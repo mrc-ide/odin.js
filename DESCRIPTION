@@ -1,0 +1,20 @@
+Package: odin.js
+Title: 'odin' 'JavaScript' support
+Version: 0.1.0
+Authors@R:
+    person(given = "Rich",
+           family = "FitzJohn",
+           role = c("aut", "cre"),
+           email = "rich.fitzjohn@gmail.com")
+Author: Rich FitzJohn
+Maintainer: Rich FitzJohn <rich.fitzjohn@gmail.com>
+Description: Create 'JavaScript' differential equation models from an 'odin' model specification.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Imports:
+  odin
+Suggests:
+  V8,
+  testthat
+RoxygenNote: 6.1.1

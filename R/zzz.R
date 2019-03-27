@@ -1,0 +1,19 @@
+JS_GENERATORS <- "generators"
+JS_INSTANCES <- "instances"
+
+env <- new.env(parent = emptyenv())
+
+##' @importFrom V8 v8
+js_context <- function() {
+  ct <- V8::v8()
+  ct$source(system.file("bundle.js", package = "odin.js", mustWork = TRUE))
+  ct$source(system.file("support.js", package = "odin.js", mustWork = TRUE))
+  ct$eval(sprintf("var %s = {};", JS_GENERATORS))
+  ct$eval(sprintf("var %s = {};", JS_INSTANCES))
+  ct
+}
+
+
+.onLoad <- function(...) {
+  env$ct <- js_context()
+}

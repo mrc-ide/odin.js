@@ -42,4 +42,15 @@ clean:
 coverage:
 	Rscript -e 'covr::shine(covr::package_coverage(quiet=FALSE))'
 
-.PHONY: all test document install vignettes build
+js: inst/bundle.js
+
+js/bundle.js: js/package.json js/in.js
+	./js/build
+
+inst/bundle.js: js/bundle.js
+	mkdir -p inst
+	cp $< $@
+	cp js/node_modules/dopri/LICENCE inst/LICENSE.dopri
+	cp js/bundle.min.js inst
+
+.PHONY: all test document install vignettes build js

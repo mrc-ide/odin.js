@@ -2,3 +2,4 @@
 ^Makefile$
 ^.travis.yml$
 ^appveyor.yml$
+^js$

@@ -9,6 +9,6 @@ addons:
 r_github_packages:
   - mrc-ide/cinterpolate
   - ropensci/jsonvalidate@use-ajv
-  - mrc-ide/odin
+  - mrc-ide/odin@i139_ir
 after_success:
   - Rscript -e 'covr::codecov(quiet = FALSE)'

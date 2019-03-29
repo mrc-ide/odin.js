@@ -9,12 +9,27 @@ js_function <- function(args, body, name = NULL) {
   } else {
     start <- sprintf("function %s(%s) {", name, paste(args, collapse = ", "))
   }
-  c(start, paste0("  ", body), "}")
+  if (length(body) > 0L) {
+    body <- paste0("  ", body)
+  }
+  c(start, body, "}")
+}
+
+
+js_extract_variable <- function(x, data_elements, state, rewrite) {
+  d <- data_elements[[x$name]]
+  if (d$rank == 0L) {
+    sprintf("%s[%s]", state, rewrite(x$offset))
+  } else {
+    sprintf("%s + %s", state, rewrite(x$offset))
+  }
 }
 
 
 js_unpack_variable <- function(name, dat, state, rewrite) {
-  browser()
+  x <- dat$data$variable$contents[[name]]
+  rhs <- js_extract_variable(x, dat$data$elements, state, rewrite)
+  sprintf_safe("var %s = %s;", x$name, rhs)
 }
 
 

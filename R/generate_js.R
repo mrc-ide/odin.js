@@ -1,6 +1,5 @@
 generate_js <- function(dat, options, context) {
   res <- generate_js_code(dat, options)
-
   context$eval(paste(res, collapse = "\n"))
   odin_js_wrapper(context, dat$config$base)
 }
@@ -21,6 +20,7 @@ generate_js_code <- function(dat, options) {
 
 generate_js_core <- function(eqs, dat, rewrite) {
   list(create = generate_js_core_create(eqs, dat, rewrite),
+       set_user = generate_js_core_set_user(eqs, dat, rewrite),
        rhs = generate_js_core_deriv(eqs, dat, rewrite),
        rhs_eval = generate_js_core_rhs_eval(eqs, dat, rewrite),
        run = generate_js_core_run(eqs, dat, rewrite),
@@ -34,7 +34,24 @@ generate_js_core_create <- function(eqs, dat, rewrite) {
   body$add("this.%s = {};", dat$meta$internal)
   body$add("var %s = this.%s;", dat$meta$internal, dat$meta$internal)
   body$add(js_flatten_eqs(eqs[dat$components$create$equations]))
-  js_function(NULL, body$get(), dat$config$base)
+  if (dat$features$has_user) {
+    body$add("this.setUser(%s);", dat$meta$user)
+  }
+  args <- dat$meta$user
+  js_function(args, body$get(), dat$config$base)
+}
+
+
+generate_js_core_set_user <- function(eqs, dat, rewrite) {
+  if (dat$features$has_user) {
+    body <- c(
+      sprintf("var %s = this.%s;", dat$meta$internal, dat$meta$internal),
+      js_flatten_eqs(eqs[dat$components$user$equations]))
+  } else {
+    body <- NULL
+  }
+  args <- dat$meta$user
+  js_function(args, body)
 }
 
 
@@ -112,11 +129,11 @@ generate_js_generator <- function(core, dat) {
 
   body <- odin:::collector()
   body$add(core$create)
+  body$add(method("setUser", core$set_user))
   body$add(method("rhs", core$rhs))
-  body$add(method("rhs_eval", core$rhs_eval))
+  body$add(method("rhsEval", core$rhs_eval))
   body$add(method("initial", core$initial_conditions))
   body$add(method("run", core$run))
-  ## body$add(prefix("this.prototype.setUser = ", core$set_user))
   body$add("return %s;", base)
 
   c(sprintf("%s.%s = (function() {", JS_GENERATORS, base),

@@ -16,7 +16,7 @@ R6_odin_js_wrapper <- R6::R6Class(
     name = NULL,
 
     finalize = function() {
-      private$context$eval("delete %s;", private$name)
+      private$context$eval(sprintf("delete %s;", private$name))
     }
   ),
 

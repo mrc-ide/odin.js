@@ -44,19 +44,16 @@ generate_js_equation_user <- function(eq, data_info, dat, rewrite) {
   min <- rewrite(eq$user$min %||% "null")
   max <- rewrite(eq$user$max %||% "null")
 
-  if (eq$user$dim) {
-    stop("not implemented")
-  } else {
-    lhs <- rewrite(eq$lhs)
-    storage_type <- data_info$storage_type
-    default <- rewrite(eq$user$default) %||% "null"
-    if (rank == 0L) {
-      size <- "null"
-    } else {
-      stop("not implemented")
-    }
-    sprintf_safe(
-      'get_user(%s, "%s", %s, %s, %s, %s, %s, %s);',
-      user, eq$lhs, internal, size, default, min, max, is_integer)
-  }
+  stopifnot(!eq$user$dim)
+
+  lhs <- rewrite(eq$lhs)
+  storage_type <- data_info$storage_type
+  default <- rewrite(eq$user$default) %||% "null"
+
+  stopifnot(rank == 0L)
+  size <- "null"
+
+  sprintf(
+    'get_user(%s, "%s", %s, %s, %s, %s, %s, %s);',
+    user, eq$lhs, internal, size, default, min, max, is_integer)
 }

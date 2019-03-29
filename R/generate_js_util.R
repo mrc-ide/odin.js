@@ -18,18 +18,15 @@ js_function <- function(args, body, name = NULL) {
 
 js_extract_variable <- function(x, data_elements, state, rewrite) {
   d <- data_elements[[x$name]]
-  if (d$rank == 0L) {
-    sprintf("%s[%s]", state, rewrite(x$offset))
-  } else {
-    sprintf("%s + %s", state, rewrite(x$offset))
-  }
+  stopifnot(d$rank == 0L)
+  sprintf("%s[%s]", state, rewrite(x$offset))
 }
 
 
 js_unpack_variable <- function(name, dat, state, rewrite) {
   x <- dat$data$variable$contents[[name]]
   rhs <- js_extract_variable(x, dat$data$elements, state, rewrite)
-  sprintf_safe("var %s = %s;", x$name, rhs)
+  sprintf("var %s = %s;", x$name, rhs)
 }
 
 

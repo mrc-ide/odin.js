@@ -1,7 +1,6 @@
 JS_GENERATORS <- "generators"
 JS_INSTANCES <- "instances"
 
-env <- new.env(parent = emptyenv())
 
 ##' @importFrom V8 v8
 js_context <- function() {
@@ -11,9 +10,4 @@ js_context <- function() {
   ct$eval(sprintf("var %s = {};", JS_GENERATORS))
   ct$eval(sprintf("var %s = {};", JS_INSTANCES))
   ct
-}
-
-
-.onLoad <- function(...) {
-  env$ct <- js_context()
 }

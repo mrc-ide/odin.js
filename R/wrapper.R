@@ -52,6 +52,7 @@ R6_odin_js_wrapper <- R6::R6Class(
     },
 
     run = function(t, y = NULL, ...) {
+      t_js <- to_json(t, auto_unbox = FALSE)
       if (is.null(y)) {
         y_js <- V8::JS("null")
       } else {

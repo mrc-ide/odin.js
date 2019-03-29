@@ -21,7 +21,7 @@ generate_js_equation_scalar <- function(eq, data_info, dat, rewrite) {
   location <- data_info$location
 
   if (location == "transient") {
-    lhs <- sprintf("const %s", eq$lhs)
+    lhs <- sprintf("var %s", eq$lhs)
   } else if (location == "internal") {
     lhs <- rewrite(eq$lhs)
   } else {

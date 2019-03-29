@@ -99,13 +99,13 @@ generate_js_core_initial_conditions <- function(eqs, dat, rewrite) {
   if (length(dat$components$initial$equations) == 0) {
     eqs_initial <- NULL
   } else {
-    browser()
+    subs <- lapply(dat$data$variable$contents, function(x) rewrite(x$initial))
+    eqs_initial <- dat$equations[dat$components$initial$equations]
+    eqs_initial <- lapply(odin:::ir_substitute(eqs_initial, subs),
+                          generate_js_equation, dat, rewrite)
   }
 
   initial <- js_flatten_eqs(lapply(dat$data$variable$contents, set_initial))
-  if (dat$features$initial_time_dependent) {
-    browser()
-  }
 
   body <- odin:::collector()
   body$add(internal)

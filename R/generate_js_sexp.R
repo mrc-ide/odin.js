@@ -10,6 +10,9 @@ generate_js_sexp <- function(x, data, meta) {
     } else if (n == 2L && fn %in% odin:::FUNCTIONS_INFIX) {
       ret <- sprintf("%s %s %s", values[[1]], fn, values[[2]])
     } else {
+      if (any(FUNCTIONS_MATH == fn)) {
+        fn <- sprintf("Math.%s", fn)
+      }
       ## if (!any(names(FUNCTIONS) == fn)) {
       ##   stop(sprintf("unsupported function '%s' [odin bug]", fn)) # nocov
       ## }
@@ -27,3 +30,19 @@ generate_js_sexp <- function(x, data, meta) {
     deparse(x, control = "digits17")
   }
 }
+
+
+FUNCTIONS_RENAME <- c(
+  "^" = "Math.pow",
+  ceiling = "Math.ceil"
+)
+
+
+FUNCTIONS_MATH <- c(
+  "sqrt",
+  "exp", "expm1", "log", "log2", "log10", "log1p",
+  "cos", "sin", "tan",
+  "acos", "asin", "atan", "atan2",
+  "cosh", "sinh", "tanh",
+  "acosh", "asinh", "atanh",
+  "abs", "floor", "round", "trunc")

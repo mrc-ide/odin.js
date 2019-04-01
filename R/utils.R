@@ -23,6 +23,10 @@ squote <- function(x) {
 }
 
 
-package_js <- function(name) {
-  readLines(system.file(name, package = "odin.js", mustWork = TRUE))
+package_js <- function(name, min) {
+  if (min) {
+    name <- sub("\\.js$", ".min.js", name)
+  }
+  readLines(system.file(name, package = "odin.js", mustWork = TRUE),
+            warn = FALSE)
 }

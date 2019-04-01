@@ -47,6 +47,9 @@ js: inst/dopri.js
 js/dopri.js: js/package.json js/in.js
 	./js/build
 
+inst/support.min.js: inst/support.js
+	uglifyjs $< > $@
+
 inst/dopri.js: js/dopri.js
 	mkdir -p inst
 	cp $< $@

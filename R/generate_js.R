@@ -71,7 +71,8 @@ generate_js_core_deriv <- function(eqs, dat, rewrite) {
 
 generate_js_core_run <- function(eqs, dat, rewrite) {
   args <- c("times", "y0")
-  body <- "return integrate_odin(this, times, y0);"
+  body <- c("var y = integrateOdin(this, times, y0);",
+            'return {"t": t, "y": y};')
   js_function(args, body)
 }
 

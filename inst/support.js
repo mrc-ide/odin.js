@@ -7,17 +7,10 @@ function zeros(n) {
     return ret;
 }
 
-function integrate_run(rhs, y0, times) {
+function integrateOdin(obj, times, y0) {
     var t0 = times[0];
     var t1 = times[times.length - 1];
-    var sol = global.dopri.integrate(rhs, y0, t0, t1);
-    return sol(times);
-}
-
-function integrate_odin(obj, times, y0) {
-    var t0 = times[0];
-    var t1 = times[times.length - 1];
-    if (y0 === undefined || y0 === null) {
+    if (isMissing(y0)) {
       y0 = obj.initial(times[0]);
     }
     var rhs = function(t, y, dy) {
@@ -27,19 +20,18 @@ function integrate_odin(obj, times, y0) {
     return sol(times);
 }
 
-
-function get_user(user, name, internal, size, default_value,
-		  min, max, is_integer) {
+function getUser(user, name, internal, size, defaultValue,
+		  min, max, isInteger) {
     var value = user[name];
     if (size !== null) {
 	throw Error("Arrays not yet supported");
     }
-    if (is_missing(value)) {
-	if (is_missing(internal[name])) {
-	    if (default_value === null) {
+    if (isMissing(value)) {
+	if (isMissing(internal[name])) {
+	    if (defaultValue === null) {
 		throw Error("Expected a value for '" + name + "'");
 	    } else {
-		internal[name] = default_value;
+		internal[name] = defaultValue;
 	    }
 	}
     } else {
@@ -56,7 +48,6 @@ function get_user(user, name, internal, size, default_value,
     }
 }
 
-
-function is_missing(x) {
+function isMissing(x) {
     return x === undefined || x === null
 }

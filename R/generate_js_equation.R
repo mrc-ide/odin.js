@@ -54,6 +54,6 @@ generate_js_equation_user <- function(eq, data_info, dat, rewrite) {
   size <- "null"
 
   sprintf(
-    'get_user(%s, "%s", %s, %s, %s, %s, %s, %s);',
+    'getUser(%s, "%s", %s, %s, %s, %s, %s, %s);',
     user, eq$lhs, internal, size, default, min, max, is_integer)
 }

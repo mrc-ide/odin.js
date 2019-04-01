@@ -16,3 +16,13 @@ to_json <- function(x, auto_unbox = FALSE) {
 scalar <- function(x) {
   jsonlite::unbox(x)
 }
+
+
+squote <- function(x) {
+  sprintf("'%s'", x)
+}
+
+
+package_js <- function(name) {
+  readLines(system.file(name, package = "odin.js", mustWork = TRUE))
+}

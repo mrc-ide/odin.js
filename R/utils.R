@@ -30,3 +30,8 @@ package_js <- function(name, min) {
   readLines(system.file(name, package = "odin.js", mustWork = TRUE),
             warn = FALSE)
 }
+
+
+js_null <- function() {
+  V8::JS("null")
+}

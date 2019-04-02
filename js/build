@@ -3,10 +3,11 @@ set -e
 
 HERE=$(dirname $0)
 cd $HERE
+DEST=../inst
 
 echo "Working in $(pwd)"
 
 rm -rf node_modules
 npm install
-browserify in.js > dopri.js
-uglifyjs dopri.js > dopri.min.js
+
+browserify dopri.in.js > $DEST/dopri.js

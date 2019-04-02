@@ -6,6 +6,7 @@
 ##
 ## Doing the latter requires some effort to keep the options
 ## extensible, but the current approach is a bit rubbish anyway.
+##' @importFrom odin odin
 odin_js <- function(x) {
   xx <- substitute(x)
   if (is.symbol(xx)) {

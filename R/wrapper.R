@@ -1,16 +1,17 @@
 ## We're going to want to call these models from R a lot for testing,
 ## so let's expose them as full R objects:
-odin_js_wrapper <- function(dat, options) {
+odin_js_wrapper <- function(ir, options) {
   context <- js_context()
 
-  res <- generate_js(dat, options)
+  res <- generate_js(ir, options)
   context$eval(paste(res$code, collapse = "\n"))
   name <- res$name
 
   ret <- function(..., user = list(...)) {
     R6_odin_js_wrapper$new(context, name, user)
   }
-  ## class(ret) <- "odin_generator"
+  attr(ret, "ir") <- ir
+  class(ret) <- "odin_generator"
   ret
 }
 

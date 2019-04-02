@@ -2,3 +2,4 @@
 
 importFrom(R6,R6Class)
 importFrom(V8,v8)
+importFrom(odin,odin)

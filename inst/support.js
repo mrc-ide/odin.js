@@ -15,7 +15,7 @@ function integrateOdin(obj, times, y0) {
     }
     var rhs = function(t, y, dy) {
         obj.rhs(t, y, dy);
-    }
+    };
     var sol = dopri.integrate(rhs, y0, t0, t1);
     var y = sol(times);
     // Prepend the result vector with the times; this is going to be
@@ -56,5 +56,5 @@ function getUser(user, name, internal, size, defaultValue,
 }
 
 function isMissing(x) {
-    return x === undefined || x === null
+    return x === undefined || x === null;
 }

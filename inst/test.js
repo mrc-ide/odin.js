@@ -1,5 +1,5 @@
 // code for use with a test model:
 function run(name, user, t, y) {
     var mod = new odin[name](user);
-    return mod.run(t, y)
+    return mod.run(t, y);
 }

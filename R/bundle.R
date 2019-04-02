@@ -36,7 +36,7 @@ odin_js_bundle <- function(filenames, dest = tempfile(),
   support <- package_js("support.js")
   code <- c(dopri,
             support,
-            sprintf("var %s = {}", JS_GENERATORS),
+            sprintf("var %s = {};", JS_GENERATORS),
             js_flatten_eqs(lapply(dat, "[[", "code")))
 
   writeLines(code, dest)

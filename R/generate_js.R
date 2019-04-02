@@ -137,7 +137,9 @@ generate_js_core_initial_conditions <- function(eqs, dat, rewrite) {
 generate_js_generator <- function(core, dat) {
   base <- dat$config$base
   method <- function(name, x) {
+    n <- length(x)
     x[[1]] <- sprintf("%s.prototype.%s = %s", base, name, x[[1]])
+    x[[n]] <- paste0(x[[n]], ";")
     x
   }
 

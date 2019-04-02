@@ -58,11 +58,8 @@ R6_odin_js_wrapper <- R6::R6Class(
       } else {
         y_js <- to_json(y, auto_unbox = FALSE)
       }
-      ## TODO: need to decide what to do about names here, because
-      ## we'll need to support sending metadata about the result back.
-      ## I think that an option that controls name generation would be
-      ## useful here perhaps?  Then a structure rather than a
-      ## data.frame right from the get-go even.
-      private$context$call(sprintf("%s.run", private$name), t_js, y_js)
+      res <- private$context$call(sprintf("%s.run", private$name), t_js, y_js)
+      colnames(res$y) <- res$names
+      res$y
     }
   ))

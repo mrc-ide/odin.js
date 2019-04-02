@@ -24,6 +24,7 @@ generate_js_core <- function(eqs, dat, rewrite) {
        rhs = generate_js_core_deriv(eqs, dat, rewrite),
        rhs_eval = generate_js_core_rhs_eval(eqs, dat, rewrite),
        run = generate_js_core_run(eqs, dat, rewrite),
+       metadata = generate_js_core_metadata(eqs, dat, rewrite),
        initial_conditions = generate_js_core_initial_conditions(
          eqs, dat, rewrite))
 }
@@ -34,21 +35,21 @@ generate_js_core_create <- function(eqs, dat, rewrite) {
   body$add("this.%s = {};", dat$meta$internal)
   body$add("var %s = this.%s;", dat$meta$internal, dat$meta$internal)
   body$add(js_flatten_eqs(eqs[dat$components$create$equations]))
-  if (dat$features$has_user) {
-    body$add("this.setUser(%s);", dat$meta$user)
-  }
+  body$add("this.setUser(%s);", dat$meta$user)
   args <- dat$meta$user
   js_function(args, body$get(), dat$config$base)
 }
 
 
 generate_js_core_set_user <- function(eqs, dat, rewrite) {
+  update_metadata <- "this.updateMetadata();"
   if (dat$features$has_user) {
     body <- c(
       sprintf("var %s = this.%s;", dat$meta$internal, dat$meta$internal),
-      js_flatten_eqs(eqs[dat$components$user$equations]))
+      js_flatten_eqs(eqs[dat$components$user$equations]),
+      update_metadata)
   } else {
-    body <- NULL
+    body <- update_metadata
   }
   args <- dat$meta$user
   js_function(args, body)
@@ -71,9 +72,21 @@ generate_js_core_deriv <- function(eqs, dat, rewrite) {
 
 generate_js_core_run <- function(eqs, dat, rewrite) {
   args <- c("times", "y0")
-  body <- c("var y = integrateOdin(this, times, y0);",
-            'return {"t": times, "y": y};')
+  body <- "return integrateOdin(this, times, y0);"
   js_function(args, body)
+}
+
+
+generate_js_core_metadata <- function(eqs, dat, rewrite) {
+  ## This will need major work for both arrays and output, but I think
+  ## that the solver does not yet cope with output
+  stopifnot(!dat$features$has_array, !dat$features$has_output)
+
+  ynames <- c(dat$meta$time, names(dat$data$variable$contents))
+  body <- c("this.metadata = {};",
+            sprintf("this.metadata.ynames = [%s];",
+                    paste(dquote(ynames), collapse = ", ")))
+  js_function(NULL, body)
 }
 
 
@@ -135,6 +148,7 @@ generate_js_generator <- function(core, dat) {
   body$add(method("rhsEval", core$rhs_eval))
   body$add(method("initial", core$initial_conditions))
   body$add(method("run", core$run))
+  body$add(method("updateMetadata", core$metadata))
   body$add("return %s;", base)
 
   c(sprintf("%s.%s = (function() {", JS_GENERATORS, base),

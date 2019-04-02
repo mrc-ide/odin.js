@@ -17,7 +17,14 @@ function integrateOdin(obj, times, y0) {
 	obj.rhs(t, y, dy);
     }
     var sol = dopri.integrate(rhs, y0, t0, t1);
-    return sol(times);
+    var y = sol(times);
+    // Prepend the result vector with the times; this is going to be
+    // required later on - it would be nice if dopri did this through
+    // it's interpolation function though.
+    for (var i = 0; i < times.length; ++i) {
+	y[i].unshift(times[i]);
+    }
+    return {"y": y, "names": obj.metadata.ynames.slice(0)};
 }
 
 function getUser(user, name, internal, size, defaultValue,

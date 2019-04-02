@@ -1,14 +1,21 @@
 ## We're going to want to call these models from R a lot for testing,
 ## so let's expose them as full R objects:
-odin_js_wrapper <- function(context, name, meta) {
-  force(context)
-  force(name)
-  function(..., user = list(...)) {
+odin_js_wrapper <- function(dat, options) {
+  context <- js_context()
+
+  res <- generate_js(dat, options)
+  context$eval(paste(res$code, collapse = "\n"))
+  name <- res$name
+
+  ret <- function(..., user = list(...)) {
     R6_odin_js_wrapper$new(context, name, user)
   }
+  ## class(ret) <- "odin_generator"
+  ret
 }
 
 
+##' @importFrom R6 R6Class
 R6_odin_js_wrapper <- R6::R6Class(
   "odin_model",
   private = list(
@@ -63,3 +70,14 @@ R6_odin_js_wrapper <- R6::R6Class(
       res$y
     }
   ))
+
+
+##' @importFrom V8 v8
+js_context <- function() {
+  ct <- V8::v8()
+  ct$source(system.file("dopri.js", package = "odin.js", mustWork = TRUE))
+  ct$source(system.file("support.js", package = "odin.js", mustWork = TRUE))
+  ct$eval(sprintf("var %s = {};", JS_GENERATORS))
+  ct$eval(sprintf("var %s = {};", JS_INSTANCES))
+  ct
+}

@@ -17,12 +17,9 @@ odin_js_bundle <- function(filenames, dest = tempfile(),
   options <- odin::odin_options(target = "js")
 
   f <- function(file) {
-    ir <- odin::odin_parse_(file)
-    dat <- odin::odin_ir_deserialise(ir)
-    code <- generate_js_code(dat, options)
-    list(name = dat$config$base, file = file, code = code)
+    ir <- odin::odin_parse_(file, options)
+    generate_js(ir, options)
   }
-
   dat <- lapply(filenames, f)
 
   nms <- vcapply(dat, "[[", "name")

@@ -1,11 +1,6 @@
-generate_js <- function(dat, options, context) {
-  res <- generate_js_code(dat, options)
-  context$eval(paste(res, collapse = "\n"))
-  odin_js_wrapper(context, dat$config$base)
-}
+generate_js <- function(ir, options) {
+  dat <- odin::odin_ir_deserialise(ir)
 
-
-generate_js_code <- function(dat, options) {
   rewrite <- function(x) {
     generate_js_sexp(x, dat$data, dat$meta)
   }
@@ -14,7 +9,8 @@ generate_js_code <- function(dat, options) {
   core <- generate_js_core(eqs, dat, rewrite)
 
   ## This is all we need to dump out
-  generate_js_generator(core, dat)
+  list(code = generate_js_generator(core, dat),
+       name = dat$config$base)
 }
 
 

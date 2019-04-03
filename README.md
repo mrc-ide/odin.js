@@ -167,7 +167,17 @@ odin.logistic = (function() {
 }());
 ```
 
-(the option `include_dopri` prevents the [`dopri-js`](https://github.com/mrc-ide/dopri-js) solver being included here as that can be included separately and ends up being ~500 lines of extra code)
+(the option `include_dopri` prevents the [`dopri-js`](https://github.com/mrc-ide/dopri-js) solver being included here as that can be included separately and ends up being ~500 lines of extra code).
+
+### Supported features
+
+- [x] user variables
+- [ ] output
+- [ ] arrays
+- [ ] delays
+- [ ] interpolation
+- [ ] discrete models
+- [ ] stochastic models (this might be hard)
 
 ---
 

@@ -1,4 +1,5 @@
 odin_js_bundle <- function(filenames, dest = tempfile(),
+                           include = NULL,
                            include_dopri = TRUE) {
   ## The two options here seem to be: use a vector of paths to source
   ## files or use a path to a directory.  The rest of the interface is
@@ -31,10 +32,14 @@ odin_js_bundle <- function(filenames, dest = tempfile(),
 
   dopri <- if (include_dopri) package_js("dopri.js") else NULL
   support <- package_js("support.js")
+  if (!is.null(include)) {
+    include <- js_flatten_eqs(lapply(include, readLines))
+  }
   code <- c(dopri,
             support,
             sprintf("var %s = {};", JS_GENERATORS),
-            js_flatten_eqs(lapply(dat, "[[", "code")))
+            js_flatten_eqs(lapply(dat, "[[", "code")),
+            include)
 
   writeLines(code, dest)
   dest

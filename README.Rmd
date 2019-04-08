@@ -46,6 +46,17 @@ cat(c("```js", readLines(path), "```"), sep = "\n")
 
 (the option `include_dopri` prevents the [`dopri-js`](https://github.com/mrc-ide/dopri-js) solver being included here as that can be included separately and ends up being ~500 lines of extra code).
 
+### Complete example
+
+A more complete example that can actually be used from a webpage is included:
+
+```{r}
+path <- odin.js::odin_js_example("inst/models/sir.R", "simple")
+dir(path)
+```
+
+Chrome will not let you execute js directly off disk (though I think Firefox does) so to test this you should use something like [SimpleHttpServer](https://docs.python.org/2/library/simplehttpserver.html) to serve the directory and access that way.
+
 ### Supported features
 
 - [x] user variables

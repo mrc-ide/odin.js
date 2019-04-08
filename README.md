@@ -123,7 +123,7 @@ function getUser(user, name, internal, size, defaultValue,
 }
 
 function isMissing(x) {
-    return x === undefined || x === null;
+    return x === undefined || x === null || isNaN(x);
 }
 var odin = {};
 odin.logistic = (function() {
@@ -159,6 +159,7 @@ odin.logistic = (function() {
   logistic.prototype.run = function(times, y0) {
     return integrateOdin(this, times, y0);
   };
+  logistic.prototype.coef = {r: {has_default: true, default: null, rank: 0, min: -Infinity, max: Infinity, integer: false}, N0: {has_default: false, default: 1, rank: 0, min: -Infinity, max: Infinity, integer: false}};
   logistic.prototype.updateMetadata = function() {
     this.metadata = {};
     this.metadata.ynames = ["t", "N"];
@@ -168,6 +169,22 @@ odin.logistic = (function() {
 ```
 
 (the option `include_dopri` prevents the [`dopri-js`](https://github.com/mrc-ide/dopri-js) solver being included here as that can be included separately and ends up being ~500 lines of extra code).
+
+### Complete example
+
+A more complete example that can actually be used from a webpage is included:
+
+
+```r
+path <- odin.js::odin_js_example("inst/models/sir.R", "simple")
+dir(path)
+```
+
+```
+## [1] "index.html" "odin.js"
+```
+
+Chrome will not let you execute js directly off disk (though I think Firefox does) so to test this you should use something like [SimpleHttpServer](https://docs.python.org/2/library/simplehttpserver.html) to serve the directory and access that way.
 
 ### Supported features
 

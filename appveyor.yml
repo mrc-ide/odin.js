@@ -22,7 +22,7 @@ build_script:
   - travis-tool.sh install_github mrc-ide/cinterpolate
   - travis-tool.sh install_github richfitz/dde
   - travis-tool.sh install_github ropensci/jsonvalidate@use-ajv
-  - travis-tool.sh install_github richfitz/odin@i139_ir
+  - travis-tool.sh install_github richfitz/odin
 
 test_script:
   - travis-tool.sh run_tests

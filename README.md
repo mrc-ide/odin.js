@@ -58,7 +58,7 @@ The function `odin.js::odin_js_bundle` generates a "bundle" of javascript suitab
 
 
 ```r
-path <- odin.js::odin_js_bundle("inst/example/logistic.R",
+path <- odin.js::odin_js_bundle("inst/models/logistic.R",
                                 include_dopri = FALSE)
 ```
 

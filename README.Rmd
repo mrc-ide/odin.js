@@ -34,7 +34,7 @@ This might be slightly faster than the odin-to-R compiler, though benchmarks wil
 The function `odin.js::odin_js_bundle` generates a "bundle" of javascript suitable for calling from a webpage.  This is the same code that `odin.js::odin_js` but without R-wrappers around it.  It takes a vector of filenames and produces a file of javascript code:
 
 ```{r}
-path <- odin.js::odin_js_bundle("inst/example/logistic.R",
+path <- odin.js::odin_js_bundle("inst/models/logistic.R",
                                 include_dopri = FALSE)
 ```
 

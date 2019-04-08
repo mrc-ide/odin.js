@@ -1,11 +1,14 @@
-## It's quite likely that we'll either roll this into the main package
-## (which requires the v8 dependency a little more strongly, but
-## possibly we can make that optional still) or we will make an
-## extension mechanism (which would be useful if say Julia was to
-## become a target later).
-##
-## Doing the latter requires some effort to keep the options
-## extensible, but the current approach is a bit rubbish anyway.
+##' Generate a javascript odin model from a file, text string or
+##' expression.
+##'
+##'
+##' @title Create a javascript odin model
+##'
+##' @param x Either the name of a file to read, a text string (if
+##'   length is greater than 1 elements will be joined with newlines)
+##'   or an expression.
+##'
+##' @export
 ##' @importFrom odin odin
 odin_js <- function(x) {
   xx <- substitute(x)
@@ -20,6 +23,8 @@ odin_js <- function(x) {
 }
 
 
+##' @export
+##' @rdname odin_js
 odin_js_ <- function(x) {
   options <- odin::odin_options(target = "js")
   ir <- odin::odin_parse_(x, options)

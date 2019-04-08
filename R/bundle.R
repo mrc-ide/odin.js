@@ -1,3 +1,18 @@
+##' Create a bundle of odin models
+##'
+##' @title Create a bundle of odin models
+##'
+##' @param filenames Filenames with odin source code
+##'
+##' @param dest Destination file for the generated javascript
+##'
+##' @param include Optional vector of paths of filenames to include
+##'   into the javascript bundle
+##'
+##' @param include_dopri Logical, indicating if the dopri solver
+##'   should be included as well.
+##'
+##' @export
 odin_js_bundle <- function(filenames, dest = tempfile(),
                            include = NULL,
                            include_dopri = TRUE) {

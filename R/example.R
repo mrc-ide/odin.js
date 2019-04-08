@@ -1,4 +1,17 @@
-odin_js_example <- function(filename, name, dest = tempfile(), ...) {
+##' Generate a web page and javascript for a built-in example
+##'
+##' @title Generate a built in example
+##'
+##' @param filename Filename of model to include
+##'
+##' @param name Name of the example (only \code{simple} is currently
+##'   supported)
+##'
+##' @param dest Destination directory - multiple files will be created
+##'   here, overwriting existing files without prompting.
+
+##' @export
+odin_js_example <- function(filename, name, dest = tempfile()) {
   p <- system.file("example", package = "odin.js")
   if (!(name %in% dir(p))) {
     stop(sprintf("Unknown example '%s' - must be one of %s",

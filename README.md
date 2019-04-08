@@ -184,7 +184,7 @@ dir(path)
 ## [1] "index.html" "odin.js"
 ```
 
-Chrome will not let you execute js directly off disk (though I think Firefox does) so to test this you should use something like [SimpleHttpServer](https://docs.python.org/2/library/simplehttpserver.html) to serve the directory and access that way.  This example is also available at mrc-ide.github.io/odin.js/simple
+Chrome will not let you execute js directly off disk (though I think Firefox does) so to test this you should use something like [SimpleHttpServer](https://docs.python.org/2/library/simplehttpserver.html) to serve the directory and access that way.  This example is also available at [mrc-ide.github.io/odin.js/simple](https://mrc-ide.github.io/odin.js/simple)
 
 ### Supported features
 

@@ -21,6 +21,7 @@ generate_js_core <- function(eqs, dat, rewrite) {
        rhs_eval = generate_js_core_rhs_eval(eqs, dat, rewrite),
        run = generate_js_core_run(eqs, dat, rewrite),
        metadata = generate_js_core_metadata(eqs, dat, rewrite),
+       coef = generate_js_coef(eqs, dat, rewrite),
        initial_conditions = generate_js_core_initial_conditions(
          eqs, dat, rewrite))
 }
@@ -70,6 +71,32 @@ generate_js_core_run <- function(eqs, dat, rewrite) {
   args <- c("times", "y0")
   body <- "return integrateOdin(this, times, y0);"
   js_function(args, body)
+}
+
+
+generate_js_coef <- function(eqs, dat, rewrite) {
+  if (!dat$features$has_user) {
+    return("{}")
+  }
+  js_dict <- function(x) {
+    sprintf("{%s}", paste(sprintf("%s: %s", names(x), x), collapse = ", "))
+  }
+  f <- function(x) {
+    data_info <- dat$data$elements[[x$name]]
+    if (is.null(x$user$default)) {
+      default <- "null"
+    } else {
+      default <- as.character(x$user$default)
+    }
+    d <- c(has_default = tolower(is.null(x$user$default)),
+           default = default,
+           rank = as.character(data_info$rank),
+           min = as.character(x$user$min %||% "-Infinity"),
+           max = as.character(x$user$max %||% "Infinity"),
+           integer = tolower(data_info$storage_type == "integer"))
+    js_dict(d)
+  }
+  js_dict(vcapply(dat$equations[names(dat$user)], f))
 }
 
 
@@ -138,6 +165,10 @@ generate_js_generator <- function(core, dat) {
     x[[n]] <- paste0(x[[n]], ";")
     x
   }
+  field <- function(name, x) {
+    stopifnot(length(x) == 1)
+    sprintf("%s.prototype.%s = %s;", base, name, x)
+  }
 
   body <- odin:::collector()
   body$add(core$create)
@@ -146,6 +177,7 @@ generate_js_generator <- function(core, dat) {
   body$add(method("rhsEval", core$rhs_eval))
   body$add(method("initial", core$initial_conditions))
   body$add(method("run", core$run))
+  body$add(field("coef", core$coef))
   body$add(method("updateMetadata", core$metadata))
   body$add("return %s;", base)
 

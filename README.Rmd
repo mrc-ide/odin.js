@@ -55,7 +55,7 @@ path <- odin.js::odin_js_example("inst/models/sir.R", "simple")
 dir(path)
 ```
 
-Chrome will not let you execute js directly off disk (though I think Firefox does) so to test this you should use something like [SimpleHttpServer](https://docs.python.org/2/library/simplehttpserver.html) to serve the directory and access that way.
+Chrome will not let you execute js directly off disk (though I think Firefox does) so to test this you should use something like [SimpleHttpServer](https://docs.python.org/2/library/simplehttpserver.html) to serve the directory and access that way.  This example is also available at mrc-ide.github.io/odin.js/simple
 
 ### Supported features
 

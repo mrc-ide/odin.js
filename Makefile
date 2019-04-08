@@ -26,10 +26,14 @@ autodoc:
 	${RSCRIPT} autodoc.R process
 
 pkgdown:
+	rm -fr docs/simple
 	${RSCRIPT} -e "library(methods); pkgdown::build_site()"
 
-website: pkgdown
-	./update_web.sh
+example:
+	${RSCRIPT} -e 'devtools::load_all(); odin.js::odin_js_example("inst/models/sir.R", "simple", "docs/simple")'
+
+website: pkgdown example
+	./scripts/update_web.sh
 
 README.md: README.Rmd
 	Rscript -e 'library(methods); devtools::load_all(); knitr::knit("README.Rmd")'
@@ -56,4 +60,4 @@ inst/dopri.js: js/dopri.js
 	cp js/node_modules/dopri/LICENCE inst/LICENSE.dopri
 	cp js/dopri.min.js inst
 
-.PHONY: all test document install vignettes build js
+.PHONY: all test document install vignettes build js example

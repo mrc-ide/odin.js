@@ -5,20 +5,22 @@
     <script src="odin.js"></script>
   </head>
   <body onload="odinInit()">
-    <p>
+    <div>
       <b>time range: </b>
-      <input type="text" width="5" id="t0" value="0">
+      <input type="text" width="5" id="t0" value="0" />
       to
-      <input type="text" width="5" id="t1" value="50">
-    </p>
-    <p>
+      <input type="text" width="5" id="t1" value="50" />
+    </div>
+    <br/>
+    <div>
       <b>parameters: </b>
       <div id="odin_parameters">
       </div>
-    </p>
-    <p>
+    </div>
+    <br/>
+    <div>
       <button id="plot" onclick="odinPlot()">Plot</button>
-    </p>
+    </div>
     <div id="odin_graph" style="width:600px; height:300px;"></div>
   </body>
 </html>

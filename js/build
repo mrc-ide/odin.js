@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -e
+
+HERE=$(dirname $0)
+cd $HERE
+DEST=../inst
+
+echo "Working in $(pwd)"
+
+rm -rf node_modules
+npm install
+
+browserify dopri.in.js > $DEST/dopri.js

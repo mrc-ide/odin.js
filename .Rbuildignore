@@ -2,3 +2,8 @@
 ^Makefile$
 ^.travis.yml$
 ^appveyor.yml$
+^js$
+^README\.Rmd$
+^docs$
+^scripts$
+\.V8history

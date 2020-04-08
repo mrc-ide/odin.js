@@ -127,13 +127,13 @@ generate_js_core_metadata <- function(eqs, dat, rewrite) {
         ynames <- c(
           ynames,
           sprintf("for (var i = 1; i <= %s; ++i) {", len),
-          sprintf("  this.metadata.ynames.push(`%s[${i}]`);", el$name),
+          sprintf('  this.metadata.ynames.push("%s[" + i + "]");', el$name),
           sprintf("}"))
       } else {
         rank <- el$rank
         index <- paste0("i", seq_len(rank))
-        pos <- paste(sprintf("${%s}", index), collapse = ",")
-        ynames1 <- sprintf("this.metadata.ynames.push(`%s[%s]`);",
+        pos <- paste(index, collapse = ' + "," + ')
+        ynames1 <- sprintf('this.metadata.ynames.push("%s[" + %s + "]");',
                            el$name, pos)
         for (i in seq_len(rank)) {
           len <- rewrite(el$dimnames$dim[[i]])

@@ -88,7 +88,8 @@ test_that("user variables", {
 
   expect_error(gen())
   expect_error(gen(NULL),
-               "Expected a value for 'r'", fixed = TRUE)
+               "Expected a value for 'r'", fixed = TRUE,
+               class = "std::runtime_error")
   ## expect_error(gen(1:2),
   ##              "Expected a scalar numeric for 'r'")
   ## expect_error(gen(numeric(0)),

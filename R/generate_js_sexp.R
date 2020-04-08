@@ -9,6 +9,14 @@ generate_js_sexp <- function(x, data, meta) {
       ret <- sprintf("(%s)", values[[1]])
     } else if (n == 2L && fn %in% odin:::FUNCTIONS_INFIX) {
       ret <- sprintf("%s %s %s", values[[1]], fn, values[[2]])
+    } else if (fn == "if") {
+      ## NOTE: The ternary operator has very low precendence, so I'm
+      ## going to agressively parenthesise it.  This is strictly not
+      ## needed when this expression is the only element of `expr` but
+      ## that's hard to detect so we'll tolerate a few additional
+      ## parens for now.
+      ret <- sprintf("(%s ? %s : %s)",
+                     values[[1L]], values[[2L]], values[[3L]])
     } else {
       if (any(FUNCTIONS_MATH == fn)) {
         fn <- sprintf("Math.%s", fn)

@@ -18,8 +18,13 @@ js_function <- function(args, body, name = NULL) {
 
 js_extract_variable <- function(x, data_elements, state, rewrite) {
   d <- data_elements[[x$name]]
-  stopifnot(d$rank == 0L)
-  sprintf("%s[%s]", state, rewrite(x$offset))
+  if (d$rank == 0L) {
+    sprintf("%s[%s]", state, rewrite(x$offset))
+  } else {
+    offset <- rewrite(x$offset)
+    len <- rewrite(d$dimnames$length)
+    sprintf("%s.slice(%s, %s + %s)", state, offset, offset, len)
+  }
 }
 
 

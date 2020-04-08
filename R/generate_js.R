@@ -6,11 +6,11 @@ generate_js <- function(ir, options) {
   }
 
   features <- vlapply(dat$features, identity)
-  supported <- c("has_array")
+  supported <- c("initial_time_dependent", "has_array", "has_user")
   unsupported <- setdiff(names(features)[features], supported)
   if (length(unsupported) > 0L) {
     stop("Using unsupported features: ",
-         paste(squote(unsupported, collapse = ", ")))
+         paste(squote(unsupported), collapse = ", "))
   }
 
   eqs <- generate_js_equations(dat, rewrite)

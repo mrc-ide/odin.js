@@ -3,6 +3,11 @@ vcapply <- function(X, FUN, ...) {
 }
 
 
+vlapply <- function(X, FUN, ...) {
+  vapply(X, FUN, logical(1), ...)
+}
+
+
 `%||%` <- function(x, y) {
   if (is.null(x)) y else x
 }

@@ -7,6 +7,9 @@ generate_js_sexp <- function(x, data, meta) {
 
     if (fn == "(") {
       ret <- sprintf("(%s)", values[[1]])
+    } else if (fn == "[") {
+      pos <- js_array_access(args[[1L]], args[-1], data, meta)
+      ret <- sprintf("%s[%s]", values[[1L]], pos)
     } else if (n == 2L && fn %in% odin:::FUNCTIONS_INFIX) {
       ret <- sprintf("%s %s %s", values[[1]], fn, values[[2]])
     } else if (fn == "if") {

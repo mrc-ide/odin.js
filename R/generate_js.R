@@ -5,6 +5,14 @@ generate_js <- function(ir, options) {
     generate_js_sexp(x, dat$data, dat$meta)
   }
 
+  features <- vlapply(dat$features, identity)
+  supported <- c("has_array")
+  unsupported <- setdiff(names(features)[features], supported)
+  if (length(unsupported) > 0L) {
+    stop("Using unsupported features: ",
+         paste(squote(unsupported, collapse = ", ")))
+  }
+
   eqs <- generate_js_equations(dat, rewrite)
   core <- generate_js_core(eqs, dat, rewrite)
 

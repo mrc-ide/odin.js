@@ -33,3 +33,30 @@ js_unpack_variable <- function(name, dat, state, rewrite) {
 js_variable_reference <- function(x, data_info, state, rewrite) {
   sprintf("%s[%s]", state, rewrite(x$offset))
 }
+
+
+js_array_access <- function(target, index, data, meta) {
+  mult <- data$elements[[target]]$dimnames$mult
+
+  f <- function(i) {
+    index_i <- js_minus_1(index[[i]], i > 1, data, meta)
+    if (i == 1) {
+      index_i
+    } else {
+      mult_i <- generate_js_sexp(mult[[i]], data, meta)
+      sprintf("%s * %s", mult_i, index_i)
+    }
+  }
+
+  paste(vcapply(rev(seq_along(index)), f), collapse = " + ")
+}
+
+
+js_minus_1 <- function(x, protect, data, meta) {
+  if (is.numeric(x)) {
+    generate_js_sexp(x - 1L, data, meta)
+  } else {
+    x_expr <- generate_js_sexp(x, data, meta)
+    sprintf(if (protect) "(%s - 1)" else "%s - 1", x_expr)
+  }
+}

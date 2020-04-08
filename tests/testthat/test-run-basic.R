@@ -271,3 +271,31 @@ test_that("multi-line array expression", {
   })
   expect_equal(gen()$contents()$a, c(1, 1, 2, 3, 5, 8, 13, 21, 34, 55))
 })
+
+
+test_that("3d array", {
+  gen <- odin_js({
+    initial(y[, , ]) <- 1
+    deriv(y[, , ]) <- y[i, j, k] * 0.1
+    dim(y) <- c(2, 3, 4)
+  })
+
+  mod <- gen()
+  d <- mod$contents()
+  ## expect_equal(d$initial_y, array(1, c(2, 3, 4))) # TODO
+  expect_equal(d$dim_y, 24)
+  expect_equal(d$dim_y_1, 2)
+  expect_equal(d$dim_y_2, 3)
+  expect_equal(d$dim_y_3, 4)
+  expect_equal(d$dim_y_12, 6)
+
+  expect_equal(mod$initial(0), rep(1, 24))
+  expect_equal(mod$deriv(0, mod$initial(0)), rep(0.1, 24))
+
+  tt <- 0:10
+  yy <- mod$run(tt, atol = 1e-8, rtol = 1e-8)
+  expect_equal(colnames(yy)[[12]], "y[1,3,2]")
+  expect_equal(yy[, 1], tt)
+  expect_equal(unname(yy[, -1]), matrix(rep(exp(0.1 * tt), 24), 11),
+               tolerance = 1e-7)
+})

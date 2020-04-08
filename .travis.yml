@@ -5,7 +5,7 @@ r_packages:
 addons:
   apt:
     packages:
-      - libnode-dev
+      - libv8-dev
 r_github_packages:
   - mrc-ide/cinterpolate
   - ropensci/jsonvalidate

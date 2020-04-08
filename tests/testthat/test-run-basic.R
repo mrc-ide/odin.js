@@ -225,7 +225,6 @@ test_that("copy output", {
 ## Fairly minimal array model, though it does mix array and non array
 ## variables, plus an array support variable.
 test_that("array support", {
-  skip("needs implementing")
   gen <- odin_js({
     initial(x[]) <- 1
     initial(y) <- 2

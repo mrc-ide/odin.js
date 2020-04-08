@@ -20,6 +20,12 @@ generate_js_sexp <- function(x, data, meta) {
       ## parens for now.
       ret <- sprintf("(%s ? %s : %s)",
                      values[[1L]], values[[2L]], values[[3L]])
+    } else if (fn == "length") {
+      ret <- generate_js_sexp(data$elements[[args[[1L]]]]$dimnames$length,
+                              data, meta)
+    } else if (fn == "dim") {
+      dim <- data$elements[[args[[1L]]]]$dimnames$dim[[args[[2]]]]
+      ret <- generate_js_sexp(dim, data, meta)
     } else {
       if (any(FUNCTIONS_MATH == fn)) {
         fn <- sprintf("Math.%s", fn)

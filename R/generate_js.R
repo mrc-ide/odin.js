@@ -135,8 +135,17 @@ generate_js_core_rhs_eval <- function(eqs, dat, rewrite) {
 generate_js_core_initial_conditions <- function(eqs, dat, rewrite) {
   set_initial <- function(el) {
     data_info <- dat$data$elements[[el$name]]
-    lhs <- js_variable_reference(el, data_info, dat$meta$state, rewrite)
-    sprintf("%s = %s.%s;", lhs, dat$meta$internal, el$initial)
+    if (data_info$rank == 0L) {
+      lhs <- js_variable_reference(el, data_info, dat$meta$state, rewrite)
+      sprintf("%s = %s.%s;", lhs, dat$meta$internal, el$initial)
+    } else {
+      c(sprintf("for (var i = 0; i < %s; ++i) {",
+                rewrite(data_info$dimnames$length)),
+        sprintf("  %s[%s + i] = %s.%s[i];",
+                dat$meta$state, rewrite(el$offset),
+                dat$meta$internal, el$initial),
+        "}")
+    }
   }
 
   internal <- sprintf("var %s = this.%s;",

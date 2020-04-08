@@ -243,7 +243,7 @@ test_that("array support", {
   expect_equal(sort_list(mod$contents()),
                sort_list(list(dim_r = 3, dim_x = 3, initial_x = rep(1, 3),
                               initial_y = 2, n = 3, r = 1:3)))
-  expect_equal(mod$initial(), c(2, 1, 1, 1))
+  expect_equal(mod$initial(0), c(2, 1, 1, 1))
   expect_equal(mod$deriv(0, c(2, 1, 1, 1)), c(3, 1, 2, 3))
 
   tt <- 0:10

@@ -67,7 +67,7 @@ R6_odin_js_wrapper <- R6::R6Class(
         y_js <- to_json(y, auto_unbox = FALSE)
       }
       res <- private$context$call(sprintf("%s.run", private$name), t_js, y_js)
-      ## colnames(res$y) <- res$names
+      colnames(res$y) <- res$names
       res$y
     }
   ))

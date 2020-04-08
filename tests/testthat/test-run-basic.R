@@ -253,8 +253,8 @@ test_that("array support", {
                           deparse.level = 0))
   expect_equal(colnames(yy), c("t", "y", "x[1]", "x[2]", "x[3]"))
 
-  expect_equal(mod$transform_variables(yy),
-               list(t = tt,
-                    y = yy[, 2],
-                    x = unname(yy[, 3:5])))
+  ## expect_equal(mod$transform_variables(yy),
+  ##              list(t = tt,
+  ##                   y = yy[, 2],
+  ##                   x = unname(yy[, 3:5])))
 })

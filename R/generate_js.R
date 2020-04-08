@@ -111,12 +111,35 @@ generate_js_coef <- function(eqs, dat, rewrite) {
 generate_js_core_metadata <- function(eqs, dat, rewrite) {
   ## This will need major work for both arrays and output, but I think
   ## that the solver does not yet cope with output
-  stopifnot(!dat$features$has_array, !dat$features$has_output)
+  stopifnot(!dat$features$has_output)
 
-  ynames <- c(dat$meta$time, names(dat$data$variable$contents))
   body <- c("this.metadata = {};",
-            sprintf("this.metadata.ynames = [%s];",
-                    paste(dquote(ynames), collapse = ", ")))
+            "var internal = this.internal;")
+  if (dat$features$has_array) {
+    contents <- dat$data$elements[names(dat$data[["variable"]]$contents)]
+    is_scalar <- vlapply(contents, function(x) x$rank == 0)
+    ynames_scalar <- c("t", names(is_scalar)[is_scalar])
+    ynames <- sprintf("this.metadata.ynames = [%s];",
+                      paste(dquote(ynames_scalar), collapse = ", "))
+    for (el in contents[!is_scalar]) {
+      if (el$rank == 1L) {
+        len <- rewrite(el$dimnames$length)
+        ynames <- c(
+          ynames,
+          sprintf("for (var i = 0; i < %s; ++i) {", len),
+          sprintf("  this.metadata.ynames.push(`%s[${i + 1}]`);", el$name),
+          sprintf("}"))
+      } else {
+        stop("WRITEME")
+      }
+    }
+    body <- c(body, ynames)
+  } else {
+    ynames <- c(dat$meta$time, names(dat$data$variable$contents))
+    body <- c(body,
+              sprintf("this.metadata.ynames = [%s];",
+                      paste(dquote(ynames), collapse = ", ")))
+  }
   js_function(NULL, body)
 }
 

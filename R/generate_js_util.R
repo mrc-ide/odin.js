@@ -31,7 +31,12 @@ js_unpack_variable <- function(name, dat, state, rewrite) {
 
 
 js_variable_reference <- function(x, data_info, state, rewrite) {
-  sprintf("%s[%s]", state, rewrite(x$offset))
+  if (data_info$rank == 0L) {
+    sprintf("%s[%s]", state, rewrite(x$offset))
+  } else {
+    stop("needs work?")
+    sprintf("%s[%s + %s]", state, rewrite(x$offset))
+  }
 }
 
 

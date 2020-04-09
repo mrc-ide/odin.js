@@ -51,7 +51,7 @@ function getUser(user, name, internal, size, defaultValue,
         if (max !== null && value > min) {
             throw Error("Expected '" + name + "' to be at most " + max);
         }
-        if (isInteger && !Number.isInteger(value)) {
+        if (isInteger && !numberIsInteger(value)) {
             throw Error("Expected '" + name + "' to be integer-like");
         }
 
@@ -172,7 +172,7 @@ function getUserArrayCheckContents(data, min, max, isInteger, name) {
         if (max !== null && data[i] > min) {
             throw Error("Expected '" + name + "' to be at most " + max);
         }
-        if (isInteger && !Number.isInteger(data[i])) {
+        if (isInteger && !numberIsInteger(data[i])) {
             throw Error("Expected a integer value for '" + name + "'");
         }
     }
@@ -182,6 +182,12 @@ function getUserArrayCheckContents(data, min, max, isInteger, name) {
 function isMissing(x) {
     return x === undefined || x === null ||
         (typeof x === "number" && isNaN(x));
+}
+
+
+// Travis has ancient v8 version that lacks Number.isNumber
+function numberIsInteger(x) {
+    return Math.abs(x - Math.round(x)) < Math.sqrt(Number.EPSILON)
 }
 
 

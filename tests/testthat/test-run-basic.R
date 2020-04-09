@@ -153,7 +153,6 @@ test_that("user variables", {
 ##
 ## This one is about as basic as I can see!
 test_that("output", {
-  skip("Needs implementing")
   gen <- odin_js({
     deriv(y) <- 2
     initial(y) <- 1
@@ -172,18 +171,11 @@ test_that("output", {
   expect_equal(yy1[, "t"], tt)
   expect_equal(yy1[, "y"], seq(1, length.out = length(tt), by = 2))
   expect_equal(yy1[, "z"], tt)
-
-  yy2 <- gen(TRUE)$run(tt)
-  expect_equal(colnames(yy2), c("t", "y", "z"))
-  expect_equal(yy2[, "t"], tt)
-  expect_equal(yy2[, "y"], seq(1, length.out = length(tt), by = 2))
-  expect_equal(yy2[, "z"], tt)
 })
 
 
 ## Do some nontrivial calculation in the output
 test_that("output", {
-  skip("needs implementing")
   gen <- odin_js({
     deriv(y) <- 2
     initial(y) <- 1

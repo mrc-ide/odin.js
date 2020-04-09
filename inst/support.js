@@ -56,5 +56,6 @@ function getUser(user, name, internal, size, defaultValue,
 }
 
 function isMissing(x) {
-    return x === undefined || x === null || isNaN(x);
+    return x === undefined || x === null ||
+        (typeof x === "number" && isNaN(x));
 }

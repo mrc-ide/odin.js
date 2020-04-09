@@ -55,6 +55,67 @@ function getUser(user, name, internal, size, defaultValue,
     }
 }
 
+// With arrays there are really two ways that they might come in; on
+// the one hand we could accept json-style nested arrays, which is
+// cool, but requires considerable checking.  Or, given we want
+// C-style arrays ultimately we could use an R-style construct like:
+// {"data": <array>, "dim": <array>}.  I'm doing the latter for now,
+// and we can revisit later.
+function getUserArrayDim(user, name, internal, size, defaultValue,
+                         min, max, isInteger) {
+    var value = user[name];
+
+    if (isMissing(value)) {
+        if (isMissing(internal[name])) {
+            if (defaultValue === null) {
+                throw Error("Expected a value for '" + name + "'");
+            } else {
+                // not totally clear how to do this as we need to get
+                // the previous dimensions too!
+                throw Error("This needs implementing....");
+                internal[name] = defaultValue;
+            }
+        }
+        return;
+    }
+
+    var rank = size.length - 1;
+    if (!(typeof value === "object" && "data" in value && "dim" in value)) {
+        throw Error("Expected an odin.js array object for '" + name + "'");
+    }
+    if (value.dim.length !== rank) {
+        if (rank === 1) {
+            throw Error("Expected a numeric vector for '" + name + "'");
+        } else if (rank === 2) {
+            throw Error("Expected a numeric matrix for '" + name + "'");
+        } else {
+            throw Error("Expected a numeric array of rank " + rank +
+                        " for '" + name + "'");
+        }
+    }
+
+    var len = value.data.length;
+    size[0] = len;
+    for (var i = 0; i < rank; ++i) {
+        size[i + 1] = value.dim[i];
+    }
+
+    data = value.data.slice();
+    for (var i = 0; i < len; ++i) {
+        if (typeof data[i] !== "number") {
+            throw Error("Expected a number for '" + name + "'");
+        }
+        if (min !== null && data[i] < min) {
+            throw Error("Expected '" + name + "' to be at least " + min);
+        }
+        if (max !== null && data[i] > min) {
+            throw Error("Expected '" + name + "' to be at most " + max);
+        }
+    }
+
+    internal[name] = data;
+}
+
 function isMissing(x) {
     return x === undefined || x === null ||
         (typeof x === "number" && isNaN(x));

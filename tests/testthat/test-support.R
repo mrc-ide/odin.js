@@ -8,6 +8,13 @@ test_that("isMissing", {
 })
 
 
+test_that("numberIsInteger", {
+  ctx <- odin_js_support()
+  expect_true(ctx$call("numberIsInteger", 1))
+  expect_false(ctx$call("numberIsInteger", 1.5))
+})
+
+
 test_that("getUserArray", {
   ctx <- odin_js_support()
   helper <- c(

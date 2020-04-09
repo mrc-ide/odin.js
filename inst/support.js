@@ -185,9 +185,11 @@ function isMissing(x) {
 }
 
 
-// Travis has ancient v8 version that lacks Number.isNumber
+// Travis has ancient v8 version that lacks Number.isNumber.  However
+// it also lacks Number.EPSILON so I'm just comparing against 1e-8
+// which is close enough to sqrt(double.eps) anyway
 function numberIsInteger(x) {
-    return Math.abs(x - Math.round(x)) < Math.sqrt(Number.EPSILON)
+    return Math.abs(x - Math.round(x)) < 1e-8
 }
 
 

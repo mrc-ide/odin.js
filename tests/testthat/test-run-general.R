@@ -1184,7 +1184,7 @@ test_that("user integer", {
                "Expected 'y0' to be at least 0",
                class = "std::runtime_error")
 
-  expect_error(mod <- gen(y0 = 1), NA)
+  mod <- gen(y0 = 1)
   expect_equal(mod$run(0:10)[, "y"], 1.0 + 0.5 * (0:10))
 })
 

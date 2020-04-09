@@ -133,9 +133,6 @@ generate_js_equation_array_lhs <- function(eq, data_info, dat, rewrite) {
 }
 
 
-## TODO: we should really use size_t for the index variables here, but
-## because the sizes are not yet stored as size_t that causes a lot of
-## compiler warning noise.
 generate_js_equation_array_rhs <- function(value, index, lhs, rewrite) {
   ret <- sprintf("%s = %s;", lhs, rewrite(value))
   seen_range <- FALSE

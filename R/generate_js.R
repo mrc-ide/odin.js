@@ -109,8 +109,6 @@ generate_js_coef <- function(eqs, dat, rewrite) {
 
 
 generate_js_core_metadata <- function(eqs, dat, rewrite) {
-  ## This will need major work for both arrays and output, but I think
-  ## that the solver does not yet cope with output
   stopifnot(!dat$features$has_output)
 
   body <- c("this.metadata = {};",

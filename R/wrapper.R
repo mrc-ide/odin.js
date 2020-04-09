@@ -16,6 +16,23 @@ odin_js_wrapper <- function(ir, options) {
 }
 
 
+to_json_user <- function(user) {
+  f <- function(x) {
+    if (is.array(x)) {
+      x <- list(data = c(x), dim = I(dim(x)))
+    } else if (length(x) > 1L || inherits(x, "AsIs")) {
+      x <- list(data = x, dim = I(length(x)))
+    }
+    x
+  }
+  if (length(user) > 0) {
+    stopifnot(!is.null(names(user)))
+  }
+  user <- lapply(user, f)
+  to_json(user, auto_unbox = TRUE)
+}
+
+
 ##' @importFrom R6 R6Class
 R6_odin_js_wrapper <- R6::R6Class(
   "odin_model",
@@ -32,7 +49,7 @@ R6_odin_js_wrapper <- R6::R6Class(
     initialize = function(context, generator, user) {
       private$context <- context
       private$name <- sprintf("%s.%s", JS_INSTANCES, basename(tempfile("i")))
-      user_js <- to_json(user, auto_unbox = TRUE)
+      user_js <- to_json_user(user)
       init <- sprintf("%s = new %s.%s(%s);",
                       private$name, JS_GENERATORS, generator, user_js)
       private$context$eval(init)
@@ -44,7 +61,7 @@ R6_odin_js_wrapper <- R6::R6Class(
     },
 
     set_user = function(user) {
-      user_js <- to_json(user, auto_unbox = TRUE)
+      user_js <- to_json_user(user)
       private$context$call(sprintf("%s.setUser", private$name), user_js)
     },
 

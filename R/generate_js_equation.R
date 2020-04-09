@@ -45,19 +45,42 @@ generate_js_equation_user <- function(eq, data_info, dat, rewrite) {
   is_integer <- if (data_info$storage_type == "int") "true" else "false"
   min <- rewrite(eq$user$min %||% "null")
   max <- rewrite(eq$user$max %||% "null")
-
-  stopifnot(!eq$user$dim)
-
-  lhs <- rewrite(eq$lhs)
-  storage_type <- data_info$storage_type
   default <- rewrite(eq$user$default) %||% "null"
 
-  stopifnot(rank == 0L)
-  size <- "null"
-
-  sprintf(
-    'getUser(%s, "%s", %s, %s, %s, %s, %s, %s);',
-    user, eq$lhs, internal, size, default, min, max, is_integer)
+  if (eq$user$dim) {
+    len <- data_info$dimnames$length
+    ret <- c(
+      sprintf("var %s = new Array(%d);", len, rank + 1),
+      sprintf(
+        'getUserArrayDim(%s, "%s", %s, %s, %d, %s, %s, %s);',
+        user, eq$lhs, internal, len, default,
+        min, max, is_integer),
+      sprintf("%s = %s[%d];", rewrite(len), len, 0),
+      sprintf("%s = %s[%d];",
+              vcapply(data_info$dimnames$dim, rewrite), len,
+              seq_len(rank)))
+  } else {
+    if (rank == 0L) {
+      size <- "null"
+      ret <- sprintf(
+        'getUser(%s, "%s", %s, %s, %s, %s, %s, %s);',
+        user, eq$lhs, internal, size, default, min, max, is_integer)
+    } else {
+      if (rank == 1L) {
+        dim <- rewrite(data_info$dimnames$length)
+        size <- sprintf("[%s, %s]", dim, dim)
+      } else {
+        dim <- vcapply(c(data_info$dimnames$length, data_info$dimnames$dim),
+                       rewrite)
+        size <- sprintf("[%s]", paste(dim, collapse = ", "))
+      }
+      ret <- sprintf(
+        'getUserArray(%s, "%s", %s, %s, %s, %s, %s, %s);',
+        user, eq$lhs, internal, size, default,
+        min, max, is_integer)
+    }
+  }
+  ret
 }
 
 

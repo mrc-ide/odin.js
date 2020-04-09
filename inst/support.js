@@ -17,13 +17,13 @@ function integrateOdin(obj, times, y0) {
         obj.rhs(t, y, dy);
     };
     var sol = null;
-    if (obj.output === null) {
-        sol = dopri.integrate(rhs, y0, t0, t1, {});
-    } else {
+    if (typeof obj.output === "function") {
         var output = function(t, y) {
             return obj.output(t, y);
         }
         sol = dopri.integrate(rhs, y0, t0, t1, {}, output);
+    } else {
+        sol = dopri.integrate(rhs, y0, t0, t1, {});
     }
     var y = sol(times);
     // Prepend the result vector with the times; this is going to be

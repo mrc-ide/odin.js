@@ -256,7 +256,9 @@ generate_js_generator <- function(core, dat) {
   body$add(core$create)
   body$add(method("setUser", core$set_user))
   body$add(method("rhs", core$rhs))
-  body$add(method("output", core$output))
+  if (!is.null(core$output)) {
+    body$add(method("output", core$output))
+  }
   body$add(method("rhsEval", core$rhs_eval))
   body$add(method("initial", core$initial_conditions))
   body$add(method("run", core$run))

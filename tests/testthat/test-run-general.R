@@ -1079,7 +1079,6 @@ test_that("c in dim for vector", {
 
 
 test_that("user variable information", {
-  skip("user arrays")
   gen <- odin_js({
     deriv(N) <- r[1] * N * (1 - N / K)
     initial(N) <- N0
@@ -1095,12 +1094,12 @@ test_that("user variable information", {
   expect_equal(info$has_default, c(FALSE, TRUE, TRUE))
   expect_equal(info$rank, c(1L, 0L, 0L))
 
+  skip("interface error")
   expect_identical(coef(gen(1)), info)
 })
 
 
 test_that("user variable information - when no user", {
-  skip("user arrays")
   gen <- odin_js({
     deriv(N) <- r * N * (1 - N / K)
     initial(N) <- N0
@@ -1118,12 +1117,12 @@ test_that("user variable information - when no user", {
                     integer = logical(),
                     stringsAsFactors = FALSE)
   expect_identical(info, cmp)
+  skip("interface issue")
   expect_identical(coef(gen()), cmp)
 })
 
 
 test_that("format/print", {
-  skip("user arrays")
   gen <- odin_js({
     deriv(N) <- r[1] * N * (1 - N / K)
     initial(N) <- N0
@@ -1170,15 +1169,18 @@ test_that("multiline string", {
 ## This is basically all ok but what is still not great is _doing_ the
 ## validation.
 test_that("user integer", {
-  skip("user integer support")
   gen <- odin_js({
     deriv(y) <- 0.5
     initial(y) <- y0
     y0 <- user(1, integer = TRUE, min = 0)
   })
 
-  expect_error(gen(y0 = 1.5), "Expected 'y0' to be integer-like")
-  expect_error(gen(y0 = -1L), "Expected 'y0' to be at least 0")
+  expect_error(gen(y0 = 1.5),
+               "Expected 'y0' to be integer-like",
+               class = "std::runtime_error")
+  expect_error(gen(y0 = -1L),
+               "Expected 'y0' to be at least 0",
+               class = "std::runtime_error")
 
   expect_error(mod <- gen(y0 = 1), NA)
   expect_equal(mod$run(0:10)[, "y"], 1.0 + 0.5 * (0:10))
@@ -1186,7 +1188,6 @@ test_that("user integer", {
 
 
 test_that("multiple constraints", {
-  skip("user constraints")
   gen <- odin_js({
     deriv(y) <- r
     initial(y) <- y0
@@ -1200,7 +1201,6 @@ test_that("multiple constraints", {
 
 
 test_that("set_user honours constraints", {
-  skip("user constraints")
   gen <- odin_js({
     deriv(y) <- r
     initial(y) <- y0
@@ -1209,8 +1209,8 @@ test_that("set_user honours constraints", {
   })
 
   mod <- gen()
-  expect_error(mod$set_user(y0 = -1L), "Expected 'y0' to be at least 0")
-  expect_error(mod$set_user(r = 100), "Expected 'r' to be at most 10")
+  expect_error(mod$set_user(list(y0 = -1L)), "Expected 'y0' to be at least 0")
+  expect_error(mod$set_user(list(r = 100)), "Expected 'r' to be at most 10")
 })
 
 

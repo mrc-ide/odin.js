@@ -13,3 +13,11 @@ call_odin_bundle <- function(context, name, user, t, y = NULL) {
   colnames(res$y) <- res$names
   res$y
 }
+
+
+odin_js_support <- function() {
+  v8 <- V8::v8()
+  support <- package_js("support.js")
+  v8$eval(support)
+  v8
+}

@@ -51,6 +51,10 @@ function getUser(user, name, internal, size, defaultValue,
         if (max !== null && value > min) {
             throw Error("Expected '" + name + "' to be at most " + max);
         }
+        if (isInteger && !Number.isInteger(value)) {
+            throw Error("Expected '" + name + "' to be integer-like");
+        }
+
         internal[name] = value;
     }
 }
@@ -167,6 +171,9 @@ function getUserArrayCheckContents(data, min, max, isInteger, name) {
         }
         if (max !== null && data[i] > min) {
             throw Error("Expected '" + name + "' to be at most " + max);
+        }
+        if (isInteger && !Number.isInteger(data[i])) {
+            throw Error("Expected a integer value for '" + name + "'");
         }
     }
 }

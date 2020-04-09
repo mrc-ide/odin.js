@@ -60,4 +60,7 @@ inst/dopri.js: js/dopri.js
 	cp js/node_modules/dopri/LICENCE inst/LICENSE.dopri
 	cp js/dopri.min.js inst
 
+inst/support_sum.js: R/generate_js_support.R
+	./scripts/create_support_sum_js.R
+
 .PHONY: all test document install vignettes build js example

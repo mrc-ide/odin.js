@@ -145,3 +145,10 @@ test_that("getUserArrayDim", {
     "Expected 'c' to be at most 3",
     class = "std::runtime_error")
 })
+
+
+test_that("generate sum", {
+  code <- unlist(lapply(2:8, generate_js_support_sum))
+  expect_equal(code,
+               readLines(system.file("support_sum.js", package = "odin.js")))
+})

@@ -97,6 +97,7 @@ js_context <- function() {
   ct <- V8::v8()
   ct$source(system.file("dopri.js", package = "odin.js", mustWork = TRUE))
   ct$source(system.file("support.js", package = "odin.js", mustWork = TRUE))
+  ct$source(system.file("support_sum.js", package = "odin.js", mustWork = TRUE))
   ct$eval(sprintf("var %s = {};", JS_GENERATORS))
   ct$eval(sprintf("var %s = {};", JS_INSTANCES))
   ct

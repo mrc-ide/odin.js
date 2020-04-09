@@ -171,7 +171,7 @@ generate_js_core_initial_conditions <- function(eqs, dat, rewrite) {
   set_initial <- function(el) {
     data_info <- dat$data$elements[[el$name]]
     if (data_info$rank == 0L) {
-      lhs <- js_variable_reference(el, data_info, dat$meta$state, rewrite)
+      lhs <- sprintf("%s[%s]", dat$meta$state, rewrite(el$offset))
       sprintf("%s = %s.%s;", lhs, dat$meta$internal, el$initial)
     } else {
       c(sprintf("for (var i = 0; i < %s; ++i) {",

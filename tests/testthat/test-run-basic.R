@@ -219,7 +219,7 @@ test_that("copy output", {
 ## Basic discrete models
 test_that("discrete", {
   skip("Needs implementing")
-  gen <- odin({
+  gen <- odin_js({
     initial(x) <- 1
     update(x) <- x + 1
   })
@@ -236,7 +236,7 @@ test_that("discrete", {
 
 test_that("discrete with output", {
   skip("Needs implementing")
-  gen <- odin({
+  gen <- odin_js({
     initial(x) <- 1
     update(x) <- x + 1
     output(y) <- x + step

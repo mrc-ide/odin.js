@@ -82,12 +82,6 @@ generate_js_core_output <- function(eqs, dat, rewrite) {
     return(NULL)
   }
 
-  if (dat$features$has_array) {
-    message("generate_js_core_output")
-    browser()
-    stop("CHECKME")
-  }
-
   variables <- dat$components$output$variables
   equations <- dat$components$output$equations
 
@@ -140,36 +134,35 @@ generate_js_core_metadata <- function(eqs, dat, rewrite) {
   body <- c("this.metadata = {};",
             "var internal = this.internal;")
   if (dat$features$has_array) {
-    stopifnot(!dat$features$has_output)
-    contents <- dat$data$elements[names(dat$data[["variable"]]$contents)]
-    is_scalar <- vlapply(contents, function(x) x$rank == 0)
-    ynames_scalar <- c("t", names(is_scalar)[is_scalar])
-    ynames <- sprintf("this.metadata.ynames = [%s];",
-                      paste(dquote(ynames_scalar), collapse = ", "))
-    for (el in contents[!is_scalar]) {
-      if (el$rank == 1L) {
+    variables <- names(dat$data$variable$contents)
+    output <- names(dat$data$output$contents)
+    contents <- dat$data$elements[c(variables, output)]
+
+    add_name <- function(el) {
+      if (el$rank == 0) {
+        ret <- sprintf('this.metadata.ynames.push("%s");', el$name)
+      } else if (el$rank == 1) {
         len <- rewrite(el$dimnames$length)
-        ynames <- c(
-          ynames,
+        ret <- c(
           sprintf("for (var i = 1; i <= %s; ++i) {", len),
           sprintf('  this.metadata.ynames.push("%s[" + i + "]");', el$name),
           sprintf("}"))
       } else {
-        rank <- el$rank
-        index <- paste0("i", seq_len(rank))
+        index <- paste0("i", seq_len(el$rank))
         pos <- paste(index, collapse = ' + "," + ')
-        ynames1 <- sprintf('this.metadata.ynames.push("%s[" + %s + "]");',
+        ret <- sprintf('this.metadata.ynames.push("%s[" + %s + "]");',
                            el$name, pos)
-        for (i in seq_len(rank)) {
+        for (i in seq_len(el$rank)) {
           len <- rewrite(el$dimnames$dim[[i]])
           loop <- sprintf("for (var %s = 1; %s <= %s; ++%s) {",
                           index[[i]], index[[i]], len, index[[i]])
-          ynames1 <- c(loop, paste0("  ", ynames1), "}")
+          ret <- c(loop, paste0("  ", ret), "}")
         }
-
-        ynames <- c(ynames, ynames1)
       }
+      ret
     }
+    ynames <- c(sprintf('this.metadata.ynames = ["%s"];', dat$meta$time),
+                js_flatten_eqs(lapply(contents, add_name)))
     body <- c(body, ynames)
   } else {
     ynames <- c(dat$meta$time,

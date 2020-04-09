@@ -9,8 +9,9 @@ generate_js_equation <- function(eq, dat, rewrite) {
     expression_scalar = generate_js_equation_scalar,
     expression_array = generate_js_equation_array,
     alloc = generate_js_equation_alloc,
+    copy = generate_js_equation_copy,
     user = generate_js_equation_user,
-    stop("Unknown type"))
+    stop(sprintf("Unknown type '%s' [odin.js bug]")))
 
   data_info <- dat$data$elements[[eq$lhs]]
   stopifnot(!is.null(data_info))
@@ -34,6 +35,19 @@ generate_js_equation_scalar <- function(eq, data_info, dat, rewrite) {
 
   rhs <- rewrite(eq$rhs$value)
   sprintf("%s = %s;", lhs, rhs)
+}
+
+
+generate_js_equation_copy <- function(eq, data_info, dat, rewrite) {
+  x <- dat$data$output$contents[[data_info$name]]
+  if (data_info$rank == 0L) {
+    sprintf("output[%s] = %s", rewrite(x$offset), rewrite(eq$lhs))
+  } else {
+    c(sprintf("for (var i = 0; i < %s; ++i) {",
+              rewrite(data_info$dimnames$length)),
+      sprintf("  output[%s + i] = %s[i]", rewrite(x$offset), rewrite(eq$lhs)),
+      "}")
+  }
 }
 
 

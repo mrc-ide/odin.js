@@ -190,7 +190,6 @@ test_that("output", {
 
 
 test_that("copy output", {
-  skip("needs implementing")
   gen <- odin_js({
     deriv(y) <- 1
     initial(y) <- 1
@@ -202,9 +201,9 @@ test_that("copy output", {
   mod <- gen()
   tt <- 0:10
   y <- mod$run(tt)
-  yy <- mod$transform_variables(y)
-  expect_equal(yy$y, tt + 1)
-  expect_equal(yy$z, matrix(tt, length(tt), 5))
+  ## yy <- mod$transform_variables(y) # TODO
+  expect_equivalent(y[, 2], tt + 1)
+  expect_equivalent(y[, 3:7], matrix(tt, length(tt), 5))
 })
 
 

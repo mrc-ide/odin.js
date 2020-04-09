@@ -87,7 +87,7 @@ generate_js_core_output <- function(eqs, dat, rewrite) {
 
   internal <- sprintf("var %s = this.%s;", dat$meta$internal, dat$meta$internal)
   alloc <- sprintf("var %s = new Array(%s);",
-                   dat$meta$output, rewrite(dat$data$variable$length))
+                   dat$meta$output, rewrite(dat$data$output$length))
   unpack <- lapply(variables, js_unpack_variable, dat, dat$meta$state, rewrite)
   ret <- sprintf("return %s;", dat$meta$output)
   body <- js_flatten_eqs(c(internal, alloc, unpack, eqs[equations], ret))

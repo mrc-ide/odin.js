@@ -813,7 +813,6 @@ test_that("overlapping graph", {
 })
 
 test_that("sum over one dimension", {
-  skip("sum")
   ## This does rowSums / colSums and will be important for building up
   ## towards a general sum.
   gen <- odin_js({
@@ -842,7 +841,7 @@ test_that("sum over one dimension", {
   m <- matrix(runif(nr * nc), nr, nc)
   dat <- gen(m = m)$contents()
 
-  expect_equal(dat$m, m)
+  expect_equal(dat$m, c(m)) # TODO: reshape
   expect_equal(dat$v1, rowSums(m))
   expect_equal(dat$v2, colSums(m))
 

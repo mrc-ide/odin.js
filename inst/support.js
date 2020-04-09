@@ -183,3 +183,25 @@ function isMissing(x) {
     return x === undefined || x === null ||
         (typeof x === "number" && isNaN(x));
 }
+
+
+// These get replaced with generated versions shortly
+function odinSum1(x, from, to) {
+    var tot = 0.0;
+    for (var i = from; i < to; ++i) {
+        tot += x[i];
+    }
+    return tot;
+}
+
+
+function odinSum2(x, from_i, to_i, from_j, to_j, dim_x_1) {
+  var tot = 0.0;
+  for (var j = from_j; j < to_j; ++j) {
+    var jj = j * dim_x_1;
+    for (var i = from_i; i < to_i; ++i) {
+        tot += x[i + jj];
+    }
+  }
+  return tot;
+}

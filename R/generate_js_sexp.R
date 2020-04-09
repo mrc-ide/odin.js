@@ -26,6 +26,8 @@ generate_js_sexp <- function(x, data, meta) {
     } else if (fn == "dim") {
       dim <- data$elements[[args[[1L]]]]$dimnames$dim[[args[[2]]]]
       ret <- generate_js_sexp(dim, data, meta)
+    } else if (fn == "sum" || fn == "odin_sum") {
+      ret <- generate_js_sexp_sum(args, data, meta)
     } else {
       if (any(FUNCTIONS_MATH == fn)) {
         fn <- sprintf("Math.%s", fn)
@@ -45,6 +47,29 @@ generate_js_sexp <- function(x, data, meta) {
     }
   } else if (is.numeric(x)) {
     deparse(x, control = "digits17")
+  }
+}
+
+
+## This just works the same way that the C version does, even if there
+## might be a better way in js.
+generate_js_sexp_sum <- function(args, data, meta) {
+  target <- generate_js_sexp(args[[1]], data, meta)
+  data_info <- data$elements[[args[[1]]]]
+
+  if (length(args) == 1L) {
+    len <- generate_js_sexp(data_info$dimnames$length, data, meta)
+    sprintf("odinSum1(%s, 0, %s)", target, len)
+  } else {
+    i <- seq(2, length(args), by = 2)
+
+    all_args <- c(args, as.list(data_info$dimnames$mult[-1]))
+    values <- character(length(all_args))
+    values[i] <- vcapply(all_args[i], js_minus_1, FALSE, data, meta)
+    values[-i] <- vcapply(all_args[-i], generate_js_sexp, data, meta)
+    arg_str <- paste(values, collapse = ", ")
+
+    sprintf("odinSum%d(%s)", length(i), arg_str)
   }
 }
 

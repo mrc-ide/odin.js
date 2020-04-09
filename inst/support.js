@@ -75,19 +75,8 @@ function getUserArray(user, name, internal, size, defaultValue,
     }
 
     var rank = size.length - 1;
-    if (!(typeof value === "object" && "data" in value && "dim" in value)) {
-        throw Error("Expected an odin.js array object for '" + name + "'");
-    }
-    if (value.dim.length !== rank) {
-        if (rank === 1) {
-            throw Error("Expected a numeric vector for '" + name + "'");
-        } else if (rank === 2) {
-            throw Error("Expected a numeric matrix for '" + name + "'");
-        } else {
-            throw Error("Expected a numeric array of rank " + rank +
-                        " for '" + name + "'");
-        }
-    }
+    value = getUserArrayCheckType(value, name);
+    getUserArrayCheckRank(rank, value.dim.length, name);
 
     for (var i = 0; i < rank; ++i) {
         if (value.dim[i] !== size[i + 1]) {
@@ -102,21 +91,9 @@ function getUserArray(user, name, internal, size, defaultValue,
         }
     }
 
-    var data = value.data.slice();
-    var len = size[0];
-    for (var i = 0; i < len; ++i) {
-        if (typeof data[i] !== "number") {
-            throw Error("Expected a number for '" + name + "'");
-        }
-        if (min !== null && data[i] < min) {
-            throw Error("Expected '" + name + "' to be at least " + min);
-        }
-        if (max !== null && data[i] > min) {
-            throw Error("Expected '" + name + "' to be at most " + max);
-        }
-    }
+    getUserArrayCheckContents(value.data, min, max, isInteger, name);
 
-    internal[name] = data;
+    internal[name] = value.data.slice();
 }
 
 // With arrays there are really two ways that they might come in; on
@@ -144,19 +121,9 @@ function getUserArrayDim(user, name, internal, size, defaultValue,
     }
 
     var rank = size.length - 1;
-    if (!(typeof value === "object" && "data" in value && "dim" in value)) {
-        throw Error("Expected an odin.js array object for '" + name + "'");
-    }
-    if (value.dim.length !== rank) {
-        if (rank === 1) {
-            throw Error("Expected a numeric vector for '" + name + "'");
-        } else if (rank === 2) {
-            throw Error("Expected a numeric matrix for '" + name + "'");
-        } else {
-            throw Error("Expected a numeric array of rank " + rank +
-                        " for '" + name + "'");
-        }
-    }
+    value = getUserArrayCheckType(value, name);
+    getUserArrayCheckRank(rank, value.dim.length, name);
+    getUserArrayCheckContents(value.data, min, max, isInteger, name);
 
     var len = value.data.length;
     size[0] = len;
@@ -164,8 +131,34 @@ function getUserArrayDim(user, name, internal, size, defaultValue,
         size[i + 1] = value.dim[i];
     }
 
-    var data = value.data.slice();
-    for (var i = 0; i < len; ++i) {
+    internal[name] = value.data.slice();;
+}
+
+
+function getUserArrayCheckType(value, name) {
+    if (!(typeof value === "object" && "data" in value && "dim" in value)) {
+        throw Error("Expected an odin.js array object for '" + name + "'");
+    }
+    return value;
+}
+
+
+function getUserArrayCheckRank(expected, given, name) {
+    if (given !== expected) {
+        if (expected === 1) {
+            throw Error("Expected a numeric vector for '" + name + "'");
+        } else if (expected === 2) {
+            throw Error("Expected a numeric matrix for '" + name + "'");
+        } else {
+            throw Error("Expected a numeric array of rank " + expected +
+                        " for '" + name + "'");
+        }
+    }
+}
+
+
+function getUserArrayCheckContents(data, min, max, isInteger, name) {
+    for (var i = 0; i < data.length; ++i) {
         if (typeof data[i] !== "number") {
             throw Error("Expected a number for '" + name + "'");
         }
@@ -176,9 +169,8 @@ function getUserArrayDim(user, name, internal, size, defaultValue,
             throw Error("Expected '" + name + "' to be at most " + max);
         }
     }
-
-    internal[name] = data;
 }
+
 
 function isMissing(x) {
     return x === undefined || x === null ||

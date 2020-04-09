@@ -64,7 +64,7 @@ test_that("getUserArray", {
   user$b$data <- letters[1:6]
   expect_error(
     ctx$call("test", user, "b", dim_b, null, null, null, FALSE),
-    "Expected a number for 'b'",
+    "Expected a numeric value for 'b'",
     class = "std::runtime_error")
 
   ## Check range
@@ -132,7 +132,7 @@ test_that("getUserArrayDim", {
   user$b$data <- letters[1:6]
   expect_error(
     ctx$call("test", user, "b", 2, null, null, null, FALSE),
-    "Expected a number for 'b'",
+    "Expected a numeric value for 'b'",
     class = "std::runtime_error")
 
   ## Check range

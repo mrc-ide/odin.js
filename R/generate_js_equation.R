@@ -52,7 +52,7 @@ generate_js_equation_user <- function(eq, data_info, dat, rewrite) {
     ret <- c(
       sprintf("var %s = new Array(%d);", len, rank + 1),
       sprintf(
-        'getUserArrayDim(%s, "%s", %s, %s, %d, %s, %s, %s);',
+        'getUserArrayDim(%s, "%s", %s, %s, %s, %s, %s, %s);',
         user, eq$lhs, internal, len, default,
         min, max, is_integer),
       sprintf("%s = %s[%d];", rewrite(len), len, 0),

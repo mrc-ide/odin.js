@@ -87,13 +87,13 @@ test_that("user variables", {
   })
 
   expect_error(gen())
-  expect_error(gen(NULL),
-               "Expected a value for 'r'", fixed = TRUE,
-               class = "std::runtime_error")
-  ## expect_error(gen(1:2),
-  ##              "Expected a scalar numeric for 'r'")
-  ## expect_error(gen(numeric(0)),
-  ##              "Expected a scalar numeric for 'r'")
+  ## TODO: Some of these errors are not the same as the other engines
+  expect_js_error(gen(user = NULL),
+                  "Expected a value for 'r'", fixed = TRUE)
+  expect_js_error(gen(r = 1:2),
+                  "Expected a numeric value for 'r'")
+  expect_js_error(gen(r = numeric(0)),
+                  "Expected a numeric value for 'r'")
 
   expect_equal(sort_list(gen(r = pi)$contents()),
                sort_list(list(K = 100, N0 = 1, initial_N = 1, r = pi)))

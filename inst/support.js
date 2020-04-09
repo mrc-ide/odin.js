@@ -43,7 +43,7 @@ function getUser(user, name, internal, size, defaultValue,
         }
     } else {
         if (typeof value !== "number") {
-            throw Error("Expected a number for '" + name + "'");
+            throw Error("Expected a numeric value for '" + name + "'");
         }
         if (min !== null && value < min) {
             throw Error("Expected '" + name + "' to be at least " + min);
@@ -164,7 +164,7 @@ function getUserArrayCheckRank(expected, given, name) {
 function getUserArrayCheckContents(data, min, max, isInteger, name) {
     for (var i = 0; i < data.length; ++i) {
         if (typeof data[i] !== "number") {
-            throw Error("Expected a number for '" + name + "'");
+            throw Error("Expected a numeric value for '" + name + "'");
         }
         if (min !== null && data[i] < min) {
             throw Error("Expected '" + name + "' to be at least " + min);

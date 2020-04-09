@@ -126,15 +126,13 @@ test_that("user variables", {
 
   expect_error(gen())
   ## TODO: had to change error strings here
-  expect_error(gen(NULL),
-               "Expected a value for 'r'", fixed = TRUE,
-               class = "std::runtime_error")
-  expect_error(gen(r = 1:2),
-               "Expected a value for 'r'",
-               class = "std::runtime_error")
-  expect_error(gen(numeric(0)),
-               "Expected a value for 'r'",
-               class = "std::runtime_error")
+  expect_js_error(gen(user = NULL),
+                  "Expected a value for 'r'", fixed = TRUE)
+  expect_js_error(gen(r = 1:2),
+                  "Expected a numeric value for 'r'", fixed = TRUE)
+  expect_js_error(gen(r = numeric(0)),
+                  "Expected a numeric value for 'r'",
+                  fixed = TRUE)
 
   expect_equal(sort_list(gen(r = pi)$contents()),
                sort_list(list(K = 100, N0 = 1, initial_N = 1, r = pi)))

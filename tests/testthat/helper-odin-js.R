@@ -1,3 +1,5 @@
+options(odin.no_check_naked_index = TRUE)
+
 sort_list <- function(x) {
   x[order(names(x))]
 }
@@ -20,4 +22,9 @@ odin_js_support <- function() {
   support <- package_js("support.js")
   v8$eval(support)
   v8
+}
+
+
+expect_js_error <- function(...) {
+  testthat::expect_error(..., class = "std::runtime_error")
 }

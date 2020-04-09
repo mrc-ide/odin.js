@@ -102,7 +102,12 @@ generate_js_equation_array_lhs <- function(eq, data_info, dat, rewrite) {
   if (eq$type == "expression_array") {
     index <- vcapply(eq$rhs[[1]]$index, "[[", "index")
   } else {
-    index <- lapply(eq$rhs$index, "[[", "index")
+    ## This is here to support delays, which are not yet supported.
+    ## This *shoul* work but leaving in an assertion so that I
+    ## remember to double check it and remove the "no coverage"
+    ## marker.
+    stop("check for delays") # nocov
+    index <- lapply(eq$rhs$index, "[[", "index") # nocov
   }
   location <- data_info$location
 

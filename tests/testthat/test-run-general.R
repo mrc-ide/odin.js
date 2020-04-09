@@ -925,7 +925,6 @@ test_that("sum over two dimensions", {
 })
 
 test_that("sum for a 4d array", {
-  skip("sum")
   ## I don't want to check absolutely everything here, so hopefully if
   ## these few go OK then given the more exhaustive tests above we'll
   ## be OK
@@ -946,16 +945,16 @@ test_that("sum for a 4d array", {
 
     tot1 <- sum(a)
     tot2 <- sum(a[,,,])
-  }, verbose = FALSE)
+  })
 
   dim <- c(3, 5, 7, 9)
   a <- array(runif(prod(dim)), dim)
   dat <- gen(a = a)$contents()
 
-  expect_equal(dat$a, a)
-  expect_equal(dat$m12, apply(a, 1:2, sum))
-  expect_equal(dat$m23, apply(a, c(2, 3), sum))
-  expect_equal(dat$m24, apply(a, c(2, 4), sum))
+  expect_equal(dat$a, c(a))
+  expect_equal(dat$m12, c(apply(a, 1:2, sum)))
+  expect_equal(dat$m23, c(apply(a, c(2, 3), sum)))
+  expect_equal(dat$m24, c(apply(a, c(2, 4), sum)))
 })
 
 test_that("self output for scalar", {

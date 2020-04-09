@@ -853,7 +853,6 @@ test_that("sum over one dimension", {
 })
 
 test_that("sum over two dimensions", {
-  skip("sum")
   ## This is where things get a bit more horrid:
   gen <- odin_js({
     deriv(y) <- 0
@@ -896,7 +895,7 @@ test_that("sum over two dimensions", {
 
     tot1 <- sum(a)
     tot2 <- sum(a[,,])
-  }, verbose = FALSE)
+  })
 
   nr <- 5
   nc <- 7
@@ -904,18 +903,18 @@ test_that("sum over two dimensions", {
   a <- array(runif(nr * nc * nz), c(nr, nc, nz))
   dat <- gen(a = a)$contents()
 
-  expect_equal(dat$a, a)
-  expect_equal(dat$m12, apply(a, 1:2, sum))
-  expect_equal(dat$m13, apply(a, c(1, 3), sum))
-  expect_equal(dat$m23, apply(a, 2:3, sum))
+  expect_equal(dat$a, c(a)) # TODO: reshaping all through here
+  expect_equal(dat$m12, c(apply(a, 1:2, sum)))
+  expect_equal(dat$m13, c(apply(a, c(1, 3), sum)))
+  expect_equal(dat$m23, c(apply(a, 2:3, sum)))
 
   expect_equal(dat$v1, apply(a, 1, sum))
   expect_equal(dat$v2, apply(a, 2, sum))
   expect_equal(dat$v3, apply(a, 3, sum))
 
-  expect_equal(dat$mm12, apply(a[,,2:4], 1:2, sum))
-  expect_equal(dat$mm13, apply(a[,2:4,], c(1, 3), sum))
-  expect_equal(dat$mm23, apply(a[2:4,,], 2:3, sum))
+  expect_equal(dat$mm12, c(apply(a[,,2:4], 1:2, sum)))
+  expect_equal(dat$mm13, c(apply(a[,2:4,], c(1, 3), sum)))
+  expect_equal(dat$mm23, c(apply(a[2:4,,], 2:3, sum)))
 
   expect_equal(dat$vv1, apply(a[,2:4,2:4], 1, sum))
   expect_equal(dat$vv2, apply(a[2:4,,2:4], 2, sum))

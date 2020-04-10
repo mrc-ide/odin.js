@@ -65,8 +65,7 @@ test_that("constant array", {
   ## Two dimensions to check here:
   expect_js_error(gen(tp = tp, zp = zp[1:2, ]), "zp to have size 3")
   expect_js_error(gen(tp = tp, zp = zp[c(1:3, 1:3), ]), "zp to have size 3")
-  ## TODO: this one does not work....
-  ## expect_js_error(gen(tp = tp, zp = zp[, 1, drop = FALSE]), "zp to have size 2")
+  expect_js_error(gen(tp = tp, zp = zp[, 1, drop = FALSE]), "zp to have size 2")
   expect_js_error(gen(tp = tp, zp = zp[, c(1:2, 1)]), "zp to have size 2")
 
   mod <- gen(tp = tp, zp = zp)
@@ -114,9 +113,11 @@ test_that("constant 3d array", {
   ## Three dimensions to check here:
   expect_js_error(gen(tp = tp, zp = zp[1:2, , ]), "zp to have size 3")
   expect_js_error(gen(tp = tp, zp = zp[c(1:3, 1:3), , ]), "zp to have size 3")
-  ## expect_js_error(gen(tp = tp, zp = zp[, 1, , drop = FALSE]), "zp to have size 2")
+  expect_js_error(gen(tp = tp, zp = zp[, 1, , drop = FALSE]),
+                  "zp to have size 2")
   expect_js_error(gen(tp = tp, zp = zp[, c(1:2, 1), ]), "zp to have size 2")
-  ## expect_js_error(gen(tp = tp, zp = zp[, , 1, drop = FALSE]), "zp to have size 2")
+  expect_js_error(gen(tp = tp, zp = zp[, , 1, drop = FALSE]),
+                  "zp to have size 2")
   expect_js_error(gen(tp = tp, zp = zp[, , c(1:2, 1)]), "zp to have size 2")
 
   mod <- gen(tp = tp, zp = zp)

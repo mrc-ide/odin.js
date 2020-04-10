@@ -7,7 +7,7 @@ function interpolateCheckY(dimArg, dimTarget, nameArg, nameTarget) {
                         dimArg[0] + " (for " + nameTarget + ")");
         }
     } else {
-        for (var i = 0; i < dimTarget[i]; ++i) {
+        for (var i = 0; i < dimTarget.length; ++i) {
             if (dimArg[i] !== dimTarget[i]) {
                 throw Error("Expected dimension " + (i + 1) + " of " +
                             nameArg + " to have size " + dimArg[i] +

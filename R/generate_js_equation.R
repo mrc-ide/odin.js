@@ -140,7 +140,7 @@ generate_js_equation_alloc_interpolate <- function(eq, data_info, dat,
     len_result <- rewrite(1L)
     len_y <- rewrite(data_info_y$dimnames$length)
     check <- sprintf(
-      'interpolateCheckY(%s, %s, 0, "%s", "%s");',
+      'interpolateCheckY([%s], [%s], "%s", "%s");',
       len_t, len_y, data_info_y$name, eq$interpolate$equation)
   } else {
     browser()
@@ -157,8 +157,8 @@ generate_js_equation_alloc_interpolate <- function(eq, data_info, dat,
         vcapply(data_info_target$dimnames$dim[seq_len(rank)], rewrite))
     }
     check <- sprintf(
-      'interpolateCheckY(%s, %s, %d, "%s", "%s");',
-      len_expected, len_y, seq_len(rank + 1), data_info_y$name,
+      'interpolateCheckY(%s, %s, "%s", "%s");',
+      len_expected, len_y, data_info_y$name,
       eq$interpolate$equation)
   }
 

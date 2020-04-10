@@ -29,8 +29,8 @@ test_that("constant", {
   ## already some checking there.
   tp <- c(0, 1, 2)
   zp <- c(0, 1, 0)
-  ## expect_error(gen(tp = tp, zp = zp[1:2]), "Expected zp to have length 3")
-  ## expect_error(gen(tp = tp, zp = rep(zp, 2)), "Expected zp to have length 3")
+  expect_js_error(gen(tp = tp, zp = zp[1:2]), "Expected zp to have length 3")
+  expect_js_error(gen(tp = tp, zp = rep(zp, 2)), "Expected zp to have length 3")
 
   mod <- gen(tp = tp, zp = zp)
 

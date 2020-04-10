@@ -1,17 +1,16 @@
 // --- odin bits
 function interpolateCheckY(dimArg, dimTarget, nameArg, nameTarget) {
     var rank = dimTarget.length - 1;
-    // stopifnot(dimTarget.length === length(dimArg))
     if (rank === 0) {
         if (dimArg[0] !== dimTarget[0]) {
             throw Error("Expected " + nameArg + " to have length " +
-                        dimTarget[0] + " (for " + nameTarget + ")");
+                        dimArg[0] + " (for " + nameTarget + ")");
         }
     } else {
         for (var i = 0; i < dimTarget[i]; ++i) {
             if (dimArg[i] !== dimTarget[i]) {
                 throw Error("Expected dimension " + i + " of " + nameArg +
-                            " to have size " + dimTarget[i] +
+                            " to have size " + dimArg[i] +
                             " (for " + nameTarget + ")");
             }
         }

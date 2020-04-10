@@ -17,9 +17,15 @@ generate_js <- function(ir, options) {
   eqs <- generate_js_equations(dat, rewrite)
   core <- generate_js_core(eqs, dat, rewrite)
 
+  fns <- unlist(lapply(dat$equations, function(x) x$depends$functions),
+                FALSE, FALSE)
+  uses_sum <- "sum" %in% fns
+
   ## This is all we need to dump out
   list(code = generate_js_generator(core, dat),
-       name = dat$config$base)
+       name = dat$config$base,
+       include = c(interpolate.js = dat$features$has_interpolate,
+                   support_sum.js = uses_sum))
 }
 
 

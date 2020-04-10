@@ -45,15 +45,16 @@ odin_js_bundle <- function(filenames, dest = tempfile(),
                  paste(squote(unique(nms[err]))), collapse = ", "))
   }
 
-  dopri <- if (include_dopri) package_js("dopri.js") else NULL
-  support <- package_js("support.js")
-  support_sum <- package_js("support_sum.js")
+  needed <- apply(do.call(cbind, lapply(dat, "[[", "include")), 1, any)
+  support <- c(
+    if (include_dopri) "dopri.js",
+    "support.js",
+    names(which(needed)))
+
   if (!is.null(include)) {
     include <- js_flatten_eqs(lapply(include, readLines))
   }
-  code <- c(dopri,
-            support,
-            support_sum,
+  code <- c(js_flatten_eqs(lapply(support, package_js)),
             sprintf("var %s = {};", JS_GENERATORS),
             js_flatten_eqs(lapply(dat, "[[", "code")),
             include)

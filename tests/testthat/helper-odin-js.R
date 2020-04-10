@@ -7,7 +7,7 @@ sort_list <- function(x) {
 
 call_odin_bundle <- function(context, name, user, t, y = NULL) {
   context$eval(package_js("test.js"))
-  user <- to_json(list(r = 0.5), auto_unbox = TRUE)
+  user <- to_json_user(user)
   if (is.null(y)) {
     y <- js_null()
   }

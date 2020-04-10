@@ -13,6 +13,11 @@ test_that("bundle works", {
 
   res <- odin_js_bundle(filename)
 
+  ## Keep unwanted bits out:
+  txt <- readLines(res)
+  expect_false(any(grepl("odinSum2", txt)))
+  expect_false(any(grepl("interpolateCheckY", txt)))
+
   ct <- V8::v8()
   invisible(ct$source(res))
 
@@ -44,4 +49,63 @@ test_that("unique model names", {
 
   expect_error(odin_js_bundle(c(path1, path2)),
                "Duplicate model names: 'test'")
+})
+
+
+test_that("include interpolate", {
+  code <- c("deriv(y) <- pulse",
+            "initial(y) <- 0",
+            "pulse <- interpolate(tp, zp, 'constant')",
+            "tp[] <- user()",
+            "zp[] <- user()",
+            "dim(tp) <- user()",
+            "dim(zp) <- user()",
+            "output(p) <- pulse")
+
+  p <- tempfile()
+  dir.create(p)
+  filename <- file.path(p, "odin.R")
+  writeLines(code, filename)
+
+  res <- odin_js_bundle(filename)
+
+  ct <- V8::v8()
+  invisible(ct$source(res))
+
+  tt <- seq(0, 3, length.out = 301)
+  tp <- c(0, 1, 2)
+  zp <- c(0, 1, 0)
+  user <- list(tp = tp, zp = zp)
+  yy <- call_odin_bundle(ct, "odin", user, tt)
+  zz <- ifelse(tt < 1, 0, ifelse(tt > 2, 1, tt - 1))
+  expect_equal(yy[, 2], zz, tolerance = 2e-5)
+})
+
+
+test_that("include sum", {
+  code <- c("deriv(y[]) <- r[i] * y[i]",
+            "initial(y[]) <- 1",
+            "r[] <- 0.1",
+            "dim(r) <- 3",
+            "dim(y) <- 3",
+            "tot <- sum(y)",
+            "output(ytot) <- tot",
+            "output(y2[]) <- y[i] * 2",
+            "dim(y2) <- length(y)")
+
+  p <- tempfile()
+  dir.create(p)
+  filename <- file.path(p, "odin.R")
+  writeLines(code, filename)
+  res <- odin_js_bundle(filename)
+
+  ct <- V8::v8()
+  invisible(ct$source(res))
+  tt <- seq(0, 10, length.out = 101)
+  yy <- call_odin_bundle(ct, "odin", NULL, tt)
+  res <- list(y = unname(yy[, 2:4]),
+              ytot = unname(yy[, 5, drop = TRUE]),
+              y2 = unname(yy[, 6:8]))
+  expect_equal(res$ytot, rowSums(res$y))
+  expect_equal(res$y2, res$y * 2)
 })

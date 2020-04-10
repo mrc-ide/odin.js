@@ -1,3 +1,42 @@
+// --- odin bits
+function interpolateCheckY(dimArg, dimTarget, nameArg, nameTarget) {
+    var rank = dimTarget.length - 1;
+    // stopifnot(dimTarget.length === length(dimArg))
+    if (rank === 0) {
+        if (dimArg[0] !== dimTarget[0]) {
+            throw Error("Expected " + nameArg + " to have length " +
+                        dimTarget[0] + " (for " + nameTarget + ")");
+        }
+    } else {
+        for (var i = 0; i < dimTarget[i]; ++i) {
+            if (dimArg[i] !== dimTarget[i]) {
+                throw Error("Expected dimension " + i + " of " + nameArg +
+                            " to have size " + dimTarget[i] +
+                            " (for " + nameTarget + ")");
+            }
+        }
+    }
+}
+
+
+function interpolateCheckT(time, dat, tcrit) {
+    if (time[0] < dat.min) {
+        throw Error("Intergration times do not span interpolation range; " +
+                    "min: ", + dat.min);
+    }
+    // I think this is not actually an issue for constant?
+    if (time[time.length - 1] > dat.max) {
+        throw Error("Intergration times do not span interpolation range; " +
+                    "max: ", + dat.max);
+    }
+    if (length(dat.max) > 0 && tcrit === null) {
+        tcrit = dat.max;
+    }
+    return tcrit;
+}
+
+
+// --- implementation
 function interpolateAlloc(type, x, y, failOnExtrapolate) {
     if (type !== "constant") {
         throw Error("Only 'constant' interpolation is currently supported");

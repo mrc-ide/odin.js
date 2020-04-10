@@ -102,9 +102,13 @@ R6_odin_js_wrapper <- R6::R6Class(
 ##' @importFrom V8 v8
 js_context <- function() {
   ct <- V8::v8()
-  ct$source(system.file("dopri.js", package = "odin.js", mustWork = TRUE))
-  ct$source(system.file("support.js", package = "odin.js", mustWork = TRUE))
-  ct$source(system.file("support_sum.js", package = "odin.js", mustWork = TRUE))
+  js_file <- function(path) {
+    system.file(path, package = "odin.js", mustWork = TRUE)
+  }
+  ct$source(js_file("dopri.js"))
+  ct$source(js_file("support.js"))
+  ct$source(js_file("interpolate.js"))
+  ct$source(js_file("support_sum.js"))
   ct$eval(sprintf("var %s = {};", JS_GENERATORS))
   ct$eval(sprintf("var %s = {};", JS_INSTANCES))
   ct

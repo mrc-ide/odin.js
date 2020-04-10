@@ -172,6 +172,28 @@ generate_js_core_metadata <- function(eqs, dat, rewrite) {
               sprintf("this.metadata.ynames = [%s];",
                       paste(dquote(ynames), collapse = ", ")))
   }
+
+  if (dat$features$has_interpolate) {
+    args_min <- js_fold_call("Math.max",
+                             vcapply(dat$interpolate$min, function(x)
+                               sprintf("%s[0]", rewrite(x))))
+    if (length(dat$interpolate$max) == 0) {
+      args_max <- "Infinity"
+    } else {
+      args_max <- js_fold_call(
+        "Math.min",
+        vcapply(dat$interpolate$max, function(x)
+          sprintf("%s[%s - 1]", rewrite(x),
+                  rewrite(dat$data$elements[[x]]$dimnames$length))))
+    }
+    body <- c(
+      body,
+      "this.metadata.interpolateTimes = {",
+      sprintf("  min: %s,", args_min),
+      sprintf("  max: %s", args_max),
+      "}")
+  }
+
   js_function(NULL, body)
 }
 
@@ -259,6 +281,7 @@ generate_js_generator <- function(core, dat) {
   if (!is.null(core$output)) {
     body$add(method("output", core$output))
   }
+  body$add(field("interpolateTime", "null"))
   body$add(method("rhsEval", core$rhs_eval))
   body$add(method("initial", core$initial_conditions))
   body$add(method("run", core$run))

@@ -60,3 +60,12 @@ js_minus_1 <- function(x, protect, data, meta) {
     sprintf(if (protect) "(%s - 1)" else "%s - 1", x_expr)
   }
 }
+
+
+js_fold_call <- function(fn, args) {
+  if (length(args) == 1L) {
+    args[[1L]]
+  } else {
+    sprintf("%s(%s, %s)", fn, args[[1L]], js_fold_call(fn, args[-1]))
+  }
+}

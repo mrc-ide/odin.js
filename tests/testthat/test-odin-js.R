@@ -129,19 +129,3 @@ test_that("delay models are not supported", {
     }),
     "Using unsupported features: 'has_delay'")
 })
-
-
-test_that("interpolation is not supported", {
-  skip("work in progress")
-  expect_error(
-    odin_js({
-      deriv(y) <- pulse
-      initial(y) <- 0
-      pulse <- interpolate(tp, zp, "constant")
-      tp[] <- user()
-      zp[] <- user()
-      dim(tp) <- user()
-      dim(zp) <- user()
-    }),
-    "Using unsupported features: 'has_interpolate'")
-})

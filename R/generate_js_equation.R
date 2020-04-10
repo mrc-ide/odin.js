@@ -58,8 +58,12 @@ generate_js_equation_interpolate <- function(eq, data_info, dat, rewrite) {
   if (data_info$location == "transient") {
     lhs <- paste("var", lhs)
   }
-  sprintf("%s = interpolateEval(%s, %s);",
-          lhs, dat$meta$time, rewrite(eq$interpolate))
+  if (data_info$rank == 0L) {
+    fmt <- "%s = interpolateEval(%s, %s)[0];"
+  } else {
+    fmt <- "%s = interpolateEval(%s, %s);"
+  }
+  sprintf(fmt, lhs, dat$meta$time, rewrite(eq$interpolate))
 }
 
 

@@ -9,12 +9,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 function dopriControl(control) {
     if (control === void 0) { control = {}; }
     var defaults = { atol: 1e-6, maxSteps: 10000, rtol: 1e-6,
-        stiffCheck: 0 };
+        stiffCheck: 0, tcrit: Infinity };
     var ret = {
         atol: withDefault(control.atol, defaults.atol),
         maxSteps: withDefault(control.maxSteps, defaults.maxSteps),
         rtol: withDefault(control.rtol, defaults.rtol),
         stiffCheck: withDefault(control.stiffCheck, defaults.stiffCheck),
+        tcrit: withDefault(control.tcrit, defaults.tcrit),
     };
     if (ret.maxSteps < 1) {
         throw controlError("maxSteps", "must be at least 1");
@@ -43,7 +44,7 @@ var __extends = (this && this.__extends) || (function () {
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
             function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
         return extendStatics(d, b);
-    }
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -191,6 +192,9 @@ var Dopri = /** @class */ (function () {
             }
             if (h <= Math.abs(t) * DBL_EPSILON) {
                 throw integrationError("step size vanished", t);
+            }
+            if (t + h > this._control.tcrit) {
+                h = this._control.tcrit - t;
             }
             // Carry out the step
             this._stepper.step(t, h);

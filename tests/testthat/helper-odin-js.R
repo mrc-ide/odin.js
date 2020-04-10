@@ -19,12 +19,17 @@ call_odin_bundle <- function(context, name, user, t, y = NULL) {
 
 odin_js_support <- function() {
   v8 <- V8::v8()
-  support <- package_js("support.js")
-  v8$eval(support)
+  v8$eval(package_js("support.js"))
+  v8$eval(package_js("interpolate.js"))
   v8
 }
 
 
 expect_js_error <- function(...) {
   testthat::expect_error(..., class = "std::runtime_error")
+}
+
+
+to_json_max <- function(x) {
+  V8::JS(jsonlite::toJSON(x, digits = NA))
 }

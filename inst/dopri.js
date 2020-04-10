@@ -3,7 +3,7 @@
 global.dopri = require('dopri');
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"dopri":6}],2:[function(require,module,exports){
+},{"dopri":8}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 function dopriControl(control) {
@@ -37,16 +37,81 @@ function withDefault(x, y) {
 
 },{}],3:[function(require,module,exports){
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var dopri_1 = require("./dopri");
+var utils_1 = require("./utils");
+function integrate(rhs, y, t0, t1, control, output) {
+    if (control === void 0) { control = {}; }
+    if (output === void 0) { output = null; }
+    var solver = new DDE(rhs, y.length, control, output);
+    solver.initialise(t0, y);
+    return solver.run(t1);
+}
+exports.integrate = integrate;
+var DDE = /** @class */ (function (_super) {
+    __extends(DDE, _super);
+    function DDE(rhs, n, control, output) {
+        if (control === void 0) { control = {}; }
+        if (output === void 0) { output = null; }
+        var _this = this;
+        var solution = function (t) { return _this._interpolate(t); };
+        var rhsUse = function (t, y, dy) {
+            return rhs(t, y, dy, solution);
+        };
+        var outputUse = output === null ? null :
+            function (t, y) { return output(t, y, solution); };
+        _this = _super.call(this, rhsUse, n, control, outputUse) || this;
+        _this._y0 = new Array(n);
+        return _this;
+    }
+    DDE.prototype.initialise = function (t, y) {
+        _super.prototype.initialise.call(this, t, y);
+        this._y0 = y;
+        return this;
+    };
+    DDE.prototype._interpolate = function (t) {
+        var i = this._findHistory(t);
+        if (i < 0) {
+            return this._y0.slice(0);
+        }
+        else {
+            return this._stepper.interpolate(t, this._history[i]);
+        }
+    };
+    DDE.prototype._findHistory = function (t) {
+        return utils_1.search(this._history, function (el) { return el.t > t; });
+    };
+    return DDE;
+}(dopri_1.Dopri));
+exports.DDE = DDE;
+
+},{"./dopri":4,"./utils":12}],4:[function(require,module,exports){
+"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var control_1 = require("./control");
 var dopri5 = require("./dopri5/stepper");
-var interpolator = require("./interpolator");
+var interpolator_1 = require("./interpolator");
 var utils = require("./utils");
 // needed for ES5 - will be ~= Number.EPSILON in ES6
 var DBL_EPSILON = Math.pow(2, -52); // = 2.220446049250313e-16
 var STEP_FACTOR_MIN = 1e-4;
-function integrate(rhs, y, t0, t1) {
-    var solver = new Dopri(rhs, y.length);
+function integrate(rhs, y, t0, t1, control, output) {
+    if (control === void 0) { control = {}; }
+    if (output === void 0) { output = null; }
+    var solver = new Dopri(rhs, y.length, control, output);
     solver.initialise(t0, y);
     return solver.run(t1);
 }
@@ -55,8 +120,10 @@ function integrationError(message, t) {
     return new Error("Integration failure: " + message + " at " + t);
 }
 var Dopri = /** @class */ (function () {
-    function Dopri(rhs, n, control) {
+    function Dopri(rhs, n, control, output) {
         if (control === void 0) { control = {}; }
+        if (output === void 0) { output = null; }
+        this._history = [];
         this._t = 0.0;
         this._h = 0.0;
         // state
@@ -68,25 +135,26 @@ var Dopri = /** @class */ (function () {
         this._lastError = 0;
         this._stepper = new dopri5.Dopri5(rhs, n);
         this._control = control_1.dopriControl(control);
+        this._output = output;
     }
     Dopri.prototype.initialise = function (t, y) {
         var n = this._stepper.n;
         if (y.length !== n) {
             throw Error("Invalid size 'y' - expected a length " + n + " array");
         }
-        this._stepper.reset(y);
+        this._stepper.reset(t, y);
         this._reset();
-        this._h = this._stepper.initialStepSize(t, this._control.atol, this._control.rtol);
+        this._h = initialStepSize(this._stepper, t, y, this._control.atol, this._control.rtol);
         this._t = t;
+        this._history = [];
         return this;
     };
     Dopri.prototype.run = function (tEnd) {
-        var ret = new interpolator.Interpolator(this._stepper);
         while (this._t < tEnd) {
             this._step();
-            ret.add(this._stepper.history);
+            this._history.push(this._stepper.history.clone());
         }
-        return function (t) { return ret.interpolate(t); };
+        return interpolator_1.interpolator(this._history.slice(0), this._stepper, this._output);
     };
     Dopri.prototype.statistics = function () {
         return {
@@ -178,8 +246,53 @@ var Dopri = /** @class */ (function () {
     return Dopri;
 }());
 exports.Dopri = Dopri;
+function initialStepSize(stepper, t, y, atol, rtol) {
+    var stepSizeMax = stepper.stepControl.sizeMax;
+    // NOTE: This is destructive with respect to most of the information
+    // in the object; in particular k2, k3 will be modified.
+    var f0 = new Array(stepper.n);
+    var f1 = new Array(stepper.n);
+    var y1 = new Array(stepper.n);
+    // Compute a first guess for explicit Euler as
+    //   h = 0.01 * norm (y0) / norm (f0)
+    // the increment for explicit euler is small compared to the solution
+    stepper.rhs(t, y, f0);
+    stepper.nEval++;
+    var normF = 0.0;
+    var normY = 0.0;
+    var i = 0;
+    for (i = 0; i < stepper.n; ++i) {
+        var sk = atol + rtol * Math.abs(y[i]);
+        normF += utils.square(f0[i] / sk);
+        normY += utils.square(y[i] / sk);
+    }
+    var h = (normF <= 1e-10 || normY <= 1e-10) ?
+        1e-6 : Math.sqrt(normY / normF) * 0.01;
+    h = Math.min(h, stepSizeMax);
+    // Perform an explicit Euler step
+    for (i = 0; i < stepper.n; ++i) {
+        y1[i] = y[i] + h * f0[i];
+    }
+    stepper.rhs(t + h, y1, f1);
+    stepper.nEval++;
+    // Estimate the second derivative of the solution:
+    var der2 = 0.0;
+    for (i = 0; i < stepper.n; ++i) {
+        var sk = atol + rtol * Math.abs(y[i]);
+        der2 += utils.square((f1[i] - f0[i]) / sk);
+    }
+    der2 = Math.sqrt(der2) / h;
+    // Step size is computed such that
+    //   h^order * max(norm(f0), norm(der2)) = 0.01
+    var der12 = Math.max(Math.abs(der2), Math.sqrt(normF));
+    var h1 = (der12 <= 1e-15) ?
+        Math.max(1e-6, Math.abs(h) * 1e-3) :
+        Math.pow(0.01 / der12, 1.0 / stepper.order);
+    h = Math.min(Math.min(100 * Math.abs(h), h1), stepSizeMax);
+    return h;
+}
 
-},{"./control":2,"./dopri5/stepper":5,"./interpolator":7,"./utils":8}],4:[function(require,module,exports){
+},{"./control":2,"./dopri5/stepper":6,"./interpolator":10,"./utils":12}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Dopri5StepControl = /** @class */ (function () {
@@ -198,11 +311,12 @@ var Dopri5StepControl = /** @class */ (function () {
 }());
 exports.Dopri5StepControl = Dopri5StepControl;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var utils = require("../utils");
 var control = require("./control");
+var types_1 = require("../types");
 // Heaps of constants!
 var C2 = 0.2;
 var C3 = 0.3;
@@ -241,8 +355,6 @@ var D4 = -10690763975.0 / 1880347072.0;
 var D5 = 701980252875.0 / 199316789632.0;
 var D6 = -1453857185.0 / 822651844.0;
 var D7 = 69997945.0 / 29380423.0;
-// most of this can be made really quit private - everything not used
-// in the interface really.
 var Dopri5 = /** @class */ (function () {
     function Dopri5(rhs, n) {
         this.order = 5;
@@ -259,7 +371,7 @@ var Dopri5 = /** @class */ (function () {
         this.k4 = new Array(n);
         this.k5 = new Array(n);
         this.k6 = new Array(n);
-        this.history = new Array(this.order * n + 2);
+        this.history = new types_1.HistoryElement(this.order * n);
     }
     // This is the ugliest function - quite a lot goes on in here to
     // do the full step
@@ -273,7 +385,7 @@ var Dopri5 = /** @class */ (function () {
         var k4 = this.k4;
         var k5 = this.k5;
         var k6 = this.k6;
-        var history = this.history;
+        var hData = this.history.data;
         var i = 0;
         for (i = 0; i < n; ++i) { // 22
             yNext[i] = y[i] + h * A21 * k1[i];
@@ -306,7 +418,7 @@ var Dopri5 = /** @class */ (function () {
         this.rhs(tNext, yNext, k2);
         var j = 4 * n;
         for (i = 0; i < n; ++i) {
-            history[j++] = h * (D1 * k1[i] + D3 * k3[i] + D4 * k4[i] +
+            hData[j++] = h * (D1 * k1[i] + D3 * k3[i] + D4 * k4[i] +
                 D5 * k5[i] + D6 * k6[i] + D7 * k2[i]);
         }
         for (i = 0; i < n; ++i) {
@@ -320,20 +432,6 @@ var Dopri5 = /** @class */ (function () {
         utils.copyArray(this.k1, this.k2); // k1 <== k2
         utils.copyArray(this.y, this.yNext); // y  <== yNext
     };
-    Dopri5.prototype.saveHistory = function (t, h) {
-        var history = this.history;
-        var n = this.n;
-        for (var i = 0; i < n; ++i) {
-            var ydiff = this.yNext[i] - this.y[i];
-            var bspl = h * this.k1[i] - ydiff;
-            history[i] = this.y[i];
-            history[n + i] = ydiff;
-            history[2 * n + i] = bspl;
-            history[3 * n + i] = -h * this.k2[i] + ydiff - bspl;
-        }
-        history[this.order * n] = t;
-        history[this.order * n + 1] = h;
-    };
     Dopri5.prototype.error = function (atol, rtol) {
         var err = 0.0;
         var i = 0;
@@ -344,22 +442,19 @@ var Dopri5 = /** @class */ (function () {
         }
         return Math.sqrt(err / this.n);
     };
-    // It might be worth doing an optional argument history and then
-    // pulling in this.history if it's not present
     Dopri5.prototype.interpolate = function (t, history) {
-        var n = this.n;
-        var tStep = history[this.order * n];
-        var hStep = history[this.order * n + 1];
-        var theta = (t - tStep) / hStep;
+        var hData = history.data;
+        var theta = (t - history.t) / history.h;
         var theta1 = 1 - theta;
+        var n = this.n;
         var ret = new Array(n);
         for (var i = 0; i < n; ++i) {
             ret[i] =
-                history[i] + theta *
-                    (history[n + i] + theta1 *
-                        (history[2 * n + i] + theta *
-                            (history[3 * n + i] + theta1 *
-                                history[4 * n + i])));
+                hData[i] + theta *
+                    (hData[n + i] + theta1 *
+                        (hData[2 * n + i] + theta *
+                            (hData[3 * n + i] + theta1 *
+                                hData[4 * n + i])));
         }
         return ret;
     };
@@ -372,127 +467,143 @@ var Dopri5 = /** @class */ (function () {
         }
         return stden > 0 && Math.abs(h) * Math.sqrt(stnum / stden) > 3.25;
     };
-    Dopri5.prototype.initialStepSize = function (t, atol, rtol) {
-        var stepSizeMax = this.stepControl.sizeMax;
-        // NOTE: This is destructive with respect to most of the information
-        // in the dataect; in particular k2, k3 will be modified.
-        var f0 = this.k1;
-        var f1 = this.k2;
-        var y1 = this.k3;
-        // Compute a first guess for explicit Euler as
-        //   h = 0.01 * norm (y0) / norm (f0)
-        // the increment for explicit euler is small compared to the solution
-        this.rhs(t, this.y, f0);
-        this.nEval++;
-        var normF = 0.0;
-        var normY = 0.0;
-        var i = 0;
-        for (i = 0; i < this.n; ++i) {
-            var sk = atol + rtol * Math.abs(this.y[i]);
-            normF += utils.square(f0[i] / sk);
-            normY += utils.square(this.y[i] / sk);
-        }
-        var h = (normF <= 1e-10 || normF <= 1e-10) ?
-            1e-6 : Math.sqrt(normY / normF) * 0.01;
-        h = Math.min(h, stepSizeMax);
-        // Perform an explicit Euler step
-        for (i = 0; i < this.n; ++i) {
-            y1[i] = this.y[i] + h * f0[i];
-        }
-        this.rhs(t + h, y1, f1);
-        this.nEval++;
-        // Estimate the second derivative of the solution:
-        var der2 = 0.0;
-        for (i = 0; i < this.n; ++i) {
-            var sk = atol + rtol * Math.abs(this.y[i]);
-            der2 += utils.square((f1[i] - f0[i]) / sk);
-        }
-        der2 = Math.sqrt(der2) / h;
-        // Step size is computed such that
-        //   h^order * max(norm(f0), norm(der2)) = 0.01
-        var der12 = Math.max(Math.abs(der2), Math.sqrt(normF));
-        var h1 = (der12 <= 1e-15) ?
-            Math.max(1e-6, Math.abs(h) * 1e-3) :
-            Math.pow(0.01 / der12, 1.0 / this.order);
-        h = Math.min(Math.min(100 * Math.abs(h), h1), stepSizeMax);
-        return h;
-    };
-    Dopri5.prototype.reset = function (y) {
+    Dopri5.prototype.reset = function (t, y) {
         for (var i = 0; i < this.n; ++i) {
             this.y[i] = y[i];
         }
-        this.nEval = 0;
+        this.rhs(t, y, this.k1);
+        this.nEval = 1;
+    };
+    Dopri5.prototype.saveHistory = function (t, h) {
+        var history = this.history;
+        var n = this.n;
+        for (var i = 0; i < n; ++i) {
+            var ydiff = this.yNext[i] - this.y[i];
+            var bspl = h * this.k1[i] - ydiff;
+            history.data[i] = this.y[i];
+            history.data[n + i] = ydiff;
+            history.data[2 * n + i] = bspl;
+            history.data[3 * n + i] = -h * this.k2[i] + ydiff - bspl;
+        }
+        history.t = t;
+        history.h = h;
     };
     return Dopri5;
 }());
 exports.Dopri5 = Dopri5;
 
-},{"../utils":8,"./control":4}],6:[function(require,module,exports){
+},{"../types":11,"../utils":12,"./control":5}],7:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var HistoryElement = /** @class */ (function () {
+    function HistoryElement(len) {
+        this.t = 0;
+        this.h = 0;
+        this.data = new Array(len);
+    }
+    HistoryElement.prototype.clone = function () {
+        var h = new HistoryElement(this.data.length);
+        h.t = this.t;
+        h.h = this.h;
+        h.data = this.data.slice(0);
+        return h;
+    };
+    return HistoryElement;
+}());
+exports.HistoryElement = HistoryElement;
+
+},{}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var dopri_1 = require("./dopri");
 exports.Dopri = dopri_1.Dopri;
-exports.integrate = dopri_1.integrate;
+exports.integrate_dopri = dopri_1.integrate;
+var dde_1 = require("./dde");
+exports.DDE = dde_1.DDE;
+exports.integrate_dde = dde_1.integrate;
+var integrate_1 = require("./integrate");
+exports.integrate = integrate_1.integrate;
 
-},{"./dopri":3}],7:[function(require,module,exports){
+},{"./dde":3,"./dopri":4,"./integrate":9}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-// We could take either a stepper or the interpolation function here.
-// The advantage of the former is that we can sensibly implement
-// interpolation of single variables eventually.
-// We could also take responsibility for doing the actual collection
-// of times - that would be possibly worth doing, as then we could
-// find indexes with a binary search e.g., z.find(x => x > 2.2)
-// export type interpolate = (t: number, y: number[]) => number[];
-// This is going to need some work if we ever want to support
-// extending a history and continuing.
-var Interpolator = /** @class */ (function () {
-    function Interpolator(stepper) {
-        this.stepper = stepper;
-        this.history = [];
-    }
-    Interpolator.prototype.add = function (h) {
-        this.history.push(h.slice(0));
-    };
-    Interpolator.prototype.interpolate = function (t) {
-        var y = [];
-        // TODO: validate that 't' is increasing and fits within
-        // integration time.
-        var h = this.history;
-        // TODO: Time is currently saved into the second to last
-        // element but this would be far better as a small structure
-        // probably. e.g., {t0, h, t1, history}.  It's also possible
-        // that we could do better with some sort of "history
-        // container" object.
-        //
-        // Probably hold off doing most of that until (a) this is
-        // known to work and (b) I work out how the delay lookup will
-        // work as that needs to feed into the derivative function in
-        // odd ways.
-        //
-        // TODO: need to protect us from walking off the end of the
-        // array (or starting within it).
-        //
-        // TODO: don't allow anything to happen with a zero-length
-        // history.
-        var it = h[0].length - 2;
-        var i = 0;
-        for (var _i = 0, t_1 = t; _i < t_1.length; _i++) {
-            var tj = t_1[_i];
-            // This bit of calculation is not that nice - we're better
-            // off holding both start and end times than doing this.
-            while (h[i][it] + h[i][it + 1] < tj) {
-                i++;
-            }
-            y.push(this.stepper.interpolate(tj, h[i]));
+var dde_1 = require("./dde");
+var dopri_1 = require("./dopri");
+function isRhsFn(rhs) {
+    //        rhsFn: t, y, dy
+    // rhsFnDelayed: t, y, dy, solution
+    return rhs.length === 3;
+}
+function isOutputFn(output) {
+    return output === null || output.length === 2;
+}
+function isRhsFnDelayed(rhs) {
+    //        rhsFn: t, y, dy
+    // rhsFnDelayed: t, y, dy, solution
+    return rhs.length === 4;
+}
+function isOutputFnDelayed(output) {
+    return output === null || output.length === 3;
+}
+function integrate(rhs, y, t0, t1, control, output) {
+    if (control === void 0) { control = {}; }
+    if (output === void 0) { output = null; }
+    if (isRhsFn(rhs)) {
+        if (!isOutputFn(output)) {
+            throw new Error("Can't used delayed output with non-delayed rhs");
         }
-        return y;
-    };
-    return Interpolator;
-}());
-exports.Interpolator = Interpolator;
+        return dopri_1.integrate(rhs, y, t0, t1, control, output);
+    }
+    if (isRhsFnDelayed(rhs)) {
+        if (!isOutputFnDelayed(output)) {
+            throw new Error("Can't used non-delayed output with delayed rhs");
+        }
+        return dde_1.integrate(rhs, y, t0, t1, control, output);
+    }
+}
+exports.integrate = integrate;
 
-},{}],8:[function(require,module,exports){
+},{"./dde":3,"./dopri":4}],10:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+function interpolator(history, stepper, output) {
+    return function (t) { return interpolate(t, history, stepper, output); };
+}
+exports.interpolator = interpolator;
+function interpolate(t, history, stepper, output) {
+    var y = [];
+    // TODO: validate that 't' is increasing and fits within
+    // integration time.
+    var h = history;
+    // TODO: need to protect us from walking off the end of the
+    // array (or starting within it).
+    //
+    // TODO: don't allow anything to happen with a zero-length
+    // history.
+    var i = 0;
+    for (var _i = 0, t_1 = t; _i < t_1.length; _i++) {
+        var tj = t_1[_i];
+        // This bit of calculation is not that nice - we're better
+        // off holding both start and end times than doing this.
+        while (h[i].t + h[i].h < tj) {
+            i++;
+        }
+        var yj = stepper.interpolate(tj, h[i]);
+        if (output !== null) {
+            yj = yj.concat(output(tj, yj));
+        }
+        y.push(yj);
+    }
+    return y;
+}
+
+},{}],11:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var history_1 = require("./history");
+exports.HistoryElement = history_1.HistoryElement;
+
+},{"./history":7}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var SQRT_DBL_EPSILON = Math.pow(2, -52 / 2);
@@ -570,5 +681,53 @@ function last(x) {
     return x[x.length - 1];
 }
 exports.last = last;
+// See richfitz/ring:inst/include/ring/ring.c - this is closely based
+// off of this; that code was written for the same purpose.
+//
+// For the integration this is the problem.  We are looking for some
+// history element that has a time that is at most the start time of
+// our target time (i.e., element <= target).  If no element satisfies
+// this, then we return -1
+//
+// Consider first an array of numbers.  Here we have a comparison
+// function
+//
+//   compare = (el: number): boolean => el > target
+//
+// We'll have input like the following
+//
+//   [0, 1, 2, 3]
+//
+// for a target of 1.5 we're looking for '1' here as the last element
+// smaller than this.
+//
+//   compare(0) => false
+//   compare(3) => true
+function search(x, compare) {
+    var i0 = 0;
+    var i1 = x.length - 1;
+    if (x.length === 0 || compare(x[i0])) {
+        return -1;
+    }
+    if (!compare(x[i1])) {
+        // I'm not sure here if this should be x.length or i1
+        return i1;
+    }
+    // from this point, we will always have:
+    //
+    //   compare(x[i0]) => false
+    //   compare(x[i1]) => true
+    while (i1 - i0 > 1) {
+        var i2 = Math.floor((i0 + i1) / 2);
+        if (compare(x[i2])) {
+            i1 = i2;
+        }
+        else {
+            i0 = i2;
+        }
+    }
+    return i0;
+}
+exports.search = search;
 
 },{}]},{},[1]);

@@ -201,7 +201,6 @@ test_that("time dependent", {
 })
 
 test_that("time dependent initial conditions", {
-  skip("output")
   gen <- odin_js({
     y1 <- sin(t)
     deriv(y2) <- y1
@@ -212,8 +211,8 @@ test_that("time dependent initial conditions", {
   mod <- gen()
   t <- seq(0, 2 * pi, length.out = 101)
   y <- mod$run(t, atol = 1e-8, rtol = 1e-8)
-  expect_identical(y[, 3L], sin(t))
-  expect_equal(y[, 2L], cos(t + pi), tolerance = 1e-6)
+  expect_equal(y[, 3L], sin(t))
+  expect_equal(y[, 2L], cos(t + pi), tolerance = 1e-5)
 })
 
 test_that("user c", {
@@ -271,7 +270,6 @@ test_that("user c in subdir", {
 })
 
 test_that("time dependent initial conditions", {
-  skip("needs output")
   gen <- odin_js({
     y1 <- cos(t)
     y2 <- y1 * (1 + t)
@@ -291,7 +289,7 @@ test_that("time dependent initial conditions", {
   y <- mod$run(t, atol = 1e-8, rtol = 1e-8)
   expect_equal(as.vector(y[1, 2]), 1.0)
   ## TODO: Compute analytic expectation and compare here.
-  expect_equal(as.vector(y[length(t), 2]), 1.0, tolerance = 1e-7)
+  expect_equal(as.vector(y[length(t), 2]), 1.0, tolerance = 2e-6)
 })
 
 test_that("time dependent initial conditions depending on vars", {
@@ -315,7 +313,6 @@ test_that("time dependent initial conditions depending on vars", {
 
 ## This test case kindly contributed by @blackedder in #14
 test_that("unused variable in output", {
-  skip("needs output")
   gen <- odin_js({
     initial(S) <- N - I0
     initial(E1) <- 0
@@ -441,7 +438,6 @@ test_that("mixed", {
 ##
 ## (1) A new array:
 test_that("output array", {
-  skip("needs output")
   gen <- odin_js({
     deriv(y[]) <- r[i] * y[i]
     initial(y[]) <- 1
@@ -463,13 +459,12 @@ test_that("output array", {
                                sprintf("y2[%d]", 1:3)))
 
   ## transform function:
-  zz <- mod$transform_variables(yy)
-  expect_equal(zz$y2, zz$y * 2)
+  ## zz <- mod$transform_variables(yy)
+  expect_equal(2 * unname(yy[, 2:4]), unname(yy[, 5:7]))
 })
 
 ## (2) An existing array
 test_that("output array", {
-  skip("needs output")
   gen <- odin_js({
     deriv(y[]) <- r[i] * y[i]
     initial(y[]) <- 1
@@ -489,8 +484,8 @@ test_that("output array", {
                                sprintf("r[%d]", 1:3)))
 
   ## transform function:
-  zz <- mod$transform_variables(yy)
-  expect_equal(zz$r, matrix(0.1, length(tt), 3))
+  ## zz <- mod$transform_variables(yy)
+  expect_equal(unname(yy[, 5:7]), matrix(0.1, length(tt), 3))
 })
 
 
@@ -624,7 +619,6 @@ test_that("pathalogical array index", {
 
 
 test_that("two output arrays", {
-  skip("needs output")
   gen <- odin_js({
     deriv(y[]) <- y[i] * r[i]
     initial(y[]) <- i
@@ -640,9 +634,12 @@ test_that("two output arrays", {
   mod <- gen(r = r)
   tt <- seq(0, 10, length.out = 101)
   yy <- mod$run(tt, atol = 1e-8, rtol = 1e-8)
-  zz <- mod$transform_variables(yy)
 
-  expect_equal(zz$y, t(1:3 * exp(outer(r, tt))), tolerance = 1e-6)
+  ## zz <- mod$transform_variables(yy)
+  zz <- list(y = unname(yy[, 2:4]),
+             yr = unname(yy[, 5:7]),
+             r = unname(yy[, 8:10]))
+  expect_equal(zz$y, t(1:3 * exp(outer(r, tt))), tolerance = 2e-6)
   expect_equal(zz$r, matrix(r, length(tt), 3, TRUE))
   expect_equal(zz$yr, t(t(zz$y) / (1:3)))
 
@@ -767,7 +764,6 @@ test_that("non-numeric input", {
 })
 
 test_that("only used in output", {
-  skip("needs output")
   gen <- odin_js({
     deriv(y[]) <- r[i] * y[i]
     initial(y[]) <- 1
@@ -783,13 +779,15 @@ test_that("only used in output", {
 
   mod <- gen()
   tt <- seq(0, 10, length.out = 101)
-  res <- mod$transform_variables(mod$run(tt))
+  yy <- mod$run(tt)
+  res <- list(y = unname(yy[, 2:4]),
+              ytot = unname(yy[, 5, drop = TRUE]),
+              y2 = unname(yy[, 6:8]))
   expect_equal(res$ytot, rowSums(res$y))
   expect_equal(res$y2, res$y * 2)
 })
 
 test_that("overlapping graph", {
-  skip("needs output")
   gen <- odin_js({
     deriv(y) <- y * p
     initial(y) <- 1
@@ -797,7 +795,7 @@ test_that("overlapping graph", {
     p <- r * sqrt(t) # used in both deriv and output
     p2 <- p * 2 # used in output only
     output(p3) <- p + p2
-  }, verbose = FALSE)
+  })
 
   mod <- gen()
   tt <- seq(0, 10, length.out = 101)
@@ -809,7 +807,8 @@ test_that("overlapping graph", {
     list(y * p, p + p2)
   }
   cmp <- deSolve::ode(1, tt, f, NULL)
-  expect_equivalent(mod$run(tt), cmp)
+  class(cmp) <- "matrix"
+  expect_equivalent(mod$run(tt), cmp, tolerance = 1e-6)
 })
 
 test_that("sum over one dimension", {
@@ -958,7 +957,6 @@ test_that("sum for a 4d array", {
 })
 
 test_that("self output for scalar", {
-  skip("needs output")
   gen <- odin_js({
     initial(a) <- 1
     deriv(a) <- 0
@@ -971,7 +969,6 @@ test_that("self output for scalar", {
 })
 
 test_that("non-time sentsitive output", {
-  skip("needs output")
   gen <- odin_js({
     initial(a) <- 1
     deriv(a) <- 0
@@ -984,7 +981,6 @@ test_that("non-time sentsitive output", {
 })
 
 test_that("logical operations", {
-  skip("needs output")
   gen <- odin_js({
     initial(a) <- 1
     deriv(a) <- 0
@@ -998,7 +994,7 @@ test_that("logical operations", {
     output(x3) <- t > 8 || t > 1 && t < 3 # should equal x4
     output(x4) <- t > 8 || (t > 1 && t < 3)
     output(x5) <- (t > 8 || t > 1) && t < 3
-  }, compiler_warnings = FALSE)
+  })
 
   t <- seq(0, 10, length.out = 101)
   y <- gen()$run(t)

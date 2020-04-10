@@ -153,7 +153,6 @@ test_that("user variables", {
 ##
 ## This one is about as basic as I can see!
 test_that("output", {
-  skip("Needs implementing")
   gen <- odin_js({
     deriv(y) <- 2
     initial(y) <- 1
@@ -172,18 +171,11 @@ test_that("output", {
   expect_equal(yy1[, "t"], tt)
   expect_equal(yy1[, "y"], seq(1, length.out = length(tt), by = 2))
   expect_equal(yy1[, "z"], tt)
-
-  yy2 <- gen(TRUE)$run(tt)
-  expect_equal(colnames(yy2), c("t", "y", "z"))
-  expect_equal(yy2[, "t"], tt)
-  expect_equal(yy2[, "y"], seq(1, length.out = length(tt), by = 2))
-  expect_equal(yy2[, "z"], tt)
 })
 
 
 ## Do some nontrivial calculation in the output
 test_that("output", {
-  skip("needs implementing")
   gen <- odin_js({
     deriv(y) <- 2
     initial(y) <- 1
@@ -198,7 +190,6 @@ test_that("output", {
 
 
 test_that("copy output", {
-  skip("needs implementing")
   gen <- odin_js({
     deriv(y) <- 1
     initial(y) <- 1
@@ -210,9 +201,9 @@ test_that("copy output", {
   mod <- gen()
   tt <- 0:10
   y <- mod$run(tt)
-  yy <- mod$transform_variables(y)
-  expect_equal(yy$y, tt + 1)
-  expect_equal(yy$z, matrix(tt, length(tt), 5))
+  ## yy <- mod$transform_variables(y) # TODO
+  expect_equivalent(y[, 2], tt + 1)
+  expect_equivalent(y[, 3:7], matrix(tt, length(tt), 5))
 })
 
 

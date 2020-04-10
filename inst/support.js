@@ -16,7 +16,15 @@ function integrateOdin(obj, times, y0) {
     var rhs = function(t, y, dy) {
         obj.rhs(t, y, dy);
     };
-    var sol = dopri.integrate(rhs, y0, t0, t1);
+    var sol = null;
+    if (typeof obj.output === "function") {
+        var output = function(t, y) {
+            return obj.output(t, y);
+        }
+        sol = dopri.integrate(rhs, y0, t0, t1, {}, output);
+    } else {
+        sol = dopri.integrate(rhs, y0, t0, t1, {});
+    }
     var y = sol(times);
     // Prepend the result vector with the times; this is going to be
     // required later on - it would be nice if dopri did this through

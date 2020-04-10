@@ -131,18 +131,6 @@ test_that("delay models are not supported", {
 })
 
 
-test_that("output is not supported", {
-  expect_error(
-    odin_js({
-      y1 <- sin(t)
-      deriv(y2) <- y1
-      initial(y2) <- -1
-      output(y1) <- y1
-    }),
-    "Using unsupported features: 'has_output'")
-})
-
-
 test_that("interpolation is not supported", {
   expect_error(
     odin_js({

@@ -6,7 +6,8 @@ generate_js <- function(ir, options) {
   }
 
   features <- vlapply(dat$features, identity)
-  supported <- c("initial_time_dependent", "has_array", "has_user")
+  supported <- c("initial_time_dependent", "has_array", "has_user",
+                 "has_output")
   unsupported <- setdiff(names(features)[features], supported)
   if (length(unsupported) > 0L) {
     stop("Using unsupported features: ",
@@ -28,6 +29,7 @@ generate_js_core <- function(eqs, dat, rewrite) {
        rhs = generate_js_core_deriv(eqs, dat, rewrite),
        rhs_eval = generate_js_core_rhs_eval(eqs, dat, rewrite),
        run = generate_js_core_run(eqs, dat, rewrite),
+       output = generate_js_core_output(eqs, dat, rewrite),
        metadata = generate_js_core_metadata(eqs, dat, rewrite),
        coef = generate_js_coef(eqs, dat, rewrite),
        initial_conditions = generate_js_core_initial_conditions(
@@ -75,6 +77,26 @@ generate_js_core_deriv <- function(eqs, dat, rewrite) {
 }
 
 
+generate_js_core_output <- function(eqs, dat, rewrite) {
+  if (!dat$features$has_output) {
+    return(NULL)
+  }
+
+  variables <- dat$components$output$variables
+  equations <- dat$components$output$equations
+
+  internal <- sprintf("var %s = this.%s;", dat$meta$internal, dat$meta$internal)
+  alloc <- sprintf("var %s = new Array(%s);",
+                   dat$meta$output, rewrite(dat$data$output$length))
+  unpack <- lapply(variables, js_unpack_variable, dat, dat$meta$state, rewrite)
+  ret <- sprintf("return %s;", dat$meta$output)
+  body <- js_flatten_eqs(c(internal, alloc, unpack, eqs[equations], ret))
+
+  args <- c(dat$meta$time, dat$meta$state)
+  js_function(args, body)
+}
+
+
 generate_js_core_run <- function(eqs, dat, rewrite) {
   args <- c("times", "y0")
   body <- "return integrateOdin(this, times, y0);"
@@ -109,43 +131,43 @@ generate_js_coef <- function(eqs, dat, rewrite) {
 
 
 generate_js_core_metadata <- function(eqs, dat, rewrite) {
-  stopifnot(!dat$features$has_output)
-
   body <- c("this.metadata = {};",
             "var internal = this.internal;")
   if (dat$features$has_array) {
-    contents <- dat$data$elements[names(dat$data[["variable"]]$contents)]
-    is_scalar <- vlapply(contents, function(x) x$rank == 0)
-    ynames_scalar <- c("t", names(is_scalar)[is_scalar])
-    ynames <- sprintf("this.metadata.ynames = [%s];",
-                      paste(dquote(ynames_scalar), collapse = ", "))
-    for (el in contents[!is_scalar]) {
-      if (el$rank == 1L) {
+    variables <- names(dat$data$variable$contents)
+    output <- names(dat$data$output$contents)
+    contents <- dat$data$elements[c(variables, output)]
+
+    add_name <- function(el) {
+      if (el$rank == 0) {
+        ret <- sprintf('this.metadata.ynames.push("%s");', el$name)
+      } else if (el$rank == 1) {
         len <- rewrite(el$dimnames$length)
-        ynames <- c(
-          ynames,
+        ret <- c(
           sprintf("for (var i = 1; i <= %s; ++i) {", len),
           sprintf('  this.metadata.ynames.push("%s[" + i + "]");', el$name),
           sprintf("}"))
       } else {
-        rank <- el$rank
-        index <- paste0("i", seq_len(rank))
+        index <- paste0("i", seq_len(el$rank))
         pos <- paste(index, collapse = ' + "," + ')
-        ynames1 <- sprintf('this.metadata.ynames.push("%s[" + %s + "]");',
+        ret <- sprintf('this.metadata.ynames.push("%s[" + %s + "]");',
                            el$name, pos)
-        for (i in seq_len(rank)) {
+        for (i in seq_len(el$rank)) {
           len <- rewrite(el$dimnames$dim[[i]])
           loop <- sprintf("for (var %s = 1; %s <= %s; ++%s) {",
                           index[[i]], index[[i]], len, index[[i]])
-          ynames1 <- c(loop, paste0("  ", ynames1), "}")
+          ret <- c(loop, paste0("  ", ret), "}")
         }
-
-        ynames <- c(ynames, ynames1)
       }
+      ret
     }
+    ynames <- c(sprintf('this.metadata.ynames = ["%s"];', dat$meta$time),
+                js_flatten_eqs(lapply(contents, add_name)))
     body <- c(body, ynames)
   } else {
-    ynames <- c(dat$meta$time, names(dat$data$variable$contents))
+    ynames <- c(dat$meta$time,
+                names(dat$data$variable$contents),
+                names(dat$data$output$contents))
     body <- c(body,
               sprintf("this.metadata.ynames = [%s];",
                       paste(dquote(ynames), collapse = ", ")))
@@ -156,10 +178,20 @@ generate_js_core_metadata <- function(eqs, dat, rewrite) {
 
 generate_js_core_rhs_eval <- function(eqs, dat, rewrite) {
   args <- c(dat$meta$time, dat$meta$state)
+
+  if (dat$features$has_output) {
+    output <- sprintf("%s = %s.concat(this.output(%s, %s));",
+                      dat$meta$result, dat$meta$result, dat$meta$time,
+                      dat$meta$state)
+  } else {
+    output <- NULL
+  }
+
   body <- c(
     sprintf("var %s = zeros(%s.length);", dat$meta$result, dat$meta$state),
     sprintf("this.rhs(%s, %s, %s);",
             dat$meta$time, dat$meta$state, dat$meta$result),
+    output,
     sprintf("return %s;", dat$meta$result))
   js_function(args, body)
 }
@@ -224,6 +256,9 @@ generate_js_generator <- function(core, dat) {
   body$add(core$create)
   body$add(method("setUser", core$set_user))
   body$add(method("rhs", core$rhs))
+  if (!is.null(core$output)) {
+    body$add(method("output", core$output))
+  }
   body$add(method("rhsEval", core$rhs_eval))
   body$add(method("initial", core$initial_conditions))
   body$add(method("run", core$run))

@@ -69,7 +69,14 @@ R6_odin_js_wrapper <- R6::R6Class(
       ## TODO: check length of 'y' here?
       t_js <- to_json(scalar(t))
       y_js <- to_json(y, auto_unbox = FALSE)
-      private$context$call(sprintf("%s.rhsEval", private$name), t_js, y_js)
+      ret <- private$context$call(sprintf("%s.rhsEval", private$name),
+                                  t_js, y_js)
+      ## This is super ugly but should do the trick for now:
+      if (length(ret) > length(y)) {
+        i <- seq_along(y)
+        ret <- structure(ret[i], output = ret[-i])
+      }
+      ret
     },
 
     contents = function() {

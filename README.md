@@ -189,8 +189,8 @@ Chrome will not let you execute js directly off disk (though I think Firefox doe
 ### Supported features
 
 - [x] user variables
-- [ ] output
-- [ ] arrays
+- [x] output
+- [x] arrays
 - [ ] delays
 - [ ] interpolation
 - [ ] discrete models

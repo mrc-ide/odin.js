@@ -74,8 +74,8 @@ test_that("interpolation", {
   xout_under <- c(xout, min(x) - 0.5)
 
   rapprox <- list(
-    constant = function(x, y, xout) approx(x, y, xout, "constant"))
-  type <- "constant"
+    constant = function(x, y, xout) approx(x, y, xout, "constant"),
+    linear = function(x, y, xout) approx(x, y, xout, "linear"))
 
   for (type in names(rapprox)) {
     ## We're all good except that the constant interpolation is not

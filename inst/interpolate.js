@@ -36,11 +36,12 @@ function interpolateCheckT(times, interpolateTimes) {
 
 // --- implementation
 function interpolateAlloc(type, x, y, failOnExtrapolate) {
-    if (type !== "constant") {
-        throw Error("Only 'constant' interpolation is currently supported");
+    if (type === "spline") {
+        throw Error("'spline' interpolation is not currently supported");
     }
     var n = x.length;
     var ny = y.length / n
+    var evalFn = null;
 
     // Optimisation for the constant interpolation - this should be
     // moved into the C version of this too
@@ -54,8 +55,10 @@ function interpolateAlloc(type, x, y, failOnExtrapolate) {
             }
             y.push(yi);
         }
+        evalFn = interpolateConstantEval;
     } else {
         y = y.slice();
+        evalFn = interpolateLinearEval;
     }
 
     var ret = {
@@ -65,7 +68,7 @@ function interpolateAlloc(type, x, y, failOnExtrapolate) {
         i: 0,
         x: x.slice(),
         y: y,
-        eval: interpolateConstantEval,
+        evalFn: evalFn,
         failOnExtrapolate: failOnExtrapolate
     };
 
@@ -73,6 +76,12 @@ function interpolateAlloc(type, x, y, failOnExtrapolate) {
 }
 
 
+function interpolateEval(x, obj) {
+    return obj.evalFn(x, obj);
+}
+
+
+// Constatnt
 function interpolateConstantEval(x, obj) {
     var i = interpolateSearch(x, obj);
     if (i < 0) {
@@ -94,8 +103,28 @@ function interpolateConstantEval(x, obj) {
 }
 
 
-function interpolateEval(x, obj) {
-    return obj.eval(x, obj);
+// Linear
+function interpolateLinearEval(x, obj) {
+    var i = interpolateSearch(x, obj);
+    if (i < 0 || i == obj.n) { // off the lhs or rhs
+        return interpolateEvalFail(x, obj, y);
+    }
+
+    var x0 = obj.x[i], x1 = obj.x[i + 1];
+    var scal = (x - x0) / (x1 - x0);
+
+    // In the C version we do this in-place; we could do that here
+    // too, though it interacts poorly with the optimisation for the
+    // constant version.
+    var y = new Array(obj.ny);
+
+    for (var j = 0; j < obj.ny; ++j) {
+        var k = i + j * obj.n;
+        var y0 = obj.y[k], y1 = obj.y[k + 1];
+        y[j] = y0 + (y1 - y0) * scal;
+    }
+
+    return y;
 }
 
 

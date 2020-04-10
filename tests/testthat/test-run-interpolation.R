@@ -35,8 +35,8 @@ test_that("constant", {
   mod <- gen(tp = tp, zp = zp)
 
   tt <- seq(0, 3, length.out = 301)
-  ## expect_error(mod$run(tt - 0.1),
-  ##              "Integration times do not span interpolation")
+  expect_js_error(mod$run(tt - 0.1),
+                  "Integration times do not span interpolation")
 
   yy <- mod$run(tt)
   zz <- ifelse(tt < 1, 0, ifelse(tt > 2, 1, tt - 1))

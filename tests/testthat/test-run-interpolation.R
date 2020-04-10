@@ -195,9 +195,12 @@ test_that("spline", {
 
 
 test_that("interpolation with two variables", {
-  skip("not yet supported")
-  for (type in INTERPOLATION_TYPES) {
-    gen <- odin_(
+  interpolation_types <- c("constant", "linear", "spline")
+  for (type in interpolation_types) {
+    if (type == "spline") {
+      skip("not yet supported")
+    }
+    gen <- odin_js_(
       bquote({
         deriv(y) <- pulse1 + pulse2
         initial(y) <- 0
@@ -222,8 +225,8 @@ test_that("interpolation with two variables", {
     mod <- gen(tp1 = tp1, zp1 = zp1, tp2 = tp2, zp2 = zp2)
 
     t1 <- if (type == "constant") max(tp1) else max(tp2)
-    expect_equal(r6_private(mod)$interpolate_t$min, 0)
-    expect_equal(r6_private(mod)$interpolate_t$max, t1)
+    ## expect_equal(r6_private(mod)$interpolate_t$min, 0)
+    ## expect_equal(r6_private(mod)$interpolate_t$max, t1)
 
     tt <- seq(0, t1, length.out = 101)
     res <- mod$run(tt)
@@ -241,7 +244,7 @@ test_that("interpolation with two variables", {
       list(p[[1]](t) + p[[2]](t))
     }
     cmp <- deSolve::lsoda(0, tt, deriv, p, tcrit = t1)
-    expect_equal(res[, 2], cmp[, 2])
+    expect_equal(res[, 2], cmp[, 2], tolerance = 1e-4)
 
     expect_js_error(mod$run(tt + 1),
                     "Integration times do not span interpolation range")

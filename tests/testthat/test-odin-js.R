@@ -132,6 +132,7 @@ test_that("delay models are not supported", {
 
 
 test_that("interpolation is not supported", {
+  skip("work in progress")
   expect_error(
     odin_js({
       deriv(y) <- pulse

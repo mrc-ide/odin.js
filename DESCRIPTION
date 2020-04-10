@@ -1,6 +1,6 @@
 Package: odin.js
 Title: 'odin' 'JavaScript' support
-Version: 0.1.4
+Version: 0.1.5
 Authors@R:
     person(given = "Rich",
            family = "FitzJohn",

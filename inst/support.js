@@ -20,7 +20,10 @@ function integrateOdin(obj, times, y0, tcrit) {
     var rhs = function(t, y, dy) {
         obj.rhs(t, y, dy);
     };
-    var ctl = {tcrit: tcrit};
+    var ctl = {};
+    if (tcrit !== null) {
+        ctl.tcrit = tcrit;
+    }
     var sol = null;
     if (typeof obj.output === "function") {
         var output = function(t, y) {

@@ -135,20 +135,15 @@ generate_js_equation_alloc_interpolate <- function(eq, data_info, dat,
   data_info_y <- dat$data$elements[[eq$interpolate$y]]
 
   len_t <- rewrite(data_info_t$dimnames$length)
+  rank <- data_info_target$rank
 
-  if (data_info_target$rank == 0L) {
-    len_result <- rewrite(1L)
+  if (rank == 0L) {
     len_y <- rewrite(data_info_y$dimnames$length)
     check <- sprintf(
       'interpolateCheckY([%s], [%s], "%s", "%s");',
       len_t, len_y, data_info_y$name, eq$interpolate$equation)
   } else {
-    browser()
-    stop("This needs checking")
-    len_result <- rewrite(data_info_target$dimnames$length)
-    rank <- data_info_target$rank
     len_y <- vcapply(data_info_y$dimnames$dim, rewrite)
-    i <- seq_len(rank + 1)
     if (rank == 1L) {
       len_expected <- c(len_t, rewrite(data_info_target$dimnames$length))
     } else {
@@ -157,8 +152,10 @@ generate_js_equation_alloc_interpolate <- function(eq, data_info, dat,
         vcapply(data_info_target$dimnames$dim[seq_len(rank)], rewrite))
     }
     check <- sprintf(
-      'interpolateCheckY(%s, %s, "%s", "%s");',
-      len_expected, len_y, data_info_y$name,
+      'interpolateCheckY([%s], [%s], "%s", "%s");',
+      paste(len_expected, collapse = ", "),
+      paste(len_y, collapse = ", "),
+      data_info_y$name,
       eq$interpolate$equation)
   }
 

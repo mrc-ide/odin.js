@@ -4,16 +4,34 @@ function interpolateAlloc(type, x, y, failOnExtrapolate) {
     }
     var n = x.length;
     var ny = y.length / n
+
+    // Optimisation for the constant interpolation - this should be
+    // moved into the C version of this too
+    if (type === "constant") {
+        var ylinear = y;
+        y = [];
+        for (var i = 0; i < n; ++i) {
+            var yi = [];
+            for (j = 0; j < ny; ++j) {
+                yi.push(ylinear[j * n + i]);
+            }
+            y.push(yi);
+        }
+    } else {
+        y = y.slice();
+    }
+
     var ret = {
         type: type,
         n: n,
         ny: ny,
         i: 0,
         x: x.slice(),
-        y: y.slice(),
+        y: y,
         eval: interpolateConstantEval,
         failOnExtrapolate: failOnExtrapolate
     };
+
     return ret;
 }
 
@@ -35,12 +53,7 @@ function interpolateConstantEval(x, obj) {
         ++i;
     }
 
-    var y = new Array(obj.ny);
-    for (var j = 0; j < obj.ny; ++j) {
-        y[j] = obj.y[i + j * obj.n];
-    }
-
-    return y;
+    return obj.y[i];
 }
 
 

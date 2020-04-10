@@ -83,14 +83,18 @@ R6_odin_js_wrapper <- R6::R6Class(
       private$context$get(sprintf("%s.internal", private$name))
     },
 
-    run = function(t, y = NULL, ..., use_names = TRUE) {
+    run = function(t, y = NULL, ..., tcrit = NULL, use_names = TRUE) {
       t_js <- to_json(t, auto_unbox = FALSE)
       if (is.null(y)) {
         y_js <- V8::JS("null")
       } else {
         y_js <- to_json(y, auto_unbox = FALSE)
       }
-      res <- private$context$call(sprintf("%s.run", private$name), t_js, y_js)
+      if (is.null(tcrit)) {
+        tcrit <- V8::JS("null")
+      }
+      res <- private$context$call(sprintf("%s.run", private$name),
+                                  t_js, y_js, tcrit)
       if (use_names) {
         colnames(res$y) <- res$names
       }

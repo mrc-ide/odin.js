@@ -18,11 +18,7 @@ function interpolateCheckY(dimArg, dimTarget, nameArg, nameTarget) {
 }
 
 
-function interpolateCheckT(times, interpolateTimes) {
-    // TODO: ordinarily with the C solver we'd also have a critical
-    // time to prevernt the solver overshooting; I don't think that I
-    // support this in dopri-js and that will block getting spline
-    // interpolation implemented...
+function interpolateCheckT(times, interpolateTimes, tcrit) {
     if (times[0] < interpolateTimes.min) {
         throw Error("Integration times do not span interpolation range; " +
                     "min: " + interpolateTimes.min);
@@ -31,6 +27,10 @@ function interpolateCheckT(times, interpolateTimes) {
         throw Error("Integration times do not span interpolation range; " +
                     "max: " + interpolateTimes.max);
     }
+    if (tcrit === undefined || tcrit === null) {
+        tcrit = interpolateTimes.max;
+    }
+    return tcrit;
 }
 
 

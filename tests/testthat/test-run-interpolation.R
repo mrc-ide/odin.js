@@ -134,7 +134,6 @@ test_that("constant 3d array", {
 
 
 test_that("linear", {
-  skip("not yet supported")
   gen <- odin_js({
     deriv(y) <- pulse
     initial(y) <- 0
@@ -156,13 +155,13 @@ test_that("linear", {
 
   f <- approxfun(tp, zp, "linear")
   target <- function(t, x, .) list(f(t))
-  cmp <- deSolve::lsoda(mod$initial(), tt, target, tcrit = 2)
-  expect_equal(yy[, 2], cmp[, 2])
+  cmp <- deSolve::lsoda(mod$initial(0), tt, target, tcrit = 2)
+  expect_equal(yy[, 2], cmp[, 2], tolerance = 1e-5)
 
   expect_js_error(mod$run(c(tt, max(tp) + 1)),
                   "Integration times do not span interpolation range")
 
-  expect_js_error(mod$run(tt, tcrit = 3),
+  expect_js_error(mod$run(tt, tcrit = 10),
                   "Interpolation failed as .+ is out of range")
 })
 

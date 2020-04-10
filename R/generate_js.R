@@ -98,8 +98,8 @@ generate_js_core_output <- function(eqs, dat, rewrite) {
 
 
 generate_js_core_run <- function(eqs, dat, rewrite) {
-  args <- c("times", "y0")
-  body <- "return integrateOdin(this, times, y0);"
+  args <- c("times", "y0", "tcrit")
+  body <- "return integrateOdin(this, times, y0, tcrit);"
   js_function(args, body)
 }
 

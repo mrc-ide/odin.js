@@ -11,7 +11,7 @@ generate_js_equation <- function(eq, dat, rewrite) {
     alloc = generate_js_equation_alloc,
     copy = generate_js_equation_copy,
     user = generate_js_equation_user,
-    stop(sprintf("Unknown type '%s' [odin.js bug]")))
+    stop(sprintf("Unknown type '%s' [odin.js bug]", eq$type)))
 
   data_info <- dat$data$elements[[eq$lhs]]
   stopifnot(!is.null(data_info))

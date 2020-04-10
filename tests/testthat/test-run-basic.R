@@ -126,15 +126,13 @@ test_that("user variables", {
 
   expect_error(gen())
   ## TODO: had to change error strings here
-  expect_error(gen(NULL),
-               "Expected a value for 'r'", fixed = TRUE,
-               class = "std::runtime_error")
-  expect_error(gen(r = 1:2),
-               "Expected a value for 'r'",
-               class = "std::runtime_error")
-  expect_error(gen(numeric(0)),
-               "Expected a value for 'r'",
-               class = "std::runtime_error")
+  expect_js_error(gen(user = NULL),
+                  "Expected a value for 'r'", fixed = TRUE)
+  expect_js_error(gen(r = 1:2),
+                  "Expected a numeric value for 'r'", fixed = TRUE)
+  expect_js_error(gen(r = numeric(0)),
+                  "Expected a numeric value for 'r'",
+                  fixed = TRUE)
 
   expect_equal(sort_list(gen(r = pi)$contents()),
                sort_list(list(K = 100, N0 = 1, initial_N = 1, r = pi)))
@@ -218,14 +216,43 @@ test_that("copy output", {
 })
 
 
-## discrete
-## discrete with output
+## Basic discrete models
+test_that("discrete", {
+  skip("Needs implementing")
+  gen <- odin_js({
+    initial(x) <- 1
+    update(x) <- x + 1
+  })
+  mod <- gen()
+
+  expect_equal(mod$initial(), 1)
+  expect_equal(mod$update(0, 1), 2)
+
+  tt <- 0:10
+  yy <- mod$run(tt)
+  expect_equal(yy, cbind(step = tt, x = tt + 1))
+})
+
+
+test_that("discrete with output", {
+  skip("Needs implementing")
+  gen <- odin_js({
+    initial(x) <- 1
+    update(x) <- x + 1
+    output(y) <- x + step
+  })
+  mod <- gen()
+
+  expect_equal(mod$update(2, 3), structure(4, output = 5))
+  tt <- 0:10
+  yy <- mod$run(tt)
+  expect_equal(yy, cbind(step = tt, x = tt + 1, y = 2 * tt + 1))
+})
 
 
 ## Fairly minimal array model, though it does mix array and non array
 ## variables, plus an array support variable.
 test_that("array support", {
-  skip("needs implementing")
   gen <- odin_js({
     initial(x[]) <- 1
     initial(y) <- 2
@@ -243,7 +270,7 @@ test_that("array support", {
   expect_equal(sort_list(mod$contents()),
                sort_list(list(dim_r = 3, dim_x = 3, initial_x = rep(1, 3),
                               initial_y = 2, n = 3, r = 1:3)))
-  expect_equal(mod$initial(), c(2, 1, 1, 1))
+  expect_equal(mod$initial(0), c(2, 1, 1, 1))
   expect_equal(mod$deriv(0, c(2, 1, 1, 1)), c(3, 1, 2, 3))
 
   tt <- 0:10
@@ -253,8 +280,50 @@ test_that("array support", {
                           deparse.level = 0))
   expect_equal(colnames(yy), c("t", "y", "x[1]", "x[2]", "x[3]"))
 
-  expect_equal(mod$transform_variables(yy),
-               list(t = tt,
-                    y = yy[, 2],
-                    x = unname(yy[, 3:5])))
+  ## expect_equal(mod$transform_variables(yy),
+  ##              list(t = tt,
+  ##                   y = yy[, 2],
+  ##                   x = unname(yy[, 3:5])))
+})
+
+
+test_that("multi-line array expression", {
+  gen <- odin_js({
+    initial(x) <- 1
+    deriv(x) <- 1
+    a[1] <- 1
+    a[2] <- 1
+    a[3:n] <- a[i - 1] + a[i - 2]
+    dim(a) <- n
+    n <- 10
+  })
+  expect_equal(gen()$contents()$a, c(1, 1, 2, 3, 5, 8, 13, 21, 34, 55))
+})
+
+
+test_that("3d array", {
+  gen <- odin_js({
+    initial(y[, , ]) <- 1
+    deriv(y[, , ]) <- y[i, j, k] * 0.1
+    dim(y) <- c(2, 3, 4)
+  })
+
+  mod <- gen()
+  d <- mod$contents()
+  ## expect_equal(d$initial_y, array(1, c(2, 3, 4))) # TODO
+  expect_equal(d$dim_y, 24)
+  expect_equal(d$dim_y_1, 2)
+  expect_equal(d$dim_y_2, 3)
+  expect_equal(d$dim_y_3, 4)
+  expect_equal(d$dim_y_12, 6)
+
+  expect_equal(mod$initial(0), rep(1, 24))
+  expect_equal(mod$deriv(0, mod$initial(0)), rep(0.1, 24))
+
+  tt <- 0:10
+  yy <- mod$run(tt, atol = 1e-8, rtol = 1e-8)
+  expect_equal(colnames(yy)[[12]], "y[1,3,2]")
+  expect_equal(yy[, 1], tt)
+  expect_equal(unname(yy[, -1]), matrix(rep(exp(0.1 * tt), 24), 11),
+               tolerance = 1e-7)
 })

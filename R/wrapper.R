@@ -16,6 +16,23 @@ odin_js_wrapper <- function(ir, options) {
 }
 
 
+to_json_user <- function(user) {
+  f <- function(x) {
+    if (is.array(x)) {
+      x <- list(data = c(x), dim = I(dim(x)))
+    } else if (length(x) > 1L || inherits(x, "AsIs")) {
+      x <- list(data = x, dim = I(length(x)))
+    }
+    x
+  }
+  if (length(user) > 0) {
+    stopifnot(!is.null(names(user)))
+  }
+  user <- lapply(user, f)
+  to_json(user, auto_unbox = TRUE)
+}
+
+
 ##' @importFrom R6 R6Class
 R6_odin_js_wrapper <- R6::R6Class(
   "odin_model",
@@ -32,7 +49,7 @@ R6_odin_js_wrapper <- R6::R6Class(
     initialize = function(context, generator, user) {
       private$context <- context
       private$name <- sprintf("%s.%s", JS_INSTANCES, basename(tempfile("i")))
-      user_js <- to_json(user, auto_unbox = TRUE)
+      user_js <- to_json_user(user)
       init <- sprintf("%s = new %s.%s(%s);",
                       private$name, JS_GENERATORS, generator, user_js)
       private$context$eval(init)
@@ -44,7 +61,7 @@ R6_odin_js_wrapper <- R6::R6Class(
     },
 
     set_user = function(user) {
-      user_js <- to_json(user, auto_unbox = TRUE)
+      user_js <- to_json_user(user)
       private$context$call(sprintf("%s.setUser", private$name), user_js)
     },
 
@@ -59,7 +76,7 @@ R6_odin_js_wrapper <- R6::R6Class(
       private$context$get(sprintf("%s.internal", private$name))
     },
 
-    run = function(t, y = NULL, ...) {
+    run = function(t, y = NULL, ..., use_names = TRUE) {
       t_js <- to_json(t, auto_unbox = FALSE)
       if (is.null(y)) {
         y_js <- V8::JS("null")
@@ -67,7 +84,9 @@ R6_odin_js_wrapper <- R6::R6Class(
         y_js <- to_json(y, auto_unbox = FALSE)
       }
       res <- private$context$call(sprintf("%s.run", private$name), t_js, y_js)
-      colnames(res$y) <- res$names
+      if (use_names) {
+        colnames(res$y) <- res$names
+      }
       res$y
     }
   ))
@@ -78,6 +97,7 @@ js_context <- function() {
   ct <- V8::v8()
   ct$source(system.file("dopri.js", package = "odin.js", mustWork = TRUE))
   ct$source(system.file("support.js", package = "odin.js", mustWork = TRUE))
+  ct$source(system.file("support_sum.js", package = "odin.js", mustWork = TRUE))
   ct$eval(sprintf("var %s = {};", JS_GENERATORS))
   ct$eval(sprintf("var %s = {};", JS_INSTANCES))
   ct

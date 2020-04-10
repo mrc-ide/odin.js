@@ -87,13 +87,13 @@ test_that("user variables", {
   })
 
   expect_error(gen())
-  expect_error(gen(NULL),
-               "Expected a value for 'r'", fixed = TRUE,
-               class = "std::runtime_error")
-  ## expect_error(gen(1:2),
-  ##              "Expected a scalar numeric for 'r'")
-  ## expect_error(gen(numeric(0)),
-  ##              "Expected a scalar numeric for 'r'")
+  ## TODO: Some of these errors are not the same as the other engines
+  expect_js_error(gen(user = NULL),
+                  "Expected a value for 'r'", fixed = TRUE)
+  expect_js_error(gen(r = 1:2),
+                  "Expected a numeric value for 'r'")
+  expect_js_error(gen(r = numeric(0)),
+                  "Expected a numeric value for 'r'")
 
   expect_equal(sort_list(gen(r = pi)$contents()),
                sort_list(list(K = 100, N0 = 1, initial_N = 1, r = pi)))
@@ -107,4 +107,52 @@ test_that("user variables", {
   mod$set_user(NULL)
   expect_equal(mod$contents()$r, pi)
   expect_equal(mod$contents()$N0, exp(1))
+})
+
+
+test_that("discrete models are not supported", {
+  expect_error(
+    odin_js({
+      initial(x) <- 1
+      update(x) <- x + 1
+    }),
+    "Using unsupported features: 'discrete'")
+})
+
+
+test_that("delay models are not supported", {
+  expect_error(
+    odin_js({
+      ylag <- delay(y, 10)
+      initial(y) <- 0.5
+      deriv(y) <- 0.2 * ylag * 1 / (1 + ylag^10) - 0.1 * y
+    }),
+    "Using unsupported features: 'has_delay'")
+})
+
+
+test_that("output is not supported", {
+  expect_error(
+    odin_js({
+      y1 <- sin(t)
+      deriv(y2) <- y1
+      initial(y2) <- -1
+      output(y1) <- y1
+    }),
+    "Using unsupported features: 'has_output'")
+})
+
+
+test_that("interpolation is not supported", {
+  expect_error(
+    odin_js({
+      deriv(y) <- pulse
+      initial(y) <- 0
+      pulse <- interpolate(tp, zp, "constant")
+      tp[] <- user()
+      zp[] <- user()
+      dim(tp) <- user()
+      dim(zp) <- user()
+    }),
+    "Using unsupported features: 'has_interpolate'")
 })

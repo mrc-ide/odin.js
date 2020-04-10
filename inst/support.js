@@ -10,7 +10,7 @@ function zeros(n) {
 function integrateOdin(obj, times, y0) {
     var t0 = times[0];
     var t1 = times[times.length - 1];
-    if (obj.metadata.interpolate_t !== null) {
+    if (obj.metadata.interpolateTimes !== null) {
         interpolateCheckT(times, obj.metadata.interpolateTimes);
     }
     if (isMissing(y0)) {

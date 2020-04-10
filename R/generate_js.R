@@ -191,7 +191,11 @@ generate_js_core_metadata <- function(eqs, dat, rewrite) {
       "this.metadata.interpolateTimes = {",
       sprintf("  min: %s,", args_min),
       sprintf("  max: %s", args_max),
-      "}")
+      "};")
+  } else {
+    body <- c(
+      body,
+      "this.metadata.interpolateTimes = null;")
   }
 
   js_function(NULL, body)

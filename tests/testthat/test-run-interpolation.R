@@ -346,7 +346,6 @@ test_that("critical times", {
 
 
 test_that("user sized interpolation, 1d", {
-  skip("not yet supported")
   gen <- odin_js({
     deriv(y[]) <- pulse[i]
     initial(y[]) <- 0
@@ -373,13 +372,12 @@ test_that("user sized interpolation, 1d", {
   yy <- mod$run(tt)
   zz1 <- ifelse(tt < 1, 0, ifelse(tt > 2, 1, tt - 1))
   zz2 <- ifelse(tt < 1, 0, ifelse(tt > 2, 2, 2 * (tt - 1)))
-  expect_equal(yy[, 2], zz1, tolerance = 1e-5)
-  expect_equal(yy[, 3], zz2, tolerance = 1e-5)
+  expect_equal(yy[, 2], zz1, tolerance = 1e-4)
+  expect_equal(yy[, 3], zz2, tolerance = 1e-4)
 })
 
 
 test_that("user sized interpolation, 2d", {
-  skip("not yet supported")
   gen <- odin_js({
     deriv(y[,]) <- pulse[i,j]
     initial(y[,]) <- 0
@@ -406,7 +404,7 @@ test_that("user sized interpolation, 2d", {
   yy <- mod$run(tt)
   cmp <- sapply(1:4, function(i)
     ifelse(tt < 1, 0, ifelse(tt > 2, i, i * (tt - 1))))
-  expect_equal(unname(yy[, -1]), cmp, tolerance = 1e-5)
+  expect_equal(unname(yy[, -1]), cmp, tolerance = 0.0003)
 })
 
 

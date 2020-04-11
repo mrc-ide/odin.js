@@ -100,7 +100,7 @@ generate_js_core_update <- function(eqs, dat, rewrite) {
   unpack <- lapply(variables, js_unpack_variable, dat, dat$meta$state, rewrite)
   body <- js_flatten_eqs(c(internal, unpack, eqs[equations]))
 
-  args <- c(dat$meta$time, dat$meta$state, dat$meta$result)
+  args <- c(dat$meta$time, dat$meta$state, dat$meta$result, dat$meta$output)
   js_function(args, body)
 }
 
@@ -230,23 +230,35 @@ generate_js_core_metadata <- function(eqs, dat, rewrite) {
 }
 
 
+## This one is just a helper - not sure if it's optimally structured.
 generate_js_core_rhs_eval <- function(eqs, dat, rewrite) {
   args <- c(dat$meta$time, dat$meta$state)
 
-  if (dat$features$has_output) {
-    output <- sprintf("%s = %s.concat(this.output(%s, %s));",
-                      dat$meta$result, dat$meta$result, dat$meta$time,
-                      dat$meta$state)
+  if (dat$features$discrete && dat$features$has_output) {
+    body <- c(
+      sprintf("var %s = zeros(%s.length);",
+              dat$meta$result, dat$meta$state),
+      sprintf("var %s = zeros(%s);",
+              dat$meta$output, rewrite(dat$data$output$length)),
+      sprintf("this.rhs(%s, %s, %s, %s);",
+              dat$meta$time, dat$meta$state, dat$meta$result, dat$meta$output),
+      sprintf("return %s.concat(%s);", dat$meta$result, dat$meta$output))
   } else {
-    output <- NULL
+    if (dat$features$has_output) {
+      output <- sprintf("%s = %s.concat(this.output(%s, %s));",
+                        dat$meta$result, dat$meta$result, dat$meta$time,
+                        dat$meta$state)
+    } else {
+      output <- NULL
+    }
+    body <- c(
+      sprintf("var %s = zeros(%s.length);", dat$meta$result, dat$meta$state),
+      sprintf("this.rhs(%s, %s, %s);",
+              dat$meta$time, dat$meta$state, dat$meta$result),
+      output,
+      sprintf("return %s;", dat$meta$result))
   }
 
-  body <- c(
-    sprintf("var %s = zeros(%s.length);", dat$meta$result, dat$meta$state),
-    sprintf("this.rhs(%s, %s, %s);",
-            dat$meta$time, dat$meta$state, dat$meta$result),
-    output,
-    sprintf("return %s;", dat$meta$result))
   js_function(args, body)
 }
 

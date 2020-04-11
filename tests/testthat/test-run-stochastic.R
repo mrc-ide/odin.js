@@ -109,7 +109,6 @@ test_that("stochastic initial conditions don't get called every step", {
 
 
 test_that("exotic stochastic functions", {
-  skip("WIP")
   gen <- odin_js({
     initial(x) <- 0
     mu <- 1
@@ -117,12 +116,12 @@ test_that("exotic stochastic functions", {
     update(x) <- rnorm(mu, sd)
   })
 
-  model_set_seed(mod, 1)
   mod <- gen()
+  model_set_seed(mod, 1)
   y <- mod$run(0:10)
 
   model_set_seed(mod, 1)
-  expect_equal(y[-1, "x"], rnorm(10, 1, 2))
+  expect_equal(y[-1, "x"], model_random_numbers(mod, "normal", 10, 1, 2))
 })
 
 
@@ -138,12 +137,13 @@ test_that("round & rbinom", {
   mod <- gen(p = 1, size = 0.4)
   expect_equal(mod$initial(0), 0)
   mod$set_user(p = 1, size = 1.7)
+  mod <- gen(p = 1, size = 1.7)
   expect_equal(mod$initial(0), 2)
 })
 
 
 test_that("mutlinomial", {
-  skip("WIP")
+  skip("multinomial not supported")
   ## This is just a check that these compile and run
   sir1 <- odin_js("stochastic/sir_discrete.R")
   sir2 <- odin_js("stochastic/sir_discrete_stochastic.R")
@@ -168,7 +168,7 @@ test_that("mutlinomial", {
 
 
 test_that("replicate: scalar", {
-  skip("WIP")
+  skip("replicate not supported")
   ## TODO: this will be a nice version to try and benchmark the dde
   ## overheads I think...
   gen <- odin_js({
@@ -188,7 +188,7 @@ test_that("replicate: scalar", {
 
 
 test_that("replicate: array", {
-  skip("WIP")
+  skip("replicate not supported")
   gen <- odin_js({
     initial(x) <- 0
     initial(y[]) <- 0
@@ -212,7 +212,6 @@ test_that("replicate: array", {
 
 
 test_that("low-level stochastics: norm_rand", {
-  skip("WIP")
   gen <- odin_js({
     initial(y) <- 0
     update(y) <- norm_rand()
@@ -220,16 +219,15 @@ test_that("low-level stochastics: norm_rand", {
   m <- gen()
 
   tt <- 0:10
-  model_set_seed(mod, 1)
+  model_set_seed(m, 1)
   y <- m$run(tt)[-1, "y"]
 
-  model_set_seed(mod, 1)
-  expect_equal(y, rnorm(10))
+  model_set_seed(m, 1)
+  expect_equal(y, model_random_numbers(m, "normal", 10))
 })
 
 
 test_that("low-level stochastics: unif_rand", {
-  skip("WIP")
   gen <- odin_js({
     initial(y) <- 0
     update(y) <- unif_rand()
@@ -237,16 +235,15 @@ test_that("low-level stochastics: unif_rand", {
   m <- gen()
 
   tt <- 0:10
-  model_set_seed(mod, 1)
+  model_set_seed(m, 1)
   y <- m$run(tt)[-1, "y"]
 
-  model_set_seed(mod, 1)
-  expect_equal(y, runif(10))
+  model_set_seed(m, 1)
+  expect_equal(y, model_random_numbers(m, "uniform", 10))
 })
 
 
 test_that("low-level stochastics: exp_rand", {
-  skip("WIP")
   gen <- odin_js({
     initial(y) <- 0
     update(y) <- exp_rand()
@@ -254,16 +251,15 @@ test_that("low-level stochastics: exp_rand", {
   m <- gen()
 
   tt <- 0:10
-  model_set_seed(mod, 1)
+  model_set_seed(m, 1)
   y <- m$run(tt)[-1, "y"]
 
-  model_set_seed(mod, 1)
-  expect_equal(y, rexp(10))
+  model_set_seed(m, 1)
+  expect_equal(y, model_random_numbers(m, "exponential", 10))
 })
 
 
 test_that("rexp parametrisation", {
-  skip("WIP")
   gen <- odin_js({
     initial(y) <- 0
     update(y) <- rexp(10)
@@ -271,9 +267,9 @@ test_that("rexp parametrisation", {
   m <- gen()
 
   tt <- 0:10
-  model_set_seed(mod, 1)
+  model_set_seed(m, 1)
   y <- m$run(tt)[-1, "y"]
 
-  model_set_seed(mod, 1)
-  expect_equal(y, rexp(10, 10))
+  model_set_seed(m, 1)
+  expect_equal(y, model_random_numbers(m, "exponential", 10, 10))
 })

@@ -30,7 +30,7 @@ generate_js_sexp <- function(x, data, meta) {
       ret <- generate_js_sexp_sum(args, data, meta)
     } else if (any(names(FUNCTIONS_STOCHASTIC) == fn)) {
       ret <- sprintf("random.%s(%s)()",
-                     FUNCTIONS_STOCHASTIC_SPECIAL[[fn]],
+                     FUNCTIONS_STOCHASTIC[[fn]],
                      paste(values, collapse = ", "))
     } else {
       if (any(FUNCTIONS_MATH == fn)) {
@@ -106,10 +106,10 @@ FUNCTIONS_STOCHASTIC <- c(
   ## TODO: I should write out these ones somewhere
   ## And support many different distributions
   ## rbeta = "", # a, b
-  rbinom = "binom", # n, p
+  rbinom = "rbinom", # n, p - note that this is patched
   ## rcauchy = "", # location, scale
   ## rchisq = "", # df
-  rexp = 1L, # rate TODO: rewrite
+  rexp = "exponential", # rate
   ## rf = "", # n1, n2
   ## rgamma = 2L, # shape, scale
   rgeom = "geometric", # p

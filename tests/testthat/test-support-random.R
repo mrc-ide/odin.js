@@ -91,3 +91,18 @@ test_that("uniform", {
     expect_equal(var(res), 1/3, tolerance = 0.01)
   })
 })
+
+
+test_that("set seed", {
+  skip_if_no_random_js()
+  v8 <- V8::v8()
+  v8$eval(package_js("random.js"))
+
+  v8$call("setSeed", "hello")
+  a <- v8$call("random.unifRand")
+  b <- v8$call("random.unifRand")
+
+  v8$call("setSeed", "hello")
+  expect_equal(v8$call("random.unifRand"), a)
+  expect_equal(v8$call("random.unifRand"), b)
+})

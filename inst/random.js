@@ -2262,13 +2262,18 @@ if ((typeof module) == 'object' && module.exports) {
 
 },{"crypto":33}],32:[function(require,module,exports){
 (function (global){
+global.seedrandom = require("seedrandom");
 global.random = require("random");
+global.random.use(seedrandom("odin.js"));
+global.setSeed = function(seed) {
+    global.random.use(seedrandom(seed));
+}
 // Configure sensible drop-in replacements for R's functions:
 global.random.unifRand = random.uniform();
-global.random.unifNorm = random.normal();
-global.random.unifExp = random.exponential();
+global.random.normRand = random.normal();
+global.random.expRand = random.exponential();
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"random":23}],33:[function(require,module,exports){
+},{"random":23,"seedrandom":24}],33:[function(require,module,exports){
 
 },{}]},{},[32]);

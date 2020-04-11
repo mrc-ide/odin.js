@@ -1,4 +1,7 @@
 function iterateOdin(obj, steps, y, nOut) {
+    if (obj.metadata.interpolateTimes !== null) {
+        interpolateCheckT(steps, obj.metadata.interpolateTimes, null);
+    }
     if (isMissing(y)) {
         y = obj.initial(steps[0]);
     }

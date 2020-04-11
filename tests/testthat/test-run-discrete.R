@@ -129,7 +129,6 @@ test_that("complex initialisation: scalar", {
   })
 
   mod <- gen()
-  ctx <- environment(mod$initialize)$private$context
   model_set_seed(mod, 1)
 
   v <- mod$initial(0)
@@ -139,7 +138,7 @@ test_that("complex initialisation: scalar", {
   ## set.seed(1)
   ## x1 <- rnorm(1)
   model_set_seed(mod, 1)
-  x1 <- ctx$call("random.normRand")
+  x1 <- model_context(mod)$call("random.normRand")
   expect_equal(vv$x1, x1)
   expect_equal(vv$x2, x1 * 2 + 1)
 
@@ -158,7 +157,6 @@ test_that("complex initialisation: scalar", {
 })
 
 test_that("complex initialisation: vector", {
-  skip("needs stochastic")
   gen <- odin_js({
     initial(x1[]) <- norm_rand()
     r[] <- x1[i] * 2
@@ -172,14 +170,16 @@ test_that("complex initialisation: vector", {
     dim(x2) <- length(x1)
   })
 
-  set.seed(1)
   mod <- gen()
-
+  model_set_seed(mod, 1)
   v <- mod$initial(0)
-  vv <- mod$transform_variables(v)
+  ## vv <- mod$transform_variables(v)
+  vv <- list(x1 = v[1:10], x2 = v[11:20])
 
-  set.seed(1)
-  cmp <- rnorm(10)
+  model_set_seed(mod, 1)
+  ctx <- model_context(mod)
+  cmp <- vapply(1:10, function(i) ctx$call("random.normRand"), numeric(1))
+
   expect_equal(vv$x1, cmp)
   expect_equal(vv$x2, cmp * 2 + 1)
   expect_equal(mod$contents()$r, cmp * 2)

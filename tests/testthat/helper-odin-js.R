@@ -80,6 +80,10 @@ skip_if_no_random_js <- function() {
 }
 
 
+model_context <- function(x) {
+  environment(x$initialize)$private$context
+}
+
 model_set_seed <- function(x, seed) {
-  environment(x$initialize)$private$context$call("setSeed", seed)
+  model_context(x)$call("setSeed", seed)
 }

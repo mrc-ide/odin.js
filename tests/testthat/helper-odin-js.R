@@ -84,6 +84,22 @@ model_context <- function(x) {
   environment(x$initialize)$private$context
 }
 
+
 model_set_seed <- function(x, seed) {
   model_context(x)$call("setSeed", seed)
+}
+
+
+model_random_numbers <- function(x, name, n, ...) {
+  ctx <- model_context(x)
+  ctx$eval(c(
+    "var repeat = function(f, n) {",
+    "  var ret = [];",
+    "  for (var i = 0; i < n; ++i) {",
+    "    ret.push(f());",
+    "  }",
+    "  return ret;",
+    "}"))
+  f <- V8::JS(sprintf("random.%s(%s)", name, paste(c(...), collapse = ", ")))
+  ctx$call("repeat", f, n)
 }

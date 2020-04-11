@@ -11,3 +11,4 @@ rm -rf node_modules
 npm install
 
 browserify dopri.in.js > $DEST/dopri.js
+browserify random.in.js > $DEST/random.js

@@ -26,7 +26,8 @@ generate_js <- function(ir, options) {
        name = dat$config$base,
        discrete = dat$features$discrete,
        include = c(interpolate.js = dat$features$has_interpolate,
-                   random.js = dat$stochastic,
+                   random.js = dat$features$has_stochastic,
+                   discrete.js = dat$features$discrete,
                    support_sum.js = uses_sum))
 }
 

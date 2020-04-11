@@ -126,7 +126,6 @@ test_that("exotic stochastic functions", {
 
 
 test_that("round & rbinom", {
-  skip("WIP")
   gen <- odin_js({
     size <- user()
     p <- user()
@@ -136,8 +135,7 @@ test_that("round & rbinom", {
 
   mod <- gen(p = 1, size = 0.4)
   expect_equal(mod$initial(0), 0)
-  mod$set_user(p = 1, size = 1.7)
-  mod <- gen(p = 1, size = 1.7)
+  mod$set_user(list(p = 1, size = 1.7))
   expect_equal(mod$initial(0), 2)
 })
 

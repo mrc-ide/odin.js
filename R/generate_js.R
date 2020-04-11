@@ -7,7 +7,7 @@ generate_js <- function(ir, options) {
 
   features <- vlapply(dat$features, identity)
   supported <- c("initial_time_dependent", "has_array", "has_user",
-                 "has_output", "has_interpolate", "discrete")
+                 "has_output", "has_interpolate", "discrete", "has_stochastic")
   unsupported <- setdiff(names(features)[features], supported)
   if (length(unsupported) > 0L) {
     stop("Using unsupported features: ",
@@ -26,6 +26,7 @@ generate_js <- function(ir, options) {
        name = dat$config$base,
        discrete = dat$features$discrete,
        include = c(interpolate.js = dat$features$has_interpolate,
+                   random.js = dat$stochastic,
                    support_sum.js = uses_sum))
 }
 

@@ -78,3 +78,8 @@ skip_if_no_random_js <- function() {
     testthat::skip("random.js not supported on your v8 version")
   }
 }
+
+
+model_set_seed <- function(x, seed) {
+  environment(x$initialize)$private$context$call("setSeed", seed)
+}

@@ -111,7 +111,6 @@ test_that("2d array equations", {
 
 ## This turns up in one of Neil's cases:
 test_that("complex initialisation: scalar", {
-  skip("needs stochastic")
   gen <- odin_js({
     initial(x1) <- norm_rand()
     r <- x1 * 2
@@ -129,22 +128,27 @@ test_that("complex initialisation: scalar", {
     update(x2) <- x2 + r
   })
 
-  set.seed(1)
   mod <- gen()
+  ctx <- environment(mod$initialize)$private$context
+  model_set_seed(mod, 1)
 
   v <- mod$initial(0)
-  vv <- mod$transform_variables(v)
+  ## vv <- mod$transform_variables(v)
+  vv <- list(x1 = v[[1]], x2 = v[[2]])
 
-  set.seed(1)
-  x1 <- rnorm(1)
+  ## set.seed(1)
+  ## x1 <- rnorm(1)
+  model_set_seed(mod, 1)
+  x1 <- ctx$call("random.normRand")
   expect_equal(vv$x1, x1)
   expect_equal(vv$x2, x1 * 2 + 1)
 
-  mod2 <- gen2(x1)
+  mod2 <- gen2(x1_0 = x1)
   v2 <- mod2$initial(0)
   expect_equal(v2, v)
 
-  set.seed(1)
+  ## set.seed(1)
+  model_set_seed(mod, 1)
   z <- mod$run(0:5)
   z2 <- mod2$run(0:5)
   expect_equal(z, z2)

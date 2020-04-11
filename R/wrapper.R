@@ -126,6 +126,7 @@ js_context <- function() {
   ct$source(js_file("support.js"))
   ct$source(js_file("interpolate.js"))
   ct$source(js_file("support_sum.js"))
+  ct$source(js_file("random.js")) # TOOD: needs to be optional!
   ct$eval(sprintf("var %s = {};", JS_GENERATORS))
   ct$eval(sprintf("var %s = {};", JS_INSTANCES))
   ct

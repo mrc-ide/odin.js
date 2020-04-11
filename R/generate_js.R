@@ -7,7 +7,7 @@ generate_js <- function(ir, options) {
 
   features <- vlapply(dat$features, identity)
   supported <- c("initial_time_dependent", "has_array", "has_user",
-                 "has_output", "has_interpolate")
+                 "has_output", "has_interpolate", "discrete")
   unsupported <- setdiff(names(features)[features], supported)
   if (length(unsupported) > 0L) {
     stop("Using unsupported features: ",
@@ -126,8 +126,14 @@ generate_js_core_output <- function(eqs, dat, rewrite) {
 
 
 generate_js_core_run <- function(eqs, dat, rewrite) {
-  args <- c("times", "y0", "tcrit")
-  body <- "return integrateOdin(this, times, y0, tcrit);"
+  if (dat$features$discrete) {
+    args <- c("times", "y0")
+    body <- sprintf("return iterateOdin(this, times, y0, %s);",
+                    rewrite(dat$data$output$length))
+  } else {
+    args <- c("times", "y0", "tcrit")
+    body <- "return integrateOdin(this, times, y0, tcrit);"
+  }
   js_function(args, body)
 }
 

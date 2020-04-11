@@ -102,6 +102,9 @@ R6_odin_js_wrapper <- R6::R6Class(
       if (is.null(tcrit)) {
         tcrit <- V8::JS("null")
       }
+
+      ## NOTE: tcrit here is ignored when calling the discrete time
+      ## model
       res <- private$context$call(sprintf("%s.run", private$name),
                                   t_js, y_js, tcrit)
       if (use_names) {
@@ -119,6 +122,7 @@ js_context <- function() {
     system.file(path, package = "odin.js", mustWork = TRUE)
   }
   ct$source(js_file("dopri.js"))
+  ct$source(js_file("discrete.js"))
   ct$source(js_file("support.js"))
   ct$source(js_file("interpolate.js"))
   ct$source(js_file("support_sum.js"))

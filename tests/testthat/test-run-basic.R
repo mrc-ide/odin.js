@@ -209,14 +209,13 @@ test_that("copy output", {
 
 ## Basic discrete models
 test_that("discrete", {
-  skip("Needs implementing")
   gen <- odin_js({
     initial(x) <- 1
     update(x) <- x + 1
   })
   mod <- gen()
 
-  expect_equal(mod$initial(), 1)
+  expect_equal(mod$initial(0), 1)
   expect_equal(mod$update(0, 1), 2)
 
   tt <- 0:10
@@ -226,7 +225,6 @@ test_that("discrete", {
 
 
 test_that("discrete with output", {
-  skip("Needs implementing")
   gen <- odin_js({
     initial(x) <- 1
     update(x) <- x + 1

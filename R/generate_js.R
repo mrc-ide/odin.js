@@ -30,16 +30,22 @@ generate_js <- function(ir, options) {
 
 
 generate_js_core <- function(eqs, dat, rewrite) {
-  list(create = generate_js_core_create(eqs, dat, rewrite),
-       set_user = generate_js_core_set_user(eqs, dat, rewrite),
-       rhs = generate_js_core_deriv(eqs, dat, rewrite),
-       rhs_eval = generate_js_core_rhs_eval(eqs, dat, rewrite),
-       run = generate_js_core_run(eqs, dat, rewrite),
-       output = generate_js_core_output(eqs, dat, rewrite),
-       metadata = generate_js_core_metadata(eqs, dat, rewrite),
-       coef = generate_js_coef(eqs, dat, rewrite),
-       initial_conditions = generate_js_core_initial_conditions(
-         eqs, dat, rewrite))
+  core <- list(
+    create = generate_js_core_create(eqs, dat, rewrite),
+    set_user = generate_js_core_set_user(eqs, dat, rewrite),
+    rhs_eval = generate_js_core_rhs_eval(eqs, dat, rewrite),
+    run = generate_js_core_run(eqs, dat, rewrite),
+    output = generate_js_core_output(eqs, dat, rewrite),
+    metadata = generate_js_core_metadata(eqs, dat, rewrite),
+    coef = generate_js_coef(eqs, dat, rewrite),
+    initial_conditions = generate_js_core_initial_conditions(
+      eqs, dat, rewrite))
+  if (dat$features$discrete) {
+    core$rhs <- generate_js_core_update(eqs, dat, rewrite)
+  } else {
+    core$rhs <- generate_js_core_deriv(eqs, dat, rewrite)
+  }
+  core
 }
 
 
@@ -76,6 +82,21 @@ generate_js_core_deriv <- function(eqs, dat, rewrite) {
   internal <- sprintf("var %s = this.%s;", dat$meta$internal, dat$meta$internal)
   unpack <- lapply(variables, js_unpack_variable, dat, dat$meta$state, rewrite)
 
+  body <- js_flatten_eqs(c(internal, unpack, eqs[equations]))
+
+  args <- c(dat$meta$time, dat$meta$state, dat$meta$result)
+  js_function(args, body)
+}
+
+
+generate_js_core_update <- function(eqs, dat, rewrite) {
+  variables <- union(dat$components$rhs$variables,
+                     dat$components$output$variables)
+  equations <- union(dat$components$rhs$equations,
+                     dat$components$output$equations)
+
+  internal <- sprintf("var %s = this.%s;", dat$meta$internal, dat$meta$internal)
+  unpack <- lapply(variables, js_unpack_variable, dat, dat$meta$state, rewrite)
   body <- js_flatten_eqs(c(internal, unpack, eqs[equations]))
 
   args <- c(dat$meta$time, dat$meta$state, dat$meta$result)

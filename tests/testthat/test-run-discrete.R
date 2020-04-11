@@ -111,6 +111,7 @@ test_that("2d array equations", {
 
 ## This turns up in one of Neil's cases:
 test_that("complex initialisation: scalar", {
+  skip_if_no_random_js()
   gen <- odin_js({
     initial(x1) <- norm_rand()
     r <- x1 * 2
@@ -157,6 +158,7 @@ test_that("complex initialisation: scalar", {
 })
 
 test_that("complex initialisation: vector", {
+  skip_if_no_random_js()
   gen <- odin_js({
     initial(x1[]) <- norm_rand()
     r[] <- x1[i] * 2

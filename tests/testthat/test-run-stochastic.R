@@ -1,6 +1,7 @@
 context("run:stochastic")
 
 test_that("stochastic", {
+  skip_if_no_random_js()
   ## Here's a stochastic random walk:
   gen <- odin_js({
     initial(x) <- 0
@@ -27,6 +28,7 @@ test_that("stochastic", {
 ## variable that is used only in the initial condition I do not want
 ## that repeatedly called during the run.
 test_that("stochastic variables are time dependent", {
+  skip_if_no_random_js()
   gen <- odin_js({
     v <- norm_rand() # this variable is implicitly time dependent.
     initial(x) <- 0
@@ -45,6 +47,7 @@ test_that("stochastic variables are time dependent", {
 
 
 test_that("array stochastic variables are time dependent", {
+  skip_if_no_random_js()
   ## This checks that even in the absence of array indexing on the RHS
   ## array variables are set correctly when stochastic.
   gen <- odin_js({
@@ -67,6 +70,7 @@ test_that("array stochastic variables are time dependent", {
 
 
 test_that("stochastic initial conditions don't get called every step", {
+  skip_if_no_random_js()
   ## There is quite a few nasty little conditions that are tested
   ## here.
   gen <- odin_js({
@@ -109,6 +113,7 @@ test_that("stochastic initial conditions don't get called every step", {
 
 
 test_that("exotic stochastic functions", {
+  skip_if_no_random_js()
   gen <- odin_js({
     initial(x) <- 0
     mu <- 1
@@ -126,6 +131,7 @@ test_that("exotic stochastic functions", {
 
 
 test_that("round & rbinom", {
+  skip_if_no_random_js()
   gen <- odin_js({
     size <- user()
     p <- user()
@@ -141,6 +147,7 @@ test_that("round & rbinom", {
 
 
 test_that("mutlinomial", {
+  skip_if_no_random_js()
   skip("multinomial not supported")
   ## This is just a check that these compile and run
   sir1 <- odin_js("stochastic/sir_discrete.R")
@@ -166,6 +173,7 @@ test_that("mutlinomial", {
 
 
 test_that("replicate: scalar", {
+  skip_if_no_random_js()
   skip("replicate not supported")
   ## TODO: this will be a nice version to try and benchmark the dde
   ## overheads I think...
@@ -186,6 +194,7 @@ test_that("replicate: scalar", {
 
 
 test_that("replicate: array", {
+  skip_if_no_random_js()
   skip("replicate not supported")
   gen <- odin_js({
     initial(x) <- 0
@@ -210,6 +219,7 @@ test_that("replicate: array", {
 
 
 test_that("low-level stochastics: norm_rand", {
+  skip_if_no_random_js()
   gen <- odin_js({
     initial(y) <- 0
     update(y) <- norm_rand()
@@ -226,6 +236,7 @@ test_that("low-level stochastics: norm_rand", {
 
 
 test_that("low-level stochastics: unif_rand", {
+  skip_if_no_random_js()
   gen <- odin_js({
     initial(y) <- 0
     update(y) <- unif_rand()
@@ -242,6 +253,7 @@ test_that("low-level stochastics: unif_rand", {
 
 
 test_that("low-level stochastics: exp_rand", {
+  skip_if_no_random_js()
   gen <- odin_js({
     initial(y) <- 0
     update(y) <- exp_rand()
@@ -258,6 +270,7 @@ test_that("low-level stochastics: exp_rand", {
 
 
 test_that("rexp parametrisation", {
+  skip_if_no_random_js()
   gen <- odin_js({
     initial(y) <- 0
     update(y) <- rexp(10)

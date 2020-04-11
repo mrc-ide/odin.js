@@ -8,7 +8,7 @@ odin_js_wrapper <- function(ir, options) {
   name <- res$name
 
   ret <- function(..., user = list(...)) {
-    R6_odin_js_wrapper$new(context, name, user)
+    R6_odin_js_wrapper$new(context, name, user, res$discrete)
   }
   attr(ret, "ir") <- ir
   class(ret) <- "odin_generator"
@@ -36,6 +36,9 @@ to_json_user <- function(user) {
 ##' @importFrom R6 R6Class
 R6_odin_js_wrapper <- R6::R6Class(
   "odin_model",
+  cloneable = FALSE,
+  lock_objects = FALSE,
+
   private = list(
     context = NULL,
     name = NULL,
@@ -46,13 +49,19 @@ R6_odin_js_wrapper <- R6::R6Class(
   ),
 
   public = list(
-    initialize = function(context, generator, user) {
+    initialize = function(context, generator, user, discrete) {
       private$context <- context
       private$name <- sprintf("%s.%s", JS_INSTANCES, basename(tempfile("i")))
       user_js <- to_json_user(user)
       init <- sprintf("%s = new %s.%s(%s);",
                       private$name, JS_GENERATORS, generator, user_js)
+      if (discrete) {
+        self$update <- self$rhs
+      } else {
+        self$deriv <- self$rhs
+      }
       private$context$eval(init)
+      lockEnvironment(self)
     },
 
     initial = function(t) {
@@ -65,7 +74,7 @@ R6_odin_js_wrapper <- R6::R6Class(
       private$context$call(sprintf("%s.setUser", private$name), user_js)
     },
 
-    deriv = function(t, y) {
+    rhs = function(t, y) {
       ## TODO: check length of 'y' here?
       t_js <- to_json(scalar(t))
       y_js <- to_json(y, auto_unbox = FALSE)

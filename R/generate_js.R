@@ -24,6 +24,7 @@ generate_js <- function(ir, options) {
   ## This is all we need to dump out
   list(code = generate_js_generator(core, dat),
        name = dat$config$base,
+       discrete = dat$features$discrete,
        include = c(interpolate.js = dat$features$has_interpolate,
                    support_sum.js = uses_sum))
 }

@@ -38,21 +38,21 @@ test_that("user variables", {
   expect_equal(dat$K, 100.0)
 
   ## This should be a noop:
-  mod$set_user(NULL)
+  mod$set_user()
   dat <- mod$contents()
   expect_equal(dat$r, pi)
   expect_equal(dat$N0, 1.0)
   expect_equal(dat$K, 100.0)
 
   ## Now, try setting one of these:
-  mod$set_user(list(N0 = 5)) # TODO: different interface
+  mod$set_user(N0 = 5)
   dat <- mod$contents()
   expect_equal(dat$r, pi)
   expect_equal(dat$N0, 5.0)
   expect_equal(dat$K, 100.0)
 
   ## Don't reset to default on subsequent set:
-  mod$set_user(NULL)
+  mod$set_user()
   expect_equal(mod$contents()$N0, 5.0)
 })
 
@@ -1200,9 +1200,9 @@ test_that("set_user honours constraints", {
   })
 
   mod <- gen()
-  expect_js_error(mod$set_user(list(y0 = -1L)),
+  expect_js_error(mod$set_user(y0 = -1L),
                   "Expected 'y0' to be at least 0")
-  expect_js_error(mod$set_user(list(r = 100)), "Expected 'r' to be at most 10")
+  expect_js_error(mod$set_user(r = 100), "Expected 'r' to be at most 10")
 })
 
 

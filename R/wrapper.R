@@ -81,7 +81,7 @@ R6_odin_js_wrapper <- R6::R6Class(
       private$context$call(sprintf("%s.initial", private$name), t_js)
     },
 
-    set_user = function(user) {
+    set_user = function(..., user = list(...)) {
       user_js <- to_json_user(user)
       private$context$call(sprintf("%s.setUser", private$name), user_js)
       private$update_metadata()

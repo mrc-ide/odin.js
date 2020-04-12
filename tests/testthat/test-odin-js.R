@@ -110,6 +110,25 @@ test_that("user variables", {
 })
 
 
+test_that("accept matrices directly if asked nicely", {
+  gen <- odin_js({
+    deriv(y) <- 1
+    initial(y) <- 1
+    matrix[,] <- user()
+    dim(matrix) <- user()
+  })
+
+  m <- matrix(1:12, c(3, 4))
+  mod <- gen(matrix = to_json_columnwise(m))
+  expect_equal(
+    mod$contents()$matrix, m)
+
+  mod <- gen(matrix = m)
+  expect_equal(
+    mod$contents()$matrix, m)
+})
+
+
 test_that("delay models are not supported", {
   expect_error(
     odin_js({

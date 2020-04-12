@@ -18,7 +18,9 @@ odin_js_wrapper <- function(ir, options) {
 
 to_json_user <- function(user) {
   f <- function(x) {
-    if (is.array(x)) {
+    if (inherits(x, "JS_EVAL")) {
+      class(x) <- "json"
+    } else if (is.array(x)) {
       x <- list(data = c(x), dim = I(dim(x)))
     } else if (length(x) > 1L || inherits(x, "AsIs")) {
       x <- list(data = x, dim = I(length(x)))
@@ -29,7 +31,7 @@ to_json_user <- function(user) {
     stopifnot(!is.null(names(user)))
   }
   user <- lapply(user, f)
-  to_json(user, auto_unbox = TRUE)
+  to_json(user, auto_unbox = TRUE, json_verbatim = TRUE)
 }
 
 

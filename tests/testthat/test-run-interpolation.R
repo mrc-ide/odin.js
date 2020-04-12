@@ -167,7 +167,6 @@ test_that("linear", {
 
 
 test_that("spline", {
-  skip("not yet supported")
   gen <- odin_js({
     deriv(y) <- pulse
     initial(y) <- 0
@@ -180,7 +179,7 @@ test_that("spline", {
     dim(zp) <- user()
   })
 
-  tp <- seq(0, pi, length.out = 31)
+  tp <- seq(0, pi * 1.01, length.out = 31) # TODO: needs a bit extra here?
   zp <- sin(tp)
   mod <- gen(tp = tp, zp = zp)
 
@@ -189,17 +188,14 @@ test_that("spline", {
 
   f <- splinefun(tp, zp, "natural")
   target <- function(t, x, .) list(f(t))
-  cmp <- deSolve::lsoda(mod$initial(), tt, target, tcrit = tt[length(tt)])
-  expect_equal(yy[, 2], cmp[, 2])
+  cmp <- deSolve::lsoda(mod$initial(0), tt, target, tcrit = tt[length(tt)])
+  expect_equal(yy[, 2], cmp[, 2], tolerance = 5e-6)
 })
 
 
 test_that("interpolation with two variables", {
   interpolation_types <- c("constant", "linear", "spline")
   for (type in interpolation_types) {
-    if (type == "spline") {
-      skip("not yet supported")
-    }
     gen <- odin_js_(
       bquote({
         deriv(y) <- pulse1 + pulse2

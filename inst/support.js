@@ -312,6 +312,20 @@ function round2(x, digits) {
     }
 }
 
+// modulo that conforms to (approximately) the same behaviour as R
+function modr(x, y) {
+    var tmp = x % y;
+    if (tmp * y < 0) {
+        tmp += y;
+    }
+    return tmp;
+}
+
+
+function intdivr(x, y) {
+    return Math.floor(x / y);
+}
+
 
 // Ranks 2..8 created by scripts/create_support_sum_js.R
 function odinSum1(x, from, to) {

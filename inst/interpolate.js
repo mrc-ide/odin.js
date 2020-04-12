@@ -67,9 +67,12 @@ function interpolateAlloc(type, x, y, failOnExtrapolate) {
         ret.evalFn = interpolateLinearEval;
     } else if (type === "spline") {
         ret.y = y.slice();
-        var A = splineCalcA(x, y);
-        ret.k = splineCalcB(x, y);
-        ret.splineCalcK(A, ret.k);
+        // need to rearrange 'y' here a bit
+        var A = splineCalcA(x);
+        var B = splineCalcB(x, y);
+        k = splineCalcK(A, B); // k actually the same as B
+        ret.k = k;
+        ret.evalFn = interpolateSplineEval;
     }
 
     return ret;

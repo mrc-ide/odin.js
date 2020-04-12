@@ -6,7 +6,7 @@ function interpolateSplineEval(x, obj) {
 
     var y = new Array(obj.ny);
     for (var j = 0; j < obj.ny; ++j) {
-        y[j] = splineEval(i, x, obj.x, obj.y[j], obj.k[j]);
+        y[j] = splineEval(i, x, obj.x, obj.y[i + j * obj.n], obj.k[j]);
     }
 
     return y;
@@ -14,10 +14,14 @@ function interpolateSplineEval(x, obj) {
 
 
 function splineEval(i, x, xs, ys, ks) {
-  var t = (x - xs[i]) / (xs[i + 1] - xs[i]);
-  var a =  ks[i] * (xs[i + 1] - xs[i]) - (ys[i + 1] - ys[i]);
-  var b = -ks[i + 1] * (xs[i + 1] - xs[i]) + (ys[i + 1] - ys[i]);
-  return (1 - t) * ys[i] + t * ys[i + 1] + t * (1 - t) * (a * (1 - t) + b * t);
+    var t = (x - xs[i]) / (xs[i + 1] - xs[i]);
+    var a =  ks[i] * (xs[i + 1] - xs[i]) - (ys[i + 1] - ys[i]);
+    var b = -ks[i + 1] * (xs[i + 1] - xs[i]) + (ys[i + 1] - ys[i]);
+    console.log(t);
+    console.log(a);
+    console.log(b);
+    return (1 - t) * ys[i] + t * ys[i + 1] +
+        t * (1 - t) * (a * (1 - t) + b * t);
 }
 
 
@@ -44,13 +48,17 @@ function splineCalcA(x) {
 }
 
 
+// Accepts 'y' in column major order with each set of 'n' values in
+// 'y' corresponding to one trace to interpolate.  This is the same
+// format the interpolateSplineEval will cope with.
 function splineCalcB(x, y) {
     var n = x.length;
+    var ny = y.length / n;
     var nm1 = n - 1;
     var B = [];
-    for (var j = 0; j < y.length; ++j) {
+    for (var j = 0; j < ny; ++j) {
         var Bj = new Array(n);
-        var yj = y[j];
+        var yj = y.slice(j * n, (j + 1) * n);
         Bj[0] = 3 * (yj[1] - yj[0]) / ((x[1] - x[0]) * (x[1] - x[0]));
         for (var i = 1; i < nm1; ++i) {
             Bj[i] = 3 *

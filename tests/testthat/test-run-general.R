@@ -381,9 +381,8 @@ test_that("4d array", {
 
   mod <- gen()
   expect_equal(mod$initial(0), rep(1.0, 2 * 3 * 4 * 5))
-  ## TODO:
-  ## dat <- mod$contents()
-  ## expect_equal(dat$initial_y, array(1, c(2, 3, 4, 5)))
+  dat <- mod$contents()
+  expect_equal(dat$initial_y, array(1, c(2, 3, 4, 5)))
 })
 
 ## I need a system with mixed variables and arrays for testing the
@@ -512,7 +511,7 @@ test_that("use dim on rhs", {
 
   mod <- gen()
   expect_equal(mod$contents()$r, rep(0.1, 3))
-  expect_equal(mod$contents()$initial_y, rep(1, 3 * 4)) # TODO: return matrix
+  expect_equal(mod$contents()$initial_y, matrix(1, 3, 4))
 })
 
 
@@ -696,10 +695,9 @@ test_that("non-numeric input", {
 
   expect_equal(dat$scalar, scalar)
   expect_equal(dat$vector, vector)
-  ## TODO: should shape these back on return
-  expect_equal(dat$matrix, c(matrix))
-  expect_equal(dat$array,  c(array))
-  expect_equal(dat$array4, c(array4))
+  expect_equal(dat$matrix, matrix)
+  expect_equal(dat$array,  array)
+  expect_equal(dat$array4, array4)
 
   ## Then to integer first:
   mod <- gen(scalar = convert(scalar),
@@ -711,9 +709,9 @@ test_that("non-numeric input", {
   expect_equal(dat$scalar, scalar)
   expect_equal(dat$vector, vector)
   ## TODO: should shape these back on return
-  expect_equal(dat$matrix, c(matrix))
-  expect_equal(dat$array,  c(array))
-  expect_equal(dat$array4, c(array4))
+  expect_equal(dat$matrix, matrix)
+  expect_equal(dat$array,  array)
+  expect_equal(dat$array4, array4)
 
   ## Then test for errors on each as we convert to character:
   expect_error(
@@ -835,7 +833,7 @@ test_that("sum over one dimension", {
   m <- matrix(runif(nr * nc), nr, nc)
   dat <- gen(m = m)$contents()
 
-  expect_equal(dat$m, c(m)) # TODO: reshape
+  expect_equal(dat$m, m)
   expect_equal(dat$v1, rowSums(m))
   expect_equal(dat$v2, colSums(m))
 
@@ -897,18 +895,18 @@ test_that("sum over two dimensions", {
   a <- array(runif(nr * nc * nz), c(nr, nc, nz))
   dat <- gen(a = a)$contents()
 
-  expect_equal(dat$a, c(a)) # TODO: reshaping all through here
-  expect_equal(dat$m12, c(apply(a, 1:2, sum)))
-  expect_equal(dat$m13, c(apply(a, c(1, 3), sum)))
-  expect_equal(dat$m23, c(apply(a, 2:3, sum)))
+  expect_equal(dat$a, a)
+  expect_equal(dat$m12, apply(a, 1:2, sum))
+  expect_equal(dat$m13, apply(a, c(1, 3), sum))
+  expect_equal(dat$m23, apply(a, 2:3, sum))
 
   expect_equal(dat$v1, apply(a, 1, sum))
   expect_equal(dat$v2, apply(a, 2, sum))
   expect_equal(dat$v3, apply(a, 3, sum))
 
-  expect_equal(dat$mm12, c(apply(a[,,2:4], 1:2, sum)))
-  expect_equal(dat$mm13, c(apply(a[,2:4,], c(1, 3), sum)))
-  expect_equal(dat$mm23, c(apply(a[2:4,,], 2:3, sum)))
+  expect_equal(dat$mm12, apply(a[,,2:4], 1:2, sum))
+  expect_equal(dat$mm13, apply(a[,2:4,], c(1, 3), sum))
+  expect_equal(dat$mm23, apply(a[2:4,,], 2:3, sum))
 
   expect_equal(dat$vv1, apply(a[,2:4,2:4], 1, sum))
   expect_equal(dat$vv2, apply(a[2:4,,2:4], 2, sum))
@@ -945,10 +943,10 @@ test_that("sum for a 4d array", {
   a <- array(runif(prod(dim)), dim)
   dat <- gen(a = a)$contents()
 
-  expect_equal(dat$a, c(a))
-  expect_equal(dat$m12, c(apply(a, 1:2, sum)))
-  expect_equal(dat$m23, c(apply(a, c(2, 3), sum)))
-  expect_equal(dat$m24, c(apply(a, c(2, 4), sum)))
+  expect_equal(dat$a, a)
+  expect_equal(dat$m12, apply(a, 1:2, sum))
+  expect_equal(dat$m23, apply(a, c(2, 3), sum))
+  expect_equal(dat$m24, apply(a, c(2, 4), sum))
 })
 
 test_that("self output for scalar", {

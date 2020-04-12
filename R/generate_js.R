@@ -235,7 +235,15 @@ generate_js_core_metadata <- function(eqs, dat, rewrite) {
   }
 
   len_block <- function(location) {
-    contents <- dat$data$elements[names(dat$data[[location]]$contents)]
+    if (location == "internal") {
+      ## This excludes interpolate_data and ring_buffer
+      keep <- vlapply(dat$data$elements, function(x)
+        x$location == "internal" &&
+        x$storage_type %in% c("double", "int", "bool"))
+      contents <- dat$data$elements[keep]
+    } else {
+      contents <- dat$data$elements[names(dat$data[[location]]$contents)]
+    }
     if (length(contents) == 0) {
       sprintf("this.metadata.%sOrder = null;", location)
     } else {
@@ -245,7 +253,10 @@ generate_js_core_metadata <- function(eqs, dat, rewrite) {
     }
   }
 
-  body <- c(body, len_block("variable"), len_block("output"))
+  body <- c(body,
+            len_block("internal"),
+            len_block("variable"),
+            len_block("output"))
 
   js_function(NULL, body)
 }

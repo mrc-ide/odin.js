@@ -41,6 +41,7 @@ R6_odin_js_wrapper <- R6::R6Class(
   private = list(
     context = NULL,
     name = NULL,
+    internal_order = NULL,
     variable_order = NULL,
     output_order = NULL,
 
@@ -49,6 +50,8 @@ R6_odin_js_wrapper <- R6::R6Class(
     },
 
     update_metadata = function() {
+      private$internal_order <-
+        private$context$get(sprintf("%s.metadata.internalOrder", private$name))
       private$variable_order <-
         private$context$get(sprintf("%s.metadata.variableOrder", private$name))
       private$output_order <-
@@ -99,7 +102,15 @@ R6_odin_js_wrapper <- R6::R6Class(
     },
 
     contents = function() {
-      private$context$get(sprintf("%s.internal", private$name))
+      ret <- private$context$get(sprintf("%s.internal", private$name))
+      order <- private$internal_order
+      for (i in names(ret)) {
+        d <- order[[i]]
+        if (length(d) > 1) {
+          dim(ret[[i]]) <- d
+        }
+      }
+      ret
     },
 
     run = function(t, y = NULL, ..., tcrit = NULL, use_names = TRUE) {

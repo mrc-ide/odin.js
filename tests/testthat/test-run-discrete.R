@@ -101,7 +101,7 @@ test_that("2d array equations", {
   mod <- gen(x0 = x0, r = r)
   yy <- mod$run(0:10)
 
-  expect_equal(mod$contents()$x0, c(x0)) # TODO - reshape
+  expect_equal(mod$contents()$x0, x0)
   expect_equal(matrix(mod$initial(0), 2, 5), x0)
 
   expect_equal(unname(diff(yy)[1, ]), c(1, c(r)))

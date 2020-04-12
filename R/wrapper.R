@@ -7,7 +7,7 @@ odin_js_wrapper <- function(ir, options) {
   name <- res$name
 
   ret <- function(..., user = list(...), unused_user_action = NULL) {
-    R6_odin_js_wrapper$new(context, name, user, res$features,
+    R6_odin_js_wrapper$new(context, name, user, res$features, res$ir,
                            unused_user_action)
   }
   attr(ret, "ir") <- ir
@@ -64,7 +64,7 @@ R6_odin_js_wrapper <- R6::R6Class(
   ),
 
   public = list(
-    initialize = function(context, generator, user, features,
+    initialize = function(context, generator, user, features, ir,
                           unused_user_action) {
       private$context <- context
       private$name <- sprintf("%s.%s", JS_INSTANCES, basename(tempfile("i")))
@@ -90,6 +90,9 @@ R6_odin_js_wrapper <- R6::R6Class(
       }
       private$context$eval(init)
       private$update_metadata()
+
+      self$ir <- ir
+      lockBinding("ir", self)
       lockEnvironment(self)
     },
 

@@ -18,3 +18,8 @@ skip_for_target <- function(target, reason = NULL, using = NULL) {
 skip_for_delay <- function() {
   skip("needs delay, not yet implemented in odin.js")
 }
+
+
+ir_deserialise <- function(ir) {
+  odin:::ir_deserialise(ir)
+}

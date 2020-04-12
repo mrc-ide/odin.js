@@ -1022,7 +1022,6 @@ test_that("integer vector", {
   expect_equal(dat$idx, idx)
   expect_equal(dat$initial_v, x[idx])
 
-  skip("interface issue")
   expect_equal(ir_deserialise(mod$ir)$data$elements$idx$storage_type,
                "int")
 })
@@ -1051,7 +1050,6 @@ test_that("integer matrix", {
   mod <- gen(x = x, idx = idx)
   expect_equal(mod$contents()$v, v)
 
-  skip("interface issue")
   expect_equal(ir_deserialise(mod$ir)$data$elements$idx$storage_type,
                "int")
 })
@@ -1084,8 +1082,7 @@ test_that("user variable information", {
   expect_equal(info$has_default, c(FALSE, TRUE, TRUE))
   expect_equal(info$rank, c(1L, 0L, 0L))
 
-  skip("interface error")
-  expect_identical(coef(gen(1)), info)
+  expect_identical(coef(gen(r = I(1))), info)
 })
 
 
@@ -1107,7 +1104,6 @@ test_that("user variable information - when no user", {
                     integer = logical(),
                     stringsAsFactors = FALSE)
   expect_identical(info, cmp)
-  skip("interface issue")
   expect_identical(coef(gen()), cmp)
 })
 

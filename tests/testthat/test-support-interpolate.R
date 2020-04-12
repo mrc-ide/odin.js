@@ -175,3 +175,41 @@ test_that("spline calculations are correct", {
   expect_equal(drop(k %*% m), B)
   expect_equal(solve(m, B), k)
 })
+
+
+test_that("spline calculations are correct for matrix output", {
+  set.seed(1)
+  n <- 30
+  x <- sort(runif(n, 0, 2 * pi))
+  y <- rbind(sin(x), cos(x))
+
+  ctx <- odin_js_support()
+
+  A <- ctx$call("splineCalcA", to_json_max(x))
+  B <- ctx$call("splineCalcB", to_json_max(x), to_json_max(rbind(y)))
+  k <- ctx$call("splineCalcK", to_json_max(A), to_json_max(B))
+
+  expect_equal(dim(A), c(3, 30))
+  expect_equal(dim(B), c(2, 30))
+  expect_equal(dim(k), c(2, 30))
+
+  k1 <- ctx$call("solveTridiagonal",
+                 n, to_json_max(A[1, ]), to_json_max(A[2, ]),
+                 to_json_max(A[3, ]), to_json_max(B[1, ]))
+  k2 <- ctx$call("solveTridiagonal",
+                 n, to_json_max(A[1, ]), to_json_max(A[2, ]),
+                 to_json_max(A[3, ]), to_json_max(B[2, ]))
+  expect_equal(k[1, ], k1)
+  expect_equal(k[2, ], k2)
+
+  i <- 2:n
+  j <- 1:(n - 1)
+  m <- matrix(0, n, n)
+  m[cbind(i, j)] <- A[1, -1]
+  diag(m) <- A[2, ]
+  m[cbind(j, i)] <- A[3, -n]
+
+  ## Correct calculation of coefficients:
+  expect_equal(k %*% m, B)
+  expect_equal(solve(m, t(B)), t(k))
+})

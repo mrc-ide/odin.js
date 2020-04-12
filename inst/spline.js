@@ -71,10 +71,12 @@ function splineCalcK(A, B) {
     for (var i = 0; i < B.length; ++i) {
         solveTridiagonal(n, a, b, c, B[i]);
     }
+    return B;
 }
 
 
 function solveTridiagonal(n, a, b, c, x) {
+    b = b.slice();
     // Eliminate:
     for (var i = 1; i < n; ++i) {
         if (b[i - 1] === 0) {

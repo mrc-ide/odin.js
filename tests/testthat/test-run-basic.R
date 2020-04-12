@@ -1,7 +1,5 @@
 context("basic")
 
-## Incomplete list taken from odin:run/test-basic.R
-
 test_that("trivial model", {
   gen <- odin_js({
     deriv(y) <- r
@@ -299,7 +297,7 @@ test_that("3d array", {
 
   mod <- gen()
   d <- mod$contents()
-  expect_equal(d$initial_y, array(1, c(2, 3, 4))) # TODO
+  expect_equal(d$initial_y, array(1, c(2, 3, 4)))
   expect_equal(d$dim_y, 24)
   expect_equal(d$dim_y_1, 2)
   expect_equal(d$dim_y_2, 3)
@@ -315,4 +313,401 @@ test_that("3d array", {
   expect_equal(yy[, 1], tt)
   expect_equal(unname(yy[, -1]), matrix(rep(exp(0.1 * tt), 24), 11),
                tolerance = 1e-7)
+})
+
+
+## User provided, constant defined arrays
+test_that("user array", {
+  gen <- odin_js({
+    initial(x[]) <- 1
+    deriv(x[]) <- r[i]
+    r[] <- user()
+    n <- 3
+    dim(r) <- n
+    dim(x) <- n
+  })
+
+  mod <- gen(r = 1:3)
+  expect_equal(mod$contents()$r, 1:3)
+  expect_js_error(gen(r = I(1)), "Expected length 3 value for 'r'")
+})
+
+
+test_that("user matrix", {
+  gen <- odin_js({
+    initial(y[, ]) <- 1
+    deriv(y[, ]) <- y[i, j] * r[i, j]
+    dim(y) <- c(2, 3)
+    dim(r) <- c(2, 3)
+    r[, ] <- user()
+  })
+
+  r <- matrix(runif(6), 2, 3)
+  mod <- gen(r = r)
+  expect_equal(mod$contents()$r, r)
+
+  ## TODO: this would be nice to tidy up but it's really tricky to
+  ## throw these errors the same way in C
+  if (odin_target_name() == "r") {
+    msg1 <- msg2 <- "Expected a numeric array with dimensions 2 * 3 for 'r'"
+  } else if (odin_target_name() == "js") {
+    msg1 <- "Expected a numeric matrix for 'r'"
+    msg2 <- "Incorrect size of dimension 1 of 'r' (expected 2)"
+  } else {
+    msg1 <- "Expected a numeric matrix for 'r'"
+    msg2 <- "Incorrect size of dimension 1 of r (expected 2)"
+  }
+
+  expect_js_error(gen(r = c(r)), msg1, fixed = TRUE)
+  expect_js_error(gen(r = I(r[2, 2])), msg1, fixed = TRUE)
+  expect_js_error(gen(r = array(1, 2:4)), msg1, fixed = TRUE)
+  expect_js_error(gen(r = I(1)), msg1, fixed = TRUE)
+
+  expect_js_error(gen(r = t(r)), msg2, fixed = TRUE)
+})
+
+
+test_that("user array - indirect", {
+  gen <- odin_js({
+    initial(x[]) <- 1
+    deriv(x[]) <- r[i]
+    r[] <- user()
+    dim(r) <- n
+    dim(x) <- n
+    n <- user()
+  })
+
+  mod <- gen(n = 3, r = 1:3)
+  expect_equal(sort_list(mod$contents()),
+               sort_list(list(
+                 dim_r = 3,
+                 dim_x = 3,
+                 initial_x = rep(1, 3),
+                 n = 3,
+                 r = 1:3)))
+
+  expect_js_error(gen(n = 4, r = 1:3),
+                  "Expected length 4 value for 'r'")
+})
+
+
+test_that("user array - direct", {
+  gen <- odin_js({
+    initial(x[]) <- 1
+    deriv(x[]) <- r[i]
+    r[] <- user()
+    dim(r) <- user()
+    dim(x) <- length(r)
+  })
+
+  mod <- gen(r = 1:3)
+  expect_equal(
+    sort_list(mod$contents()),
+    sort_list(list(dim_r = 3, dim_x = 3, initial_x = rep(1, 3), r = 1:3)))
+  expect_js_error(gen(r = matrix(1, 2, 3)),
+                  "Expected a numeric vector for 'r'")
+  expect_js_error(gen(r = NULL),
+                  "Expected an odin.js array object for 'r'")
+  ## expect_silent(mod$set_user(r = NULL)) # TODO - this differs...
+  expect_equal(mod$contents()$r, 1:3)
+})
+
+
+test_that("user array - direct 3d", {
+  gen <- odin_js({
+    initial(y) <- 1
+    deriv(y) <- 1
+    r[, , ] <- user()
+    dim(r) <- user()
+  })
+
+  m <- array(runif(24), 2:4)
+  mod <- gen(r = m)
+  expect_equal(sort_list(mod$contents()),
+               sort_list(list(dim_r = 24, dim_r_1 = 2, dim_r_12 = 6,
+                              dim_r_2 = 3, dim_r_3 = 4, initial_y = 1,
+                              r = m)))
+
+  expect_js_error(gen(r = I(1)),
+                  "Expected a numeric array of rank 3 for 'r'")
+  expect_js_error(gen(r = matrix(1)),
+                  "Expected a numeric array of rank 3 for 'r'")
+})
+
+
+## NOTE: this is the test from test-interpolation.R
+test_that("interpolation", {
+  gen <- odin_js({
+    deriv(y) <- pulse
+    initial(y) <- 0
+    ##
+    pulse <- interpolate(tp, zp, "constant")
+    ##
+    tp[] <- user()
+    zp[] <- user()
+    dim(tp) <- user()
+    dim(zp) <- user()
+    output(p) <- pulse
+  })
+
+  tt <- seq(0, 3, length.out = 301)
+  tp <- c(0, 1, 2)
+  zp <- c(0, 1, 0)
+  mod <- gen(tp = tp, zp = zp)
+  dat <- mod$contents()
+
+  expect_equal(sort(names(dat)),
+               sort(c("dim_tp", "dim_zp", "initial_y", "interpolate_pulse",
+                      "tp", "zp")))
+  pulse <- cinterpolate::interpolation_function(tp, zp, "constant")(tt)
+  ## TODO: this can be done for c models too but it requires a bit
+  ## more work
+  if (odin_target_name() == "r") {
+    ## Interpolating function works
+    expect_equal(vnapply(tt, dat$interpolate_pulse), pulse)
+  }
+
+  yy <- mod$run(tt)
+  zz <- ifelse(tt < 1, 0, ifelse(tt > 2, 1, tt - 1))
+  expect_equal(yy[, "y"], zz, tolerance = 2e-5)
+  expect_equal(yy[, "p"], pulse)
+})
+
+
+test_that("stochastic", {
+  gen <- odin_js({
+    initial(x) <- 0
+    update(x) <- x + norm_rand()
+  })
+  mod <- gen()
+  expect_equal(mod$initial(0), 0)
+
+  model_set_seed(mod, 1)
+  x <- model_random_numbers(mod, "normal", 3)
+
+  model_set_seed(mod, 1)
+  y <- replicate(3, mod$update(0, 0))
+
+  expect_identical(x, y)
+})
+
+
+test_that("multiple arrays: constant", {
+  gen <- odin_js({
+    initial(x[]) <- 1
+    initial(y[]) <- 2
+    deriv(x[]) <- r[i]
+    deriv(y[]) <- r[i]
+    r[] <- i
+    n <- 3
+    dim(r) <- n
+    dim(x) <- n
+    dim(y) <- n
+  })
+
+  mod <- gen()
+  ## expect_equal(mod$contents()$offset_y, 3)
+  expect_equal(mod$initial(0), rep(1:2, each = 3))
+  expect_equal(mod$deriv(0, mod$initial(0)), rep(1:3, 2))
+})
+
+
+test_that("multiple arrays: dynamic", {
+  gen <- odin_js({
+    initial(x[]) <- 1
+    initial(y[]) <- 2
+    deriv(x[]) <- r[i]
+    deriv(y[]) <- r[i]
+    r[] <- i
+    n <- user()
+    dim(r) <- n
+    dim(x) <- n
+    dim(y) <- n
+  })
+
+  mod <- gen(n = 4)
+  ## expect_equal(mod$contents()$offset_y, 4)
+  expect_equal(mod$initial(0), rep(1:2, each = 4))
+  expect_equal(mod$deriv(0, mod$initial(0)), rep(1:4, 2))
+})
+
+
+test_that("multiple output arrays", {
+  gen <- odin_js({
+    deriv(y[]) <- y[i] * r[i]
+    initial(y[]) <- i
+    dim(y) <- 3
+    dim(r) <- 3
+    r[] <- user()
+    output(yr[]) <- y[i] / i
+    dim(yr) <- 3
+    output(r[]) <- TRUE
+  })
+
+  r <- runif(3)
+  mod <- gen(r = r)
+
+  expect_equal(mod$initial(0), 1:3)
+  expect_equal(
+    mod$deriv(0, mod$initial(0)),
+    structure(1:3 * r, output = c(1:3 / 1:3, r)))
+
+  tt <- seq(0, 10, length.out = 101)
+  yy <- mod$run(tt, atol = 1e-8, rtol = 1e-8)
+  zz <- mod$transform_variables(yy)
+
+  expect_equal(zz$y, t(1:3 * exp(outer(r, tt))), tolerance = 1e-5)
+  expect_equal(zz$r, matrix(r, length(tt), 3, TRUE))
+  expect_equal(zz$yr, t(t(zz$y) / (1:3)))
+})
+
+
+test_that("3d array time dependent and variable", {
+  gen <- odin_js({
+    initial(y[, , ]) <- 1
+    deriv(y[, , ]) <- y[i, j, k] * r[i, j, k]
+    dim(y) <- c(2, 3, 4)
+    dim(r) <- c(2, 3, 4)
+    r[, , ] <- t * 0.1
+  })
+
+  mod <- gen()
+  d <- mod$contents()
+  expect_equal(d$initial_y, array(1, c(2, 3, 4)))
+  expect_equal(d$dim_y, 24)
+  expect_equal(d$dim_y_1, 2)
+  expect_equal(d$dim_y_2, 3)
+  expect_equal(d$dim_y_3, 4)
+  expect_equal(d$dim_y_12, 6)
+
+  expect_equal(mod$initial(0), rep(1, 24))
+  expect_equal(mod$deriv(2, mod$initial(0)), rep(0.2, 24))
+
+  tt <- 0:10
+  yy <- mod$run(tt)
+  expect_equal(colnames(yy)[[12]], "y[1,3,2]")
+  expect_equal(yy[, 1], tt)
+
+  cmp <- deSolve::ode(1, tt, function(t, y, p) list(y * t * 0.1))[, 2]
+  expect_equal(
+    unname(yy[, -1]),
+    matrix(rep(cmp, 24), 11),
+    tolerance = 1e-4)
+})
+
+
+test_that("rich user arrays", {
+  gen <- odin_js({
+    initial(y[, ]) <- 1
+    deriv(y[, ]) <- y[i, j] * r[i, j]
+    dim(y) <- c(2, 3)
+    r[, ] <- user(min = 0)
+    dim(r) <- c(2, 3)
+  })
+
+  r <- matrix(runif(6), 2, 3)
+  expect_error(gen(r = r), NA)
+  expect_js_error(gen(r = -r), "Expected 'r' to be at least 0")
+  r[5] <- -1
+  expect_js_error(gen(r = r), "Expected 'r' to be at least 0")
+  r[5] <- NA
+  ## TODO: not a great error
+  expect_js_error(gen(r = r), "Expected a numeric value for 'r'")
+})
+
+
+test_that("rich user sized arrays", {
+  gen <- odin_js({
+    initial(y[, ]) <- 1
+    deriv(y[, ]) <- y[i, j] * r[i, j]
+    dim(y) <- c(2, 3)
+    r[, ] <- user(min = 0)
+    dim(r) <- user()
+  })
+
+  r <- matrix(runif(6), 2, 3)
+
+  expect_error(gen(r = r), NA)
+  expect_js_error(gen(r = -r), "Expected 'r' to be at least 0")
+  r[5] <- -1
+  expect_js_error(gen(r = r), "Expected 'r' to be at least 0")
+})
+
+
+test_that("discrete delays: matrix", {
+  skip_for_delay()
+  gen <- odin_js({
+    initial(y[, ]) <- 1
+    update(y[, ]) <- y[i, j] + 1
+
+    initial(z[, ]) <- 1
+    update(z[, ]) <- a[i, j]
+
+    a[, ] <- delay(y[i, j], 2)
+    dim(y) <- c(2, 3)
+    dim(z) <- c(2, 3)
+    dim(a) <- c(2, 3)
+  })
+
+  mod <- gen()
+  tt <- 0:10
+  yy <- mod$run(tt)
+  zz <- mod$transform_variables(yy)
+  expect_equal(zz$z[1:3, ,], array(1, c(3, 2, 3)))
+  expect_equal(zz$z[4:11, , ], zz$y[1:8, , ])
+})
+
+
+test_that("multinomial", {
+  skip_if_no_random_js()
+  skip("multinomial not supported")
+  gen <- odin_js({
+    q[] <- user()
+    p[] <- q[i] / sum(q)
+    initial(x[]) <- 0
+    update(x[]) <- y[i]
+    y[] <- rmultinom(5, p)
+    dim(p) <- 5
+    dim(q) <- 5
+    dim(x) <- 5
+    dim(y) <- 5
+  })
+
+  set.seed(1)
+  p <- runif(5)
+  mod <- gen(p)
+
+  set.seed(1)
+  y <- mod$update(0, mod$initial(0))
+  set.seed(1)
+  cmp <- drop(rmultinom(1, 5, p))
+
+  expect_equal(cmp, y)
+})
+
+
+test_that("local scope of loop variables", {
+  gen <- odin_js({
+    deriv(x[1,]) <- 1
+    deriv(x[2:n,]) <- 2
+
+    deriv(y[1,]) <- 2
+    deriv(y[2:n,]) <- 4
+
+    initial(x[,]) <- 1
+    initial(y[,]) <- 1
+
+    dim(x) <- c(n, m)
+    dim(y) <- c(n, m)
+    n <- 4
+    m <- 2
+  })
+
+  mod <- gen()
+  y0 <- mod$initial(0)
+  y <- mod$transform_variables(mod$deriv(0, y0))
+
+  cmp <- matrix(rep(1:2, c(2, 6)), 4, 2, TRUE)
+  expect_equal(y$x, cmp)
+  expect_equal(y$y, cmp * 2)
 })

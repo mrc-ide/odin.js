@@ -706,35 +706,35 @@ test_that("non-numeric input", {
   expect_equal(dat$array4, array4)
 
   ## Then test for errors on each as we convert to character:
-  expect_js_error(
+  expect_error(
     gen(scalar = convert(scalar, "character"),
         vector = vector,
         matrix = matrix,
         array = array,
         array4 = array4),
     "Expected a numeric value for 'scalar'")
-  expect_js_error(
+  expect_error(
     gen(scalar = scalar,
         vector = convert(vector, "character"),
         matrix = matrix,
         array = array,
         array4 = array4),
     "Expected a numeric value for 'vector'")
-  expect_js_error(
+  expect_error(
     gen(scalar = scalar,
         vector = vector,
         matrix = convert(matrix, "character"),
         array = array,
         array4 = array4),
     "Expected a numeric value for 'matrix'")
-  expect_js_error(
+  expect_error(
     gen(scalar = scalar,
         vector = vector,
         matrix = matrix,
         array = convert(array, "character"),
         array4 = array4),
     "Expected a numeric value for 'array'")
-  expect_js_error(
+  expect_error(
     gen(scalar = scalar,
         vector = vector,
         matrix = matrix,
@@ -1146,10 +1146,10 @@ test_that("user integer", {
     y0 <- user(1, integer = TRUE, min = 0)
   })
 
-  expect_js_error(gen(y0 = 1.5),
-                  "Expected 'y0' to be integer-like")
-  expect_js_error(gen(y0 = -1L),
-                  "Expected 'y0' to be at least 0")
+  expect_error(gen(y0 = 1.5),
+               "Expected 'y0' to be integer-like")
+  expect_error(gen(y0 = -1L),
+               "Expected 'y0' to be at least 0")
 
   mod <- gen(y0 = 1)
   expect_equal(mod$run(0:10)[, "y"], 1.0 + 0.5 * (0:10))
@@ -1164,8 +1164,8 @@ test_that("multiple constraints", {
     r <- user(0.5, max = 10)
   })
 
-  expect_js_error(gen(y0 = -1L), "Expected 'y0' to be at least 0")
-  expect_js_error(gen(r = 100), "Expected 'r' to be at most 10")
+  expect_error(gen(y0 = -1L), "Expected 'y0' to be at least 0")
+  expect_error(gen(r = 100), "Expected 'r' to be at most 10")
 })
 
 
@@ -1178,9 +1178,9 @@ test_that("set_user honours constraints", {
   })
 
   mod <- gen()
-  expect_js_error(mod$set_user(y0 = -1L),
-                  "Expected 'y0' to be at least 0")
-  expect_js_error(mod$set_user(r = 100), "Expected 'r' to be at most 10")
+  expect_error(mod$set_user(y0 = -1L),
+               "Expected 'y0' to be at least 0")
+  expect_error(mod$set_user(r = 100), "Expected 'r' to be at most 10")
 })
 
 
@@ -1207,7 +1207,7 @@ test_that("user parameter validation", {
   })
 
   ## Honour all the options:
-  expect_js_error(
+  expect_error(
     gen(user = list(r = 1, a = 1), unused_user_action = "stop"),
     "Unknown user parameters: a")
   expect_warning(
@@ -1220,7 +1220,7 @@ test_that("user parameter validation", {
     gen(user = list(r = 1, a = 1), unused_user_action = "ignore"))
 
   ## Sensible error message for invalid option
-  expect_js_error(
+  expect_error(
     gen(user = list(r = 1, a = 1), unused_user_action = "other"),
     "Unknown user parameters: a (and invalid value for unusedUserAction)",
     fixed = TRUE)
@@ -1235,7 +1235,7 @@ test_that("user parameter validation", {
   ## Override option
   with_options(
     list(odin.unused_user_action = "message"),
-    expect_js_error(
+    expect_error(
       gen(user = list(r = 1, a = 1), unused_user_action = "error"),
       "Unknown user parameters: a"))
 
@@ -1250,7 +1250,7 @@ test_that("user parameter validation", {
   mod <- gen(r = 1)
   expect_silent(
     mod$set_user(user = list(x = 1), unused_user_action = "ignore"))
-  expect_js_error(
+  expect_error(
     mod$set_user(user = list(x = 1), unused_user_action = "error"),
     "Unknown user parameters: x")
 })

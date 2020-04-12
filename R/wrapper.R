@@ -50,7 +50,7 @@ R6_odin_js_wrapper <- R6::R6Class(
     output_order = NULL,
 
     finalize = function() {
-      private$context$eval(sprintf("delete %s;", private$name))
+      private$js_eval(sprintf("delete %s;", private$name))
     },
 
     update_metadata = function() {
@@ -60,6 +60,14 @@ R6_odin_js_wrapper <- R6::R6Class(
         private$context$get(sprintf("%s.metadata.variableOrder", private$name))
       private$output_order <-
         private$context$get(sprintf("%s.metadata.outputOrder", private$name))
+    },
+
+    js_call = function(...) {
+      tryCatch(private$context$call(...), error = function(e) stop(e$message))
+    },
+
+    js_eval = function(...) {
+      tryCatch(private$context$eval(...), error = function(e) stop(e$message))
     }
   ),
 
@@ -88,7 +96,7 @@ R6_odin_js_wrapper <- R6::R6Class(
       } else {
         self$deriv <- self$rhs
       }
-      private$context$eval(init)
+      private$js_eval(init)
       private$update_metadata()
 
       self$ir <- ir
@@ -98,15 +106,15 @@ R6_odin_js_wrapper <- R6::R6Class(
 
     initial = function(t) {
       t_js <- to_json(scalar(t))
-      private$context$call(sprintf("%s.initial", private$name), t_js)
+      private$js_call(sprintf("%s.initial", private$name), t_js)
     },
 
     set_user = function(..., user = list(...), unused_user_action = NULL) {
       unused_user_action <- unused_user_action %||%
         getOption("odin.unused_user_action", "warning")
       user_js <- to_json_user(user)
-      private$context$call(sprintf("%s.setUser", private$name),
-                           user_js, unused_user_action)
+      private$js_call(sprintf("%s.setUser", private$name),
+                      user_js, unused_user_action)
       private$update_metadata()
     },
 
@@ -114,8 +122,8 @@ R6_odin_js_wrapper <- R6::R6Class(
       ## TODO: check length of 'y' here?
       t_js <- to_json(scalar(t))
       y_js <- to_json(y, auto_unbox = FALSE)
-      ret <- private$context$call(sprintf("%s.rhsEval", private$name),
-                                  t_js, y_js)
+      ret <- private$js_call(sprintf("%s.rhsEval", private$name),
+                             t_js, y_js)
       ## This is super ugly but should do the trick for now:
       if (length(ret) > length(y)) {
         i <- seq_along(y)
@@ -149,8 +157,8 @@ R6_odin_js_wrapper <- R6::R6Class(
 
       ## NOTE: tcrit here is ignored when calling the discrete time
       ## model
-      res <- private$context$call(sprintf("%s.run", private$name),
-                                  t_js, y_js, tcrit)
+      res <- private$js_call(sprintf("%s.run", private$name),
+                             t_js, y_js, tcrit)
       if (use_names) {
         colnames(res$y) <- res$names
       }

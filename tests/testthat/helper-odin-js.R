@@ -49,11 +49,6 @@ odin_js_test_random <- function(name) {
 }
 
 
-expect_js_error <- function(...) {
-  testthat::expect_error(..., class = "std::runtime_error")
-}
-
-
 to_json_max <- function(x) {
   V8::JS(jsonlite::toJSON(x, digits = NA))
 }

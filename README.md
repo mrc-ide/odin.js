@@ -199,7 +199,6 @@ Chrome will not let you execute js directly off disk (though I think Firefox doe
 ### Limitations and differences
 
 * Solver does not accept an error tolerance
-* Errors have a custom class due to V8, which adds noise to testing
 * the `$initial()` method always requires a time
 * The `use_dde` option to the constructor has gone
 * The `verbose` and `compiler_errors` option to the compiler have gone

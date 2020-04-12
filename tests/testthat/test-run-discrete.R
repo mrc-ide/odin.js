@@ -56,16 +56,16 @@ test_that("interpolate", {
 
   sp <- c(0, 10, 20)
   zp <- c(0, 1, 0)
-  expect_js_error(gen(sp = sp, zp = zp[1:2]),
-                  "Expected length 3 value for 'zp'")
-  expect_js_error(gen(sp = sp, zp = rep(zp, 2)),
-                  "Expected length 3 value for 'zp'")
+  expect_error(gen(sp = sp, zp = zp[1:2]),
+               "Expected length 3 value for 'zp'")
+  expect_error(gen(sp = sp, zp = rep(zp, 2)),
+               "Expected length 3 value for 'zp'")
 
   mod <- gen(sp = sp, zp = zp)
 
   tt <- 0:30
-  expect_js_error(mod$run(tt - 1L),
-                  "Integration times do not span interpolation")
+  expect_error(mod$run(tt - 1L),
+               "Integration times do not span interpolation")
 
   yy <- mod$run(tt)
   zz <- cumsum(ifelse(tt <= 10 | tt > 20, 0, 1))

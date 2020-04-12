@@ -88,12 +88,12 @@ test_that("user variables", {
 
   expect_error(gen())
   ## TODO: Some of these errors are not the same as the other engines
-  expect_js_error(gen(user = NULL),
-                  "Expected a value for 'r'", fixed = TRUE)
-  expect_js_error(gen(r = 1:2),
-                  "Expected a numeric value for 'r'")
-  expect_js_error(gen(r = numeric(0)),
-                  "Expected a numeric value for 'r'")
+  expect_error(gen(user = NULL),
+               "Expected a value for 'r'", fixed = TRUE)
+  expect_error(gen(r = 1:2),
+               "Expected a numeric value for 'r'")
+  expect_error(gen(r = numeric(0)),
+               "Expected a numeric value for 'r'")
 
   expect_equal(sort_list(gen(r = pi)$contents()),
                sort_list(list(K = 100, N0 = 1, initial_N = 1, r = pi)))

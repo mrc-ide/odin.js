@@ -188,8 +188,9 @@ test_that("convert matrices to odin style matrices", {
 
 test_that("detect ragged data", {
   ctx <- odin_js_support()
-  expect_js_error(ctx$call("flattenArray", list(1:3, 1:2), "x"),
-                  "Inconsistent array")
+  expect_error(ctx$call("flattenArray", list(1:3, 1:2), "x"),
+               "Inconsistent array",
+               class = "std::runtime_error")
 
   ## Not very clever though - this is a bug if the user provides
   ## terrible input.

@@ -124,13 +124,13 @@ test_that("user variables", {
 
   expect_error(gen())
   ## TODO: had to change error strings here
-  expect_js_error(gen(user = NULL),
-                  "Expected a value for 'r'", fixed = TRUE)
-  expect_js_error(gen(r = 1:2),
-                  "Expected a numeric value for 'r'", fixed = TRUE)
-  expect_js_error(gen(r = numeric(0)),
-                  "Expected a numeric value for 'r'",
-                  fixed = TRUE)
+  expect_error(gen(user = NULL),
+               "Expected a value for 'r'", fixed = TRUE)
+  expect_error(gen(r = 1:2),
+               "Expected a numeric value for 'r'", fixed = TRUE)
+  expect_error(gen(r = numeric(0)),
+               "Expected a numeric value for 'r'",
+               fixed = TRUE)
 
   expect_equal(sort_list(gen(r = pi)$contents()),
                sort_list(list(K = 100, N0 = 1, initial_N = 1, r = pi)))
@@ -329,7 +329,7 @@ test_that("user array", {
 
   mod <- gen(r = 1:3)
   expect_equal(mod$contents()$r, 1:3)
-  expect_js_error(gen(r = I(1)), "Expected length 3 value for 'r'")
+  expect_error(gen(r = I(1)), "Expected length 3 value for 'r'")
 })
 
 
@@ -358,12 +358,12 @@ test_that("user matrix", {
     msg2 <- "Incorrect size of dimension 1 of r (expected 2)"
   }
 
-  expect_js_error(gen(r = c(r)), msg1, fixed = TRUE)
-  expect_js_error(gen(r = I(r[2, 2])), msg1, fixed = TRUE)
-  expect_js_error(gen(r = array(1, 2:4)), msg1, fixed = TRUE)
-  expect_js_error(gen(r = I(1)), msg1, fixed = TRUE)
+  expect_error(gen(r = c(r)), msg1, fixed = TRUE)
+  expect_error(gen(r = I(r[2, 2])), msg1, fixed = TRUE)
+  expect_error(gen(r = array(1, 2:4)), msg1, fixed = TRUE)
+  expect_error(gen(r = I(1)), msg1, fixed = TRUE)
 
-  expect_js_error(gen(r = t(r)), msg2, fixed = TRUE)
+  expect_error(gen(r = t(r)), msg2, fixed = TRUE)
 })
 
 
@@ -386,8 +386,8 @@ test_that("user array - indirect", {
                  n = 3,
                  r = 1:3)))
 
-  expect_js_error(gen(n = 4, r = 1:3),
-                  "Expected length 4 value for 'r'")
+  expect_error(gen(n = 4, r = 1:3),
+               "Expected length 4 value for 'r'")
 })
 
 
@@ -404,10 +404,10 @@ test_that("user array - direct", {
   expect_equal(
     sort_list(mod$contents()),
     sort_list(list(dim_r = 3, dim_x = 3, initial_x = rep(1, 3), r = 1:3)))
-  expect_js_error(gen(r = matrix(1, 2, 3)),
-                  "Expected a numeric vector for 'r'")
-  expect_js_error(gen(r = NULL),
-                  "Expected an odin.js array object for 'r'")
+  expect_error(gen(r = matrix(1, 2, 3)),
+               "Expected a numeric vector for 'r'")
+  expect_error(gen(r = NULL),
+               "Expected an odin.js array object for 'r'")
   ## expect_silent(mod$set_user(r = NULL)) # TODO - this differs...
   expect_equal(mod$contents()$r, 1:3)
 })
@@ -428,10 +428,10 @@ test_that("user array - direct 3d", {
                               dim_r_2 = 3, dim_r_3 = 4, initial_y = 1,
                               r = m)))
 
-  expect_js_error(gen(r = I(1)),
-                  "Expected a numeric array of rank 3 for 'r'")
-  expect_js_error(gen(r = matrix(1)),
-                  "Expected a numeric array of rank 3 for 'r'")
+  expect_error(gen(r = I(1)),
+               "Expected a numeric array of rank 3 for 'r'")
+  expect_error(gen(r = matrix(1)),
+               "Expected a numeric array of rank 3 for 'r'")
 })
 
 
@@ -607,12 +607,12 @@ test_that("rich user arrays", {
 
   r <- matrix(runif(6), 2, 3)
   expect_error(gen(r = r), NA)
-  expect_js_error(gen(r = -r), "Expected 'r' to be at least 0")
+  expect_error(gen(r = -r), "Expected 'r' to be at least 0")
   r[5] <- -1
-  expect_js_error(gen(r = r), "Expected 'r' to be at least 0")
+  expect_error(gen(r = r), "Expected 'r' to be at least 0")
   r[5] <- NA
   ## TODO: not a great error
-  expect_js_error(gen(r = r), "Expected a numeric value for 'r'")
+  expect_error(gen(r = r), "Expected a numeric value for 'r'")
 })
 
 
@@ -628,9 +628,9 @@ test_that("rich user sized arrays", {
   r <- matrix(runif(6), 2, 3)
 
   expect_error(gen(r = r), NA)
-  expect_js_error(gen(r = -r), "Expected 'r' to be at least 0")
+  expect_error(gen(r = -r), "Expected 'r' to be at least 0")
   r[5] <- -1
-  expect_js_error(gen(r = r), "Expected 'r' to be at least 0")
+  expect_error(gen(r = r), "Expected 'r' to be at least 0")
 })
 
 

@@ -36,12 +36,17 @@ function interpolateCheckT(times, interpolateTimes, tcrit) {
 
 // --- implementation
 function interpolateAlloc(type, x, y, failOnExtrapolate) {
-    if (type === "spline") {
-        throw Error("'spline' interpolation is not currently supported");
-    }
     var n = x.length;
     var ny = y.length / n
-    var evalFn = null;
+
+    var ret = {
+        type: type,
+        n: n,
+        ny: ny,
+        i: 0,
+        x: x.slice(),
+        failOnExtrapolate: failOnExtrapolate
+    };
 
     // Optimisation for the constant interpolation - this should be
     // moved into the C version of this too
@@ -55,22 +60,17 @@ function interpolateAlloc(type, x, y, failOnExtrapolate) {
             }
             y.push(yi);
         }
-        evalFn = interpolateConstantEval;
-    } else {
-        y = y.slice();
-        evalFn = interpolateLinearEval;
+        ret.y = y;
+        ret.evalFn = interpolateConstantEval;
+    } else if (type === "linear") {
+        ret.y = y.slice();
+        ret.evalFn = interpolateLinearEval;
+    } else if (type === "spline") {
+        ret.y = y.slice();
+        var A = splineCalcA(x, y);
+        ret.k = splineCalcB(x, y);
+        ret.splineCalcK(A, ret.k);
     }
-
-    var ret = {
-        type: type,
-        n: n,
-        ny: ny,
-        i: 0,
-        x: x.slice(),
-        y: y,
-        evalFn: evalFn,
-        failOnExtrapolate: failOnExtrapolate
-    };
 
     return ret;
 }

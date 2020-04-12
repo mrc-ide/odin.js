@@ -204,7 +204,7 @@ test_that("spline calculations are correct for matrix output", {
   ctx <- odin_js_support()
 
   A <- ctx$call("splineCalcA", to_json_max(x))
-  B <- ctx$call("splineCalcB", to_json_max(x), to_json_max(rbind(y)))
+  B <- ctx$call("splineCalcB", to_json_max(x), to_json_max(y))
   k <- ctx$call("splineCalcK", to_json_max(A), to_json_max(B))
 
   expect_equal(dim(A), c(3, 30))
@@ -230,4 +230,25 @@ test_that("spline calculations are correct for matrix output", {
   ## Correct calculation of coefficients:
   expect_equal(k %*% m, B)
   expect_equal(solve(m, t(B)), t(k))
+
+  helper <- c(
+    "function testInterpolate(x, y, xout) {",
+    '  var obj = interpolateAlloc("spline", x, y, false);',
+    "  var ret = [];",
+    "  for (var i = 0; i < xout.length; ++i) {",
+    "    ret.push(interpolateEval(xout[i], obj));",
+    "  }",
+    "  return ret;",
+    "}")
+  ctx$eval(helper)
+
+  xout <- seq(min(x), max(x), length.out = 30)
+
+  expected1 <- spline(x, y[1, ], xout = xout, method = "natural")$y
+  expected2 <- spline(x, y[2, ], xout = xout, method = "natural")$y
+  ## TODO: check this transpose carefully!
+  z <- ctx$call("testInterpolate",
+                to_json_max(x), to_json_max(c(t(y))), to_json_max(xout))
+  expect_equal(z[, 1], expected1)
+  expect_equal(z[, 2], expected2)
 })

@@ -47,7 +47,7 @@ function splineCalcA(x) {
 
 function splineCalcB(x, y) {
     var n = x.length;
-    var ny = y.length / n;
+    var ny = y.length;
     var nm1 = n - 1;
     var B = [];
     for (var j = 0; j < ny; ++j) {

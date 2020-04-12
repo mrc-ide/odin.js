@@ -138,3 +138,13 @@ test_that("delay models are not supported", {
     }),
     "Using unsupported features: 'has_delay'")
 })
+
+
+test_that("some R functions are not available", {
+  expect_error(
+    odin_js({
+      deriv(y) <- 1
+      initial(y) <- choose(4, 3)
+    }),
+    "unsupported function 'choose'")
+})

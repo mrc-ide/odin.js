@@ -14,6 +14,8 @@ generate_js_sexp <- function(x, data, meta) {
       ret <- sprintf("Math.pow(%s, %s)", values[[1]], values[[2]])
     } else if (n == 2L && fn %in% odin:::FUNCTIONS_INFIX) {
       ret <- sprintf("%s %s %s", values[[1]], fn, values[[2]])
+    } else if (n == 1L && fn == "-") {
+      ret <- sprintf("- %s", values[[1]])
     } else if (fn == "if") {
       ## NOTE: The ternary operator has very low precendence, so I'm
       ## going to agressively parenthesise it.  This is strictly not
@@ -46,10 +48,9 @@ generate_js_sexp <- function(x, data, meta) {
         fn <- sprintf("Math.%s", fn)
       } else if (any(names(FUNCTIONS_STOCHASTIC_SPECIAL) == fn)) {
         fn <- sprintf("random.%s", FUNCTIONS_STOCHASTIC_SPECIAL[[fn]])
+      } else {
+        stop(sprintf("unsupported function '%s'", fn))
       }
-      ## if (!any(names(FUNCTIONS) == fn)) {
-      ##   stop(sprintf("unsupported function '%s' [odin bug]", fn)) # nocov
-      ## }
       ret <- sprintf("%s(%s)", fn, paste(values, collapse = ", "))
     }
     ret

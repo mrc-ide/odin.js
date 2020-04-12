@@ -195,6 +195,30 @@ function getUserArrayCheckContents(data, min, max, isInteger, name) {
 }
 
 
+function checkUser(user, allowed, unusedUserAction) {
+    if (unusedUserAction === undefined) {
+        unusedUserAction = "stop";
+    }
+    if (unusedUserAction === "ignore") {
+        return;
+    }
+    var err = setDifference(Object.keys(user), allowed);
+    if (err.length > 0) {
+        var msg = "Unknown user parameters: " + err.join(", ");
+
+        if (unusedUserAction === "message") {
+            odinMessage(msg);
+        } else if (unusedUserAction === "warning") {
+            odinWarning(msg);
+        } else if (unusedUserAction === "stop") {
+            throw Error(msg);
+        } else {
+            throw Error(msg + " (and invalid value for unusedUserAction)");
+        }
+    }
+}
+
+
 function isMissing(x) {
     return x === undefined || x === null ||
         (typeof x === "number" && isNaN(x));
@@ -206,6 +230,37 @@ function isMissing(x) {
 // which is close enough to sqrt(double.eps) anyway
 function numberIsInteger(x) {
     return Math.abs(x - Math.round(x)) < 1e-8
+}
+
+
+// O(n^2) but does not use Set, which is not available in old v8
+function setDifference(a, b) {
+  var result = [];
+  for (var i = 0; i < a.length; i++) {
+    if (b.indexOf(a[i]) === -1) {
+      result.push(a[i]);
+    }
+  }
+  return result;
+}
+
+
+// nice behaviour both in and out of R
+function odinWarning(msg) {
+    try {
+        console.r.call("warning", msg)
+    } catch (e) {
+        console.warn(msg)
+    }
+}
+
+
+function odinMessage(msg) {
+    try {
+        console.r.call("message", msg)
+    } catch (e) {
+        console.warn(msg)
+    }
 }
 
 

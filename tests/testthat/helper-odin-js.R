@@ -103,3 +103,10 @@ model_random_numbers <- function(x, name, n, ...) {
   f <- V8::JS(sprintf("random.%s(%s)", name, paste(c(...), collapse = ", ")))
   ctx$call("repeat", f, n)
 }
+
+
+with_options <- function(opts, code) {
+  oo <- options(opts)
+  on.exit(oo)
+  force(code)
+}

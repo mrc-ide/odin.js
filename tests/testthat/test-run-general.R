@@ -1222,7 +1222,6 @@ test_that("user sized dependent variables are allowed", {
 
 
 test_that("user parameter validation", {
-  skip("user validation")
   gen <- odin_js({
     deriv(y) <- r
     initial(y) <- 1
@@ -1230,7 +1229,7 @@ test_that("user parameter validation", {
   })
 
   ## Honour all the options:
-  expect_error(
+  expect_js_error(
     gen(user = list(r = 1, a = 1), unused_user_action = "stop"),
     "Unknown user parameters: a")
   expect_warning(
@@ -1243,9 +1242,9 @@ test_that("user parameter validation", {
     gen(user = list(r = 1, a = 1), unused_user_action = "ignore"))
 
   ## Sensible error message for invalid option
-  expect_error(
+  expect_js_error(
     gen(user = list(r = 1, a = 1), unused_user_action = "other"),
-    "Unknown user parameters: a (and invalid value for unused_user_action)",
+    "Unknown user parameters: a (and invalid value for unusedUserAction)",
     fixed = TRUE)
 
   ## Inherit action from option
@@ -1258,7 +1257,7 @@ test_that("user parameter validation", {
   ## Override option
   with_options(
     list(odin.unused_user_action = "message"),
-    expect_error(
+    expect_js_error(
       gen(user = list(r = 1, a = 1), unused_user_action = "error"),
       "Unknown user parameters: a"))
 
@@ -1273,7 +1272,7 @@ test_that("user parameter validation", {
   mod <- gen(r = 1)
   expect_silent(
     mod$set_user(user = list(x = 1), unused_user_action = "ignore"))
-  expect_error(
+  expect_js_error(
     mod$set_user(user = list(x = 1), unused_user_action = "error"),
     "Unknown user parameters: x")
 })

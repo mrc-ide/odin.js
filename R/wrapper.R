@@ -6,8 +6,9 @@ odin_js_wrapper <- function(ir, options) {
   context$eval(paste(res$code, collapse = "\n"))
   name <- res$name
 
-  ret <- function(..., user = list(...)) {
-    R6_odin_js_wrapper$new(context, name, user, res$discrete)
+  ret <- function(..., user = list(...), unused_user_action = NULL) {
+    R6_odin_js_wrapper$new(context, name, user, res$discrete,
+                           unused_user_action)
   }
   attr(ret, "ir") <- ir
   class(ret) <- "odin_generator"
@@ -60,12 +61,16 @@ R6_odin_js_wrapper <- R6::R6Class(
   ),
 
   public = list(
-    initialize = function(context, generator, user, discrete) {
+    initialize = function(context, generator, user, discrete,
+                          unused_user_action) {
       private$context <- context
       private$name <- sprintf("%s.%s", JS_INSTANCES, basename(tempfile("i")))
       user_js <- to_json_user(user)
-      init <- sprintf("%s = new %s.%s(%s);",
-                      private$name, JS_GENERATORS, generator, user_js)
+      unused_user_action <- unused_user_action %||%
+        getOption("odin.unused_user_action", "warning")
+      init <- sprintf("%s = new %s.%s(%s, %s);",
+                      private$name, JS_GENERATORS, generator, user_js,
+                      dquote(unused_user_action))
       if (discrete) {
         self$update <- self$rhs
       } else {
@@ -81,9 +86,12 @@ R6_odin_js_wrapper <- R6::R6Class(
       private$context$call(sprintf("%s.initial", private$name), t_js)
     },
 
-    set_user = function(..., user = list(...)) {
+    set_user = function(..., user = list(...), unused_user_action = NULL) {
+      unused_user_action <- unused_user_action %||%
+        getOption("odin.unused_user_action", "warning")
       user_js <- to_json_user(user)
-      private$context$call(sprintf("%s.setUser", private$name), user_js)
+      private$context$call(sprintf("%s.setUser", private$name),
+                           user_js, unused_user_action)
       private$update_metadata()
     },
 

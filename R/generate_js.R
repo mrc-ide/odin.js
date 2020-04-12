@@ -57,8 +57,8 @@ generate_js_core_create <- function(eqs, dat, rewrite) {
   body$add("this.%s = {};", dat$meta$internal)
   body$add("var %s = this.%s;", dat$meta$internal, dat$meta$internal)
   body$add(js_flatten_eqs(eqs[dat$components$create$equations]))
-  body$add("this.setUser(%s);", dat$meta$user)
-  args <- dat$meta$user
+  body$add("this.setUser(%s, unusedUserAction);", dat$meta$user)
+  args <- c(dat$meta$user, "unusedUserAction")
   js_function(args, body$get(), dat$config$base)
 }
 
@@ -66,14 +66,17 @@ generate_js_core_create <- function(eqs, dat, rewrite) {
 generate_js_core_set_user <- function(eqs, dat, rewrite) {
   update_metadata <- "this.updateMetadata();"
   if (dat$features$has_user) {
+    allowed <- paste(dquote(names(dat$user)), collapse = ", ")
     body <- c(
+      sprintf("checkUser(%s, [%s], unusedUserAction);",
+              dat$meta$user, allowed),
       sprintf("var %s = this.%s;", dat$meta$internal, dat$meta$internal),
       js_flatten_eqs(eqs[dat$components$user$equations]),
       update_metadata)
   } else {
     body <- update_metadata
   }
-  args <- dat$meta$user
+  args <- c(dat$meta$user, "unusedUserAction")
   js_function(args, body)
 }
 

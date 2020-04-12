@@ -251,7 +251,7 @@ test_that("interpolation with two variables", {
 
 
 test_that("interpolation in a delay", {
-  skip("not yet supported")
+  skip_for_delay()
   gen <- odin_js({
     deriv(y) <- ud
     initial(y) <- 0
@@ -281,7 +281,7 @@ test_that("interpolation in a delay", {
 
 
 test_that("interpolation in a delay, with default", {
-  skip("not yet supported")
+  skip_for_delay()
   gen <- odin_js({
     deriv(y) <- ud
     initial(y) <- 0
@@ -311,9 +311,9 @@ test_that("interpolation in a delay, with default", {
 
 
 test_that("critical times", {
-  skip("not yet supported")
   ## this is only done for the R generation so far:
   skip_for_target("c")
+  skip_for_target("js", "mulitple critical times")
   gen <- odin_js({
     deriv(y) <- pulse1 + pulse2
     initial(y) <- 0
@@ -405,7 +405,7 @@ test_that("user sized interpolation, 2d", {
 
 
 test_that("double delayed interpolation function", {
-  skip("not yet supported")
+  skip_for_delay()
   gen <- odin_js({
     deriv(y) <- ud
     initial(y) <- 0

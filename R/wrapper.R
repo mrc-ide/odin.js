@@ -7,7 +7,7 @@ odin_js_wrapper <- function(ir, options) {
   name <- res$name
 
   ret <- function(..., user = list(...), unused_user_action = NULL) {
-    R6_odin_js_wrapper$new(context, name, user, res$discrete,
+    R6_odin_js_wrapper$new(context, name, user, res$features,
                            unused_user_action)
   }
   attr(ret, "ir") <- ir
@@ -44,6 +44,7 @@ R6_odin_js_wrapper <- R6::R6Class(
   private = list(
     context = NULL,
     name = NULL,
+    features = NULL,
     internal_order = NULL,
     variable_order = NULL,
     output_order = NULL,
@@ -63,17 +64,26 @@ R6_odin_js_wrapper <- R6::R6Class(
   ),
 
   public = list(
-    initialize = function(context, generator, user, discrete,
+    initialize = function(context, generator, user, features,
                           unused_user_action) {
       private$context <- context
       private$name <- sprintf("%s.%s", JS_INSTANCES, basename(tempfile("i")))
+      private$features <- features
+
+      ## For compatibility with odin, without having to write the full
+      ## interface
+      if (length(user) > 0L && !private$features$has_user) {
+        tryCatch(do.call(function() NULL, user),
+                 error = function(e) stop(e$message, call. = FALSE))
+      }
+
       user_js <- to_json_user(user)
       unused_user_action <- unused_user_action %||%
         getOption("odin.unused_user_action", "warning")
       init <- sprintf("%s = new %s.%s(%s, %s);",
                       private$name, JS_GENERATORS, generator, user_js,
                       dquote(unused_user_action))
-      if (discrete) {
+      if (features$discrete) {
         self$update <- self$rhs
       } else {
         self$deriv <- self$rhs

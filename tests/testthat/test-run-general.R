@@ -57,7 +57,6 @@ test_that("user variables", {
 })
 
 test_that("user variables on models with none", {
-  skip("interface issue")
   gen <- odin_js({
     a <- 1
     deriv(y) <- 0.5 * a
@@ -71,7 +70,7 @@ test_that("user variables on models with none", {
 })
 
 test_that("non-numeric time", {
-  skip("needs delay")
+  skip_for_delay()
   ## Only an issue for delay models or models with time-dependent
   ## initial conditions.
   gen <- odin_js({
@@ -86,7 +85,7 @@ test_that("non-numeric time", {
 })
 
 test_that("delays and initial conditions", {
-  skip("needs delay")
+  skip_for_delay()
   gen <- odin_js({
     ylag <- delay(y, 10)
     initial(y) <- 0.5
@@ -216,8 +215,8 @@ test_that("time dependent initial conditions", {
 })
 
 test_that("user c", {
-  skip("not relevant")
   skip_for_target("r")
+  skip_for_target("js")
   gen <- odin_js({
     config(include) <- "user_fns.c"
     z <- squarepulse(t, 1, 2)
@@ -238,8 +237,8 @@ test_that("user c", {
 })
 
 test_that("user c in subdir", {
-  skip("not relevant")
   skip_for_target("r")
+  skip_for_target("js")
   dest <- tempfile()
   dir.create(dest)
 

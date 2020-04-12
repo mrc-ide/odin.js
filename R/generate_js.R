@@ -24,7 +24,7 @@ generate_js <- function(ir, options) {
   ## This is all we need to dump out
   list(code = generate_js_generator(core, dat),
        name = dat$config$base,
-       discrete = dat$features$discrete,
+       features = dat$features,
        include = c(interpolate.js = dat$features$has_interpolate,
                    random.js = dat$features$has_stochastic,
                    discrete.js = dat$features$discrete,
@@ -65,16 +65,17 @@ generate_js_core_create <- function(eqs, dat, rewrite) {
 
 generate_js_core_set_user <- function(eqs, dat, rewrite) {
   update_metadata <- "this.updateMetadata();"
+  allowed <- paste(dquote(names(dat$user)), collapse = ", ")
+  check_user <- sprintf("checkUser(%s, [%s], unusedUserAction);",
+                        dat$meta$user, allowed)
   if (dat$features$has_user) {
-    allowed <- paste(dquote(names(dat$user)), collapse = ", ")
     body <- c(
-      sprintf("checkUser(%s, [%s], unusedUserAction);",
-              dat$meta$user, allowed),
+      check_user,
       sprintf("var %s = this.%s;", dat$meta$internal, dat$meta$internal),
       js_flatten_eqs(eqs[dat$components$user$equations]),
       update_metadata)
   } else {
-    body <- update_metadata
+    body <- c(check_user, update_metadata)
   }
   args <- c(dat$meta$user, "unusedUserAction")
   js_function(args, body)

@@ -28,6 +28,9 @@ generate_js_sexp <- function(x, data, meta) {
     } else if (fn == "dim") {
       dim <- data$elements[[args[[1L]]]]$dimnames$dim[[args[[2]]]]
       ret <- generate_js_sexp(dim, data, meta)
+    } else if (fn == "log" && length(values) == 2L) {
+      ret <- sprintf("(Math.log(%s) / Math.log(%s))",
+                     values[[1L]], values[[2L]])
     } else if (fn == "min" || fn == "max") {
       ret <- js_fold_call(paste0("Math.", fn), values)
     } else if (fn == "sum" || fn == "odin_sum") {

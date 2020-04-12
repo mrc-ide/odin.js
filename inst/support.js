@@ -46,9 +46,6 @@ function integrateOdin(obj, times, y0, tcrit) {
 function getUser(user, name, internal, size, defaultValue,
                   min, max, isInteger) {
     var value = user[name];
-    if (size !== null) {
-        throw Error("Arrays not yet supported");
-    }
     if (isMissing(value)) {
         if (isMissing(internal[name])) {
             if (defaultValue === null) {
@@ -156,7 +153,11 @@ function getUserArrayDim(user, name, internal, size, defaultValue,
 
 
 function getUserArrayCheckType(value, name) {
-    if (!(typeof value === "object" && "data" in value && "dim" in value)) {
+    if (Array.isArray(value)) {
+        value = flattenArray(value, name)
+    } else if (!(typeof value === "object" &&
+                 "data" in value &&
+                 "dim" in value)) {
         throw Error("Expected an odin.js array object for '" + name + "'");
     }
     return value;
@@ -261,6 +262,43 @@ function odinMessage(msg) {
     } catch (e) {
         console.warn(msg)
     }
+}
+
+
+function flattenArray(value, name) {
+    var len = 1;
+    var dim = [];
+    var x = value;
+    while (Array.isArray(x)) {
+        dim.push(x.length);
+        len *= x.length;
+        x = x[0];
+    }
+    dim.reverse();
+
+    var data = flatten(value, []);
+
+    // Not a suffient check, but at least a necessary one:
+    if (len !== data.length) {
+        throw Error("Inconsistent array for '" + name + '"');
+    }
+
+    return {data: data, dim: dim};
+}
+
+
+// not all js versions have Array.prototype.flat?
+function flatten(array, result) {
+  if (array.length === 0) {
+    return result
+  }
+  var head = array[0]
+  var rest = array.slice(1)
+  if (Array.isArray(head)) {
+    return flatten(head.concat(rest), result)
+  }
+  result.push(head)
+  return flatten(rest, result)
 }
 
 

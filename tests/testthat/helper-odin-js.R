@@ -110,3 +110,8 @@ with_options <- function(opts, code) {
   on.exit(oo)
   force(code)
 }
+
+
+to_json_columnwise <- function(x) {
+  V8::JS(jsonlite::toJSON(x, matrix = "columnmajor"))
+}

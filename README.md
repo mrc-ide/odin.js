@@ -192,7 +192,7 @@ Chrome will not let you execute js directly off disk (though I think Firefox doe
 - [x] output
 - [x] arrays
 - [ ] delays
-- [ ] interpolation
+- [x] interpolation
 - [ ] discrete models
 - [ ] stochastic models (this might be hard)
 

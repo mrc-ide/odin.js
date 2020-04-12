@@ -302,6 +302,17 @@ function flatten(array, result) {
 }
 
 
+function round2(x, digits) {
+    // TODO: implement proper IEEE rounding here...
+    if (digits === undefined) {
+        return Math.round(x);
+    } else {
+        var mult = Math.pow(10, digits);
+        return Math.round(x * mult) / mult
+    }
+}
+
+
 // Ranks 2..8 created by scripts/create_support_sum_js.R
 function odinSum1(x, from, to) {
     var tot = 0.0;

@@ -40,7 +40,9 @@ generate_js_sexp <- function(x, data, meta) {
                      FUNCTIONS_STOCHASTIC[[fn]],
                      paste(values, collapse = ", "))
     } else {
-      if (any(FUNCTIONS_MATH == fn)) {
+      if (any(names(FUNCTIONS_RENAME) == fn)) {
+        fn <- FUNCTIONS_RENAME[[fn]]
+      } else if (any(FUNCTIONS_MATH == fn)) {
         fn <- sprintf("Math.%s", fn)
       } else if (any(names(FUNCTIONS_STOCHASTIC_SPECIAL) == fn)) {
         fn <- sprintf("random.%s", FUNCTIONS_STOCHASTIC_SPECIAL[[fn]])
@@ -89,8 +91,10 @@ generate_js_sexp_sum <- function(args, data, meta) {
 
 FUNCTIONS_RENAME <- c(
   "^" = "Math.pow",
-  ceiling = "Math.ceil"
-)
+  ceiling = "Math.ceil",
+  round = "round2",
+  "%%" = "modr",
+  "%/%" = "intdivr")
 
 
 FUNCTIONS_MATH <- c(
@@ -100,7 +104,7 @@ FUNCTIONS_MATH <- c(
   "acos", "asin", "atan", "atan2",
   "cosh", "sinh", "tanh",
   "acosh", "asinh", "atanh",
-  "abs", "floor", "round", "trunc")
+  "abs", "floor", "trunc")
 
 
 FUNCTIONS_STOCHASTIC_SPECIAL <- c(

@@ -234,6 +234,19 @@ generate_js_core_metadata <- function(eqs, dat, rewrite) {
       "this.metadata.interpolateTimes = null;")
   }
 
+  len_block <- function(location) {
+    contents <- dat$data$elements[names(dat$data[[location]]$contents)]
+    if (length(contents) == 0) {
+      sprintf("this.metadata.%sOrder = null;", location)
+    } else {
+      len <- vcapply(contents, generate_js_dim, rewrite)
+      sprintf("this.metadata.%sOrder = {\n  %s\n};",
+              location, paste(len, collapse = ",\n  "))
+    }
+  }
+
+  body <- c(body, len_block("variable"), len_block("output"))
+
   js_function(NULL, body)
 }
 
@@ -344,4 +357,17 @@ generate_js_generator <- function(core, dat) {
   c(sprintf("%s.%s = (function() {", JS_GENERATORS, base),
     paste0("  ", body$get()),
     "}());")
+}
+
+
+generate_js_dim <- function(data_info, rewrite) {
+  if (data_info$rank == 0L) {
+    len <- "null"
+  } else if (data_info$rank == 1L) {
+    len <- rewrite(data_info$dimnames$length)
+  } else {
+    len <- sprintf(
+      "[%s]", paste(vcapply(data_info$dimnames$dim, rewrite), collapse = ", "))
+  }
+  sprintf('"%s": %s', data_info$name, len)
 }

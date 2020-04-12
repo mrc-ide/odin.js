@@ -41,9 +41,18 @@ R6_odin_js_wrapper <- R6::R6Class(
   private = list(
     context = NULL,
     name = NULL,
+    variable_order = NULL,
+    output_order = NULL,
 
     finalize = function() {
       private$context$eval(sprintf("delete %s;", private$name))
+    },
+
+    update_metadata = function() {
+      private$variable_order <-
+        private$context$get(sprintf("%s.metadata.variableOrder", private$name))
+      private$output_order <-
+        private$context$get(sprintf("%s.metadata.outputOrder", private$name))
     }
   ),
 
@@ -60,6 +69,7 @@ R6_odin_js_wrapper <- R6::R6Class(
         self$deriv <- self$rhs
       }
       private$context$eval(init)
+      private$update_metadata()
       lockEnvironment(self)
     },
 
@@ -71,6 +81,7 @@ R6_odin_js_wrapper <- R6::R6Class(
     set_user = function(user) {
       user_js <- to_json_user(user)
       private$context$call(sprintf("%s.setUser", private$name), user_js)
+      private$update_metadata()
     },
 
     rhs = function(t, y) {
@@ -110,6 +121,10 @@ R6_odin_js_wrapper <- R6::R6Class(
         colnames(res$y) <- res$names
       }
       res$y
+    },
+
+    transform_variables = function(y) {
+      odin:::support_transform_variables(y, private)
     }
   ))
 

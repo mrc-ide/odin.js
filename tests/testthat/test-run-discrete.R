@@ -37,8 +37,7 @@ test_that("output", {
 
   tt <- 0:10
   yy <- mod$run(tt)
-  ## zz <- mod$transform_variables(yy)
-  zz <- list(x = unname(yy[, 2:11]), total = yy[, 12])
+  zz <- mod$transform_variables(yy)
 
   expect_equal(zz$x, t(outer(r, tt) + x0))
   expect_equal(zz$total, rowSums(zz$x))
@@ -133,8 +132,7 @@ test_that("complex initialisation: scalar", {
   model_set_seed(mod, 1)
 
   v <- mod$initial(0)
-  ## vv <- mod$transform_variables(v)
-  vv <- list(x1 = v[[1]], x2 = v[[2]])
+  vv <- mod$transform_variables(v)
 
   ## set.seed(1)
   ## x1 <- rnorm(1)
@@ -175,8 +173,7 @@ test_that("complex initialisation: vector", {
   mod <- gen()
   model_set_seed(mod, 1)
   v <- mod$initial(0)
-  ## vv <- mod$transform_variables(v)
-  vv <- list(x1 = v[1:10], x2 = v[11:20])
+  vv <- mod$transform_variables(v)
 
   model_set_seed(mod, 1)
   ctx <- model_context(mod)

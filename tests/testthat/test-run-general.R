@@ -359,16 +359,16 @@ test_that("3d array", {
   expect_match(colnames(yy)[-1], "^y\\[[0-9],[0-9],[0-9]\\]$")
 
   ## Transform for even nicer:
-  ## zz <- mod$transform_variables(yy)
-  ## expect_equal(dim(zz$y), c(c(length(tt), 2, 3, 4)))
+  zz <- mod$transform_variables(yy)
+  expect_equal(dim(zz$y), c(c(length(tt), 2, 3, 4)))
 
   ## Check the automatic variable naming:
-  ## expect_identical(zz$y[, 1, 2, 4], yy[, "y[1,2,4]"])
+  expect_identical(zz$y[, 1, 2, 4], yy[, "y[1,2,4]"])
 
   ## Check conversion of single row:
-  ## y0 <- mod$transform_variables(yy[1,])
-  ## expect_equal(y0,
-  ##              c(setNames(list(tt[1]), TIME), list(y = array(1, c(2, 3, 4)))))
+  y0 <- mod$transform_variables(yy[1,])
+  expect_equal(y0,
+               c(setNames(list(tt[1]), "t"), list(y = array(1, c(2, 3, 4)))))
 })
 
 test_that("4d array", {
@@ -405,19 +405,19 @@ test_that("mixed", {
   y <- mod$run(t)
   expect_error(y, NA) # just test that it doesn't fail
 
-  ## yy <- mod$transform_variables(y)
-  ## expect_equal(sort(names(yy)), sort(c(TIME, "a", "b", "v")))
+  yy <- mod$transform_variables(y)
+  expect_equal(sort(names(yy)), sort(c("t", "a", "b", "v")))
 
   ## Check contents:
-  ## expect_equal(yy[c(TIME, "a", "b")],
-  ##              as.list(as.data.frame(y[, c(TIME, "a", "b")])))
-  ## expect_equal(yy$v, unname(y[, sprintf("v[%d]", 1:3)]))
+  expect_equal(yy[c("t", "a", "b")],
+               as.list(as.data.frame(y[, c("t", "a", "b")])))
+  expect_equal(yy$v, unname(y[, sprintf("v[%d]", 1:3)]))
 
   ## Check scalar:
-  ## y0 <- mod$transform_variables(y[1, ])
-  ## expect_equal(names(y0), names(yy))
-  ## expect_equal(y0,
-  ##              lapply(yy, function(x) if (is.matrix(x)) x[1, ] else x[[1]]))
+  y0 <- mod$transform_variables(y[1, ])
+  expect_equal(names(y0), names(yy))
+  expect_equal(y0,
+               lapply(yy, function(x) if (is.matrix(x)) x[1, ] else x[[1]]))
 })
 
 
@@ -459,8 +459,8 @@ test_that("output array", {
                                sprintf("y2[%d]", 1:3)))
 
   ## transform function:
-  ## zz <- mod$transform_variables(yy)
-  expect_equal(2 * unname(yy[, 2:4]), unname(yy[, 5:7]))
+  zz <- mod$transform_variables(yy)
+  expect_equal(zz$y2, zz$y * 2)
 })
 
 ## (2) An existing array
@@ -484,10 +484,9 @@ test_that("output array", {
                                sprintf("r[%d]", 1:3)))
 
   ## transform function:
-  ## zz <- mod$transform_variables(yy)
-  expect_equal(unname(yy[, 5:7]), matrix(0.1, length(tt), 3))
+  zz <- mod$transform_variables(yy)
+  expect_equal(zz$r, matrix(0.1, length(tt), 3))
 })
-
 
 test_that("use length on rhs", {
   gen <- odin_js({
@@ -520,7 +519,6 @@ test_that("use dim on rhs", {
 ## Ideally we'll end up with all combinations of has array/has scalar
 ## (there are 15 possible combinations though!)
 test_that("transform variables with output", {
-  skip("transform_variables")
   gen <- odin_js({
     deriv(y[]) <- r[i] * y[i]
     initial(y[]) <- y0[i]
@@ -543,13 +541,12 @@ test_that("transform variables with output", {
   y <- mod$run(tt, atol = 1e-8, rtol = 1e-8)
   yy <- mod$transform_variables(y)
 
-  expect_equal(yy$y, real_y)
-  expect_equal(yy$a, real_a)
+  expect_equal(yy$y, real_y, tolerance = 5e-6)
+  expect_equal(yy$a, real_a, tolerance = 5e-6)
 })
 
 
 test_that("transform variables without time", {
-  skip("transform_variables")
   gen <- odin_js({
     deriv(y[]) <- r[i] * y[i]
     initial(y[]) <- y0[i]
@@ -635,10 +632,7 @@ test_that("two output arrays", {
   tt <- seq(0, 10, length.out = 101)
   yy <- mod$run(tt, atol = 1e-8, rtol = 1e-8)
 
-  ## zz <- mod$transform_variables(yy)
-  zz <- list(y = unname(yy[, 2:4]),
-             yr = unname(yy[, 5:7]),
-             r = unname(yy[, 8:10]))
+  zz <- mod$transform_variables(yy)
   ## Quite inaccurate on windows at least?
   expect_equal(zz$y, t(1:3 * exp(outer(r, tt))), tolerance = 1e-5)
   expect_equal(zz$r, matrix(r, length(tt), 3, TRUE))

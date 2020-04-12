@@ -134,12 +134,9 @@ test_that("non-numeric user", {
 
 
 test_that("conditionals", {
-  ## TODO: this fails if initial(x) is set to zero, like in the odin
-  ## test, due to integration not starting.  This is a general problem
-  ## in the underlying solver.
   gen <- odin_js({
     deriv(x) <- if (x > 2) 0 else 0.5
-    initial(x) <- 1
+    initial(x) <- 0
   })
 
   ## Hey ho it works:
@@ -147,24 +144,21 @@ test_that("conditionals", {
   t <- seq(0, 5, length.out = 101)
   y <- mod$run(t)
 
-  expect_equal(y[, 2], ifelse(t < 2, t * 0.5 + 1, 2.0), tolerance = 1e-4)
+  expect_equal(y[, 2], ifelse(t < 4, t * 0.5, 2.0), tolerance = 1e-4)
 })
 
 
 test_that("conditionals, precendence", {
-  ## TODO: this fails if initial(x) is set to zero, like in the odin
-  ## test, due to integration not starting.  This is a general problem
-  ## in the underlying solver.
   gen <- odin_js({
     deriv(x) <- 0.1 + 2 * if (t > 2) -0.1 else 0.5
-    initial(x) <- 1
+    initial(x) <- 0
   })
 
   mod <- gen()
   t <- seq(0, 5, length.out = 101)
   y <- mod$run(t)
 
-  cmp <- ifelse(t < 2, 1.1 * t, 2.4 -0.1 * t) + 1
+  cmp <- ifelse(t < 2, 1.1 * t, 2.4 -0.1 * t)
   expect_equal(y[, 2], cmp, tolerance = 1e-4)
 })
 
@@ -707,52 +701,46 @@ test_that("non-numeric input", {
   dat <- mod$contents()
   expect_equal(dat$scalar, scalar)
   expect_equal(dat$vector, vector)
-  ## TODO: should shape these back on return
   expect_equal(dat$matrix, matrix)
   expect_equal(dat$array,  array)
   expect_equal(dat$array4, array4)
 
   ## Then test for errors on each as we convert to character:
-  expect_error(
+  expect_js_error(
     gen(scalar = convert(scalar, "character"),
         vector = vector,
         matrix = matrix,
         array = array,
         array4 = array4),
-    "Expected a numeric value for 'scalar'",
-    class = "std::runtime_error")
-  expect_error(
+    "Expected a numeric value for 'scalar'")
+  expect_js_error(
     gen(scalar = scalar,
         vector = convert(vector, "character"),
         matrix = matrix,
         array = array,
         array4 = array4),
-    "Expected a numeric value for 'vector'",
-    class = "std::runtime_error")
-  expect_error(
+    "Expected a numeric value for 'vector'")
+  expect_js_error(
     gen(scalar = scalar,
         vector = vector,
         matrix = convert(matrix, "character"),
         array = array,
         array4 = array4),
-    "Expected a numeric value for 'matrix'",
-    class = "std::runtime_error")
-  expect_error(
+    "Expected a numeric value for 'matrix'")
+  expect_js_error(
     gen(scalar = scalar,
         vector = vector,
         matrix = matrix,
         array = convert(array, "character"),
         array4 = array4),
-    "Expected a numeric value for 'array'",
-    class = "std::runtime_error")
-  expect_error(
+    "Expected a numeric value for 'array'")
+  expect_js_error(
     gen(scalar = scalar,
         vector = vector,
         matrix = matrix,
         array = array,
         array4 = convert(array4, "character")),
-    "Expected a numeric value for 'array4'",
-    class = "std::runtime_error")
+    "Expected a numeric value for 'array4'")
 })
 
 test_that("only used in output", {
@@ -771,10 +759,7 @@ test_that("only used in output", {
 
   mod <- gen()
   tt <- seq(0, 10, length.out = 101)
-  yy <- mod$run(tt)
-  res <- list(y = unname(yy[, 2:4]),
-              ytot = unname(yy[, 5, drop = TRUE]),
-              y2 = unname(yy[, 6:8]))
+  res <- mod$transform_variables(mod$run(tt))
   expect_equal(res$ytot, rowSums(res$y))
   expect_equal(res$y2, res$y * 2)
 })
@@ -1161,12 +1146,10 @@ test_that("user integer", {
     y0 <- user(1, integer = TRUE, min = 0)
   })
 
-  expect_error(gen(y0 = 1.5),
-               "Expected 'y0' to be integer-like",
-               class = "std::runtime_error")
-  expect_error(gen(y0 = -1L),
-               "Expected 'y0' to be at least 0",
-               class = "std::runtime_error")
+  expect_js_error(gen(y0 = 1.5),
+                  "Expected 'y0' to be integer-like")
+  expect_js_error(gen(y0 = -1L),
+                  "Expected 'y0' to be at least 0")
 
   mod <- gen(y0 = 1)
   expect_equal(mod$run(0:10)[, "y"], 1.0 + 0.5 * (0:10))

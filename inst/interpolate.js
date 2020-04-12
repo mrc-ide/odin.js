@@ -189,7 +189,7 @@ function interpolateSearch(target, obj) {
     }
 
     while (i1 - i0 > 1) {
-        var i2 = (i1 + i0) / 2;
+        var i2 = Math.floor((i1 + i0) / 2);
         if (x[i2] < target) {
             i0 = i2;
         } else {

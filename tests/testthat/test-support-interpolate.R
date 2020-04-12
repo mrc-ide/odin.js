@@ -33,6 +33,29 @@ test_that("interpolateSearch", {
 })
 
 
+## Was a bug in the interpolation routine.
+test_that("interpolateSearch, corner case", {
+  ctx <- odin_js_support()
+  x <- c(
+    0.084133944562211, 0.388214586787225, 0.788885934185673, 1.10933879337353,
+    1.26720494581815, 1.29417642265985, 1.33293077275123, 1.66824013118334,
+    1.67899697952353, 2.13847581530135, 2.33812341864825, 2.38783145563323,
+    2.40261439350479, 2.4133948387136, 2.42602639316569, 3.12713656526426,
+    3.59934383578104, 3.95284011716578, 4.09458703214518, 4.15191498077006,
+    4.31669185581687, 4.50893006728715, 4.8370562989932, 4.88483239173352,
+    5.46442874361944, 5.64474886871073, 5.70643784196122, 5.87292617462855,
+    5.93556976775707, 6.23232980114077)
+  target <- 4.69528083699613
+  expect_equal(
+    ctx$call("interpolateSearch",
+             to_json_max(jsonlite::unbox(target)),
+             to_json_max(list(i = jsonlite::unbox(0L),
+                              n = jsonlite::unbox(length(x)),
+                              x = x))),
+    21)
+})
+
+
 ## Ported from cinterpolate - I might move the js code there too?
 test_that("interpolation", {
   ctx <- odin_js_support()

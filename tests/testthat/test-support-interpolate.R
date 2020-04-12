@@ -174,6 +174,24 @@ test_that("spline calculations are correct", {
   expect_equal(drop(m %*% k), B)
   expect_equal(drop(k %*% m), B)
   expect_equal(solve(m, B), k)
+
+  helper <- c(
+    "function testInterpolate(x, y, xout) {",
+    '  var obj = interpolateAlloc("spline", x, y, false);',
+    "  var ret = [];",
+    "  for (var i = 0; i < xout.length; ++i) {",
+    "    ret.push(interpolateEval(xout[i], obj));",
+    "  }",
+    "  return ret;",
+    "}")
+  ctx$eval(helper)
+
+  xout <- sample(seq(min(x), max(x), length.out = 5))
+
+  expected <- spline(x, y, xout = xout, method = "natural")$y
+  z <- ctx$call("testInterpolate",
+                to_json_max(x), to_json_max(y), to_json_max(xout))
+  expect_equal(drop(z), expected)
 })
 
 

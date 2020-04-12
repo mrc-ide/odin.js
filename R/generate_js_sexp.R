@@ -10,6 +10,8 @@ generate_js_sexp <- function(x, data, meta) {
     } else if (fn == "[") {
       pos <- js_array_access(args[[1L]], args[-1], data, meta)
       ret <- sprintf("%s[%s]", values[[1L]], pos)
+    } else if (fn == "^") {
+      ret <- sprintf("Math.pow(%s, %s)", values[[1]], values[[2]])
     } else if (n == 2L && fn %in% odin:::FUNCTIONS_INFIX) {
       ret <- sprintf("%s %s %s", values[[1]], fn, values[[2]])
     } else if (fn == "if") {
@@ -26,6 +28,8 @@ generate_js_sexp <- function(x, data, meta) {
     } else if (fn == "dim") {
       dim <- data$elements[[args[[1L]]]]$dimnames$dim[[args[[2]]]]
       ret <- generate_js_sexp(dim, data, meta)
+    } else if (fn == "min" || fn == "max") {
+      ret <- js_fold_call(paste0("Math.", fn), values)
     } else if (fn == "sum" || fn == "odin_sum") {
       ret <- generate_js_sexp_sum(args, data, meta)
     } else if (any(names(FUNCTIONS_STOCHASTIC) == fn)) {

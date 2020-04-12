@@ -147,3 +147,31 @@ test_that("interpolation", {
                  rep(NA_real_, ncol(y3)))
   }
 })
+
+
+test_that("spline calculations are correct", {
+  set.seed(1)
+  n <- 30
+  x <- sort(runif(n, 0, 2 * pi))
+  y <- sin(x)
+
+  ctx <- odin_js_support()
+
+  A <- ctx$call("splineCalcA", to_json_max(x))
+  B <- ctx$call("splineCalcB", to_json_max(x), to_json_max(rbind(y)))[1, ]
+  k <- ctx$call("solveTridiagonal",
+                n, to_json_max(A[1, ]), to_json_max(A[2, ]),
+                to_json_max(A[3, ]), to_json_max(B))
+
+  i <- 2:n
+  j <- 1:(n - 1)
+  m <- matrix(0, n, n)
+  m[cbind(i, j)] <- A[1, -1]
+  diag(m) <- A[2, ]
+  m[cbind(j, i)] <- A[3, -n]
+
+  ## Correct calculation of coefficients:
+  expect_equal(drop(m %*% k), B)
+  expect_equal(drop(k %*% m), B)
+  expect_equal(solve(m, B), k)
+})

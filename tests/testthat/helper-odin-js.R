@@ -21,6 +21,7 @@ odin_js_support <- function() {
   v8 <- V8::v8()
   v8$eval(package_js("support.js"))
   v8$eval(package_js("interpolate.js"))
+  v8$eval(package_js("spline.js"))
   v8
 }
 

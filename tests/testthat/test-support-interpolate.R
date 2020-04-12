@@ -98,7 +98,8 @@ test_that("interpolation", {
 
   rapprox <- list(
     constant = function(x, y, xout) approx(x, y, xout, "constant"),
-    linear = function(x, y, xout) approx(x, y, xout, "linear"))
+    linear = function(x, y, xout) approx(x, y, xout, "linear"),
+    spline = function(x, y, xout) spline(x, y, xout = xout, method = "natural"))
 
   for (type in names(rapprox)) {
     ## We're all good except that the constant interpolation is not
@@ -246,7 +247,6 @@ test_that("spline calculations are correct for matrix output", {
 
   expected1 <- spline(x, y[1, ], xout = xout, method = "natural")$y
   expected2 <- spline(x, y[2, ], xout = xout, method = "natural")$y
-  ## TODO: check this transpose carefully!
   z <- ctx$call("testInterpolate",
                 to_json_max(x), to_json_max(c(t(y))), to_json_max(xout))
   expect_equal(z[, 1], expected1)

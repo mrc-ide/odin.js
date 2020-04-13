@@ -302,13 +302,23 @@ function flatten(array, result) {
 }
 
 
-function round2(x, digits) {
-    // TODO: implement proper IEEE rounding here...
-    if (digits === undefined) {
+// https://en.wikipedia.org/wiki/Rounding#Round_half_to_even - same
+// behaviour as R and IEEE 754, with better biases.
+function roundHalfToEven(x) {
+    if (modr(x, 1) === 0.5) {
+        return 2 * Math.round(x / 2);
+    } else {
         return Math.round(x);
+    }
+}
+
+
+function round2(x, digits) {
+    if (digits === undefined) {
+        return roundHalfToEven(x);
     } else {
         var mult = Math.pow(10, digits);
-        return Math.round(x * mult) / mult
+        return roundHalfToEven(x * mult) / mult;
     }
 }
 

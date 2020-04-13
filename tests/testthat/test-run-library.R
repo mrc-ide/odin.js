@@ -128,16 +128,9 @@ test_that("2-arg round", {
   yy1 <- mod1$run(tt)
   yy2 <- mod2$run(tt)
 
-  yy0[51, "z"] <- 0 # FIXME
-  yy1[51, "z"] <- 0 # FIXME
-  yy2[51, "z"] <- 0 # FIXME
-
   expect_equal(yy0[, "z"], round(tt))
   expect_equal(yy1[, "z"], round(tt))
   expect_equal(yy2[, "z"], round(tt))
-
-  yy0[51, "y"] <- 0 # FIXME
-  yy1[c(6, 26, 46, 66, 86), "y"] <- c(0, 0.2, 0.4, 0.6, 0.8) # FIXME
 
   expect_equal(yy0[, "y"], round(tt, 0))
   expect_equal(yy1[, "y"], round(tt, 1))

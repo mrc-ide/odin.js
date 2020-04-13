@@ -7,23 +7,31 @@ function zeros(n) {
     return ret;
 }
 
-function integrateOdin(obj, times, y0) {
+
+function integrateOdin(obj, times, y0, tcrit) {
     var t0 = times[0];
     var t1 = times[times.length - 1];
+    if (obj.metadata.interpolateTimes !== null) {
+        tcrit = interpolateCheckT(times, obj.metadata.interpolateTimes, tcrit);
+    }
     if (isMissing(y0)) {
       y0 = obj.initial(times[0]);
     }
     var rhs = function(t, y, dy) {
         obj.rhs(t, y, dy);
     };
+    var ctl = {};
+    if (tcrit !== null) {
+        ctl.tcrit = tcrit;
+    }
     var sol = null;
     if (typeof obj.output === "function") {
         var output = function(t, y) {
             return obj.output(t, y);
         }
-        sol = dopri.integrate(rhs, y0, t0, t1, {}, output);
+        sol = dopri.integrate(rhs, y0, t0, t1, ctl, output);
     } else {
-        sol = dopri.integrate(rhs, y0, t0, t1, {});
+        sol = dopri.integrate(rhs, y0, t0, t1, ctl);
     }
     var y = sol(times);
     // Prepend the result vector with the times; this is going to be

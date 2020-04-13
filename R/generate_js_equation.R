@@ -9,8 +9,10 @@ generate_js_equation <- function(eq, dat, rewrite) {
     expression_scalar = generate_js_equation_scalar,
     expression_array = generate_js_equation_array,
     alloc = generate_js_equation_alloc,
+    alloc_interpolate = generate_js_equation_alloc_interpolate,
     copy = generate_js_equation_copy,
     user = generate_js_equation_user,
+    interpolate = generate_js_equation_interpolate,
     stop(sprintf("Unknown type '%s' [odin.js bug]", eq$type)))
 
   data_info <- dat$data$elements[[eq$lhs]]
@@ -48,6 +50,20 @@ generate_js_equation_copy <- function(eq, data_info, dat, rewrite) {
       sprintf("  output[%s + i] = %s[i]", rewrite(x$offset), rewrite(eq$lhs)),
       "}")
   }
+}
+
+
+generate_js_equation_interpolate <- function(eq, data_info, dat, rewrite) {
+  lhs <- rewrite(eq$lhs)
+  if (data_info$location == "transient") {
+    lhs <- paste("var", lhs)
+  }
+  if (data_info$rank == 0L) {
+    fmt <- "%s = interpolateEval(%s, %s)[0];"
+  } else {
+    fmt <- "%s = interpolateEval(%s, %s);"
+  }
+  sprintf(fmt, lhs, dat$meta$time, rewrite(eq$interpolate))
 }
 
 
@@ -109,6 +125,47 @@ generate_js_equation_alloc <- function(eq, data_info, dat, rewrite) {
   lhs <- rewrite(eq$lhs)
   len <- rewrite(data_info$dimnames$length)
   sprintf("%s = new Array(%s);", lhs, len)
+}
+
+
+generate_js_equation_alloc_interpolate <- function(eq, data_info, dat,
+                                                   rewrite) {
+  data_info_target <- dat$data$elements[[eq$interpolate$equation]]
+  data_info_t <- dat$data$elements[[eq$interpolate$t]]
+  data_info_y <- dat$data$elements[[eq$interpolate$y]]
+
+  len_t <- rewrite(data_info_t$dimnames$length)
+  rank <- data_info_target$rank
+
+  if (rank == 0L) {
+    len_y <- rewrite(data_info_y$dimnames$length)
+    check <- sprintf(
+      'interpolateCheckY([%s], [%s], "%s", "%s");',
+      len_t, len_y, data_info_y$name, eq$interpolate$equation)
+  } else {
+    len_y <- vcapply(data_info_y$dimnames$dim, rewrite)
+    if (rank == 1L) {
+      len_expected <- c(len_t, rewrite(data_info_target$dimnames$length))
+    } else {
+      len_expected <- c(
+        len_t,
+        vcapply(data_info_target$dimnames$dim[seq_len(rank)], rewrite))
+    }
+    check <- sprintf(
+      'interpolateCheckY([%s], [%s], "%s", "%s");',
+      paste(len_expected, collapse = ", "),
+      paste(len_y, collapse = ", "),
+      data_info_y$name,
+      eq$interpolate$equation)
+  }
+
+  t <- rewrite(eq$interpolate$t)
+  y <- rewrite(eq$interpolate$y)
+  alloc <- sprintf(
+    '%s = interpolateAlloc("%s", %s, %s, true)',
+    rewrite(eq$lhs), eq$interpolate$type, t, y)
+
+  c(check, alloc)
 }
 
 

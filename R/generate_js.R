@@ -7,7 +7,7 @@ generate_js <- function(ir, options) {
 
   features <- vlapply(dat$features, identity)
   supported <- c("initial_time_dependent", "has_array", "has_user",
-                 "has_output")
+                 "has_output", "has_interpolate")
   unsupported <- setdiff(names(features)[features], supported)
   if (length(unsupported) > 0L) {
     stop("Using unsupported features: ",
@@ -17,9 +17,15 @@ generate_js <- function(ir, options) {
   eqs <- generate_js_equations(dat, rewrite)
   core <- generate_js_core(eqs, dat, rewrite)
 
+  fns <- unlist(lapply(dat$equations, function(x) x$depends$functions),
+                FALSE, FALSE)
+  uses_sum <- any(c("odin_sum", "sum") %in% fns)
+
   ## This is all we need to dump out
   list(code = generate_js_generator(core, dat),
-       name = dat$config$base)
+       name = dat$config$base,
+       include = c(interpolate.js = dat$features$has_interpolate,
+                   support_sum.js = uses_sum))
 }
 
 
@@ -98,8 +104,8 @@ generate_js_core_output <- function(eqs, dat, rewrite) {
 
 
 generate_js_core_run <- function(eqs, dat, rewrite) {
-  args <- c("times", "y0")
-  body <- "return integrateOdin(this, times, y0);"
+  args <- c("times", "y0", "tcrit")
+  body <- "return integrateOdin(this, times, y0, tcrit);"
   js_function(args, body)
 }
 
@@ -172,6 +178,32 @@ generate_js_core_metadata <- function(eqs, dat, rewrite) {
               sprintf("this.metadata.ynames = [%s];",
                       paste(dquote(ynames), collapse = ", ")))
   }
+
+  if (dat$features$has_interpolate) {
+    args_min <- js_fold_call("Math.max",
+                             vcapply(dat$interpolate$min, function(x)
+                               sprintf("%s[0]", rewrite(x))))
+    if (length(dat$interpolate$max) == 0) {
+      args_max <- "Infinity"
+    } else {
+      args_max <- js_fold_call(
+        "Math.min",
+        vcapply(dat$interpolate$max, function(x)
+          sprintf("%s[%s - 1]", rewrite(x),
+                  rewrite(dat$data$elements[[x]]$dimnames$length))))
+    }
+    body <- c(
+      body,
+      "this.metadata.interpolateTimes = {",
+      sprintf("  min: %s,", args_min),
+      sprintf("  max: %s", args_max),
+      "};")
+  } else {
+    body <- c(
+      body,
+      "this.metadata.interpolateTimes = null;")
+  }
+
   js_function(NULL, body)
 }
 
@@ -259,6 +291,7 @@ generate_js_generator <- function(core, dat) {
   if (!is.null(core$output)) {
     body$add(method("output", core$output))
   }
+  body$add(field("interpolateTime", "null"))
   body$add(method("rhsEval", core$rhs_eval))
   body$add(method("initial", core$initial_conditions))
   body$add(method("run", core$run))

@@ -109,3 +109,46 @@ test_that("include sum", {
   expect_equal(res$ytot, rowSums(res$y))
   expect_equal(res$y2, res$y * 2)
 })
+
+
+## Taken from the odin docs, generalised Lotka-Volterra.  This
+## includes a partial sum but *not* a complete sum, which may trigger
+## a failure to include the sum support.
+test_that("include fancy sum", {
+  ## This will error on the partial sums during model
+  code <- c(
+    "deriv(y[]) <- r[i] * y[i] * (1 - sum(ay[i, ]))",
+    "initial(y[]) <- y0[i]",
+    "y0[] <- user()",
+    "r[] <- user()",
+    "a[,] <- user()",
+    "ay[,] <- a[i, j] * y[j]",
+    "dim(r) <- user()",
+    "n_spp <- length(r)",
+    "dim(y) <- n_spp",
+    "dim(y0) <- n_spp",
+    "dim(a) <- c(n_spp, n_spp)",
+    "dim(ay) <- c(n_spp, n_spp)")
+
+  p <- tempfile()
+  dir.create(p)
+  filename <- file.path(p, "odin.R")
+  writeLines(code, filename)
+  res <- odin_js_bundle(filename)
+
+  user <- list(r = c(1.00, 0.72, 1.53, 1.27),
+               a = rbind(c(1.00, 1.09, 1.52, 0.00),
+                         c(0.00, 1.00, 0.44, 1.36),
+                         c(2.33, 0.00, 1.00, 0.47),
+                         c(1.21, 0.51, 0.35, 1.00)),
+               y0 = c(0.3013, 0.4586, 0.1307, 0.3557))
+
+  ct <- V8::v8()
+  invisible(ct$source(res))
+
+  tt <- seq(0, 50, length.out = 101)
+  yy <- call_odin_bundle(ct, "odin", user, tt)
+
+  cmp <- odin::odin_(code, target = "r")(user = user, use_dde = TRUE)$run(tt)
+  expect_equal(yy, cmp, tolerance = 1e-6)
+})

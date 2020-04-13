@@ -19,7 +19,7 @@ generate_js <- function(ir, options) {
 
   fns <- unlist(lapply(dat$equations, function(x) x$depends$functions),
                 FALSE, FALSE)
-  uses_sum <- "sum" %in% fns
+  uses_sum <- any(c("odin_sum", "sum") %in% fns)
 
   ## This is all we need to dump out
   list(code = generate_js_generator(core, dat),

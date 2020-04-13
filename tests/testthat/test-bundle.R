@@ -149,6 +149,6 @@ test_that("include fancy sum", {
   tt <- seq(0, 50, length.out = 101)
   yy <- call_odin_bundle(ct, "odin", user, tt)
 
-  cmp <- odin::odin_(code, target = "r")(user = user, use_dde = TRUE)$run(tt)
-  expect_equal(yy, cmp, tolerance = 1e-6)
+  cmp <- odin::odin_(code, target = "r")(user = user)$run(tt)
+  expect_equivalent(yy, cmp[], tolerance = 1e-5)
 })

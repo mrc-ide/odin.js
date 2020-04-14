@@ -14,7 +14,7 @@ vlapply <- function(X, FUN, ...) {
 
 
 to_json <- function(x, auto_unbox = FALSE, digits = NA, ...) {
-  V8::JS(jsonlite::toJSON(x, auto_unbox = auto_unbox, digits = NA, ...))
+  V8::JS(jsonlite::toJSON(x, auto_unbox = auto_unbox, digits = digits, ...))
 }
 
 

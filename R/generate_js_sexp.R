@@ -28,9 +28,15 @@ generate_js_sexp <- function(x, data, meta) {
       ret <- generate_js_sexp(dim, data, meta)
     } else if (fn == "sum" || fn == "odin_sum") {
       ret <- generate_js_sexp_sum(args, data, meta)
+    } else if (any(names(FUNCTIONS_STOCHASTIC) == fn)) {
+      ret <- sprintf("random.%s(%s)()",
+                     FUNCTIONS_STOCHASTIC[[fn]],
+                     paste(values, collapse = ", "))
     } else {
       if (any(FUNCTIONS_MATH == fn)) {
         fn <- sprintf("Math.%s", fn)
+      } else if (any(names(FUNCTIONS_STOCHASTIC_SPECIAL) == fn)) {
+        fn <- sprintf("random.%s", FUNCTIONS_STOCHASTIC_SPECIAL[[fn]])
       }
       ## if (!any(names(FUNCTIONS) == fn)) {
       ##   stop(sprintf("unsupported function '%s' [odin bug]", fn)) # nocov
@@ -88,3 +94,35 @@ FUNCTIONS_MATH <- c(
   "cosh", "sinh", "tanh",
   "acosh", "asinh", "atanh",
   "abs", "floor", "round", "trunc")
+
+
+FUNCTIONS_STOCHASTIC_SPECIAL <- c(
+  unif_rand = "unifRand",
+  norm_rand = "normRand",
+  exp_rand = "expRand")
+
+
+FUNCTIONS_STOCHASTIC <- c(
+  ## TODO: I should write out these ones somewhere
+  ## And support many different distributions
+  ## rbeta = "", # a, b
+  rbinom = "rbinom", # n, p - note that this is patched
+  ## rcauchy = "", # location, scale
+  ## rchisq = "", # df
+  rexp = "exponential", # rate
+  ## rf = "", # n1, n2
+  ## rgamma = 2L, # shape, scale
+  rgeom = "geometric", # p
+  ## rhyper = "", # NR, NB, n
+  ## rlogis = "", # location, scale
+  ## rlnorm = "logNormal", # logmean, logsd - ignoring as hard to get right
+  ## rnbinom = "", # size, prob
+  rnorm = "normal", # mu, sigma
+  rpois = "poisson", # lambda
+  ## rt = "", # n
+  runif = "uniform" # a, b
+  ## rweibull = "", # shape, scale
+  ## rwilcox = "", # m, n
+  ## rmultinom = "", # n, p
+  ## rsignrank = "" # n
+)

@@ -110,16 +110,6 @@ test_that("user variables", {
 })
 
 
-test_that("discrete models are not supported", {
-  expect_error(
-    odin_js({
-      initial(x) <- 1
-      update(x) <- x + 1
-    }),
-    "Using unsupported features: 'discrete'")
-})
-
-
 test_that("delay models are not supported", {
   expect_error(
     odin_js({

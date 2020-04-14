@@ -25,6 +25,30 @@ odin_js_support <- function() {
 }
 
 
+odin_js_test_random <- function(name) {
+  skip_if_no_random_js()
+  force(name)
+  v8 <- V8::v8()
+  v8$eval(package_js("random.js"))
+
+  v8$eval(c(
+    "var repeat = function(f, n) {",
+    "  var ret = [];",
+    "  for (var i = 0; i < n; ++i) {",
+    "    ret.push(f());",
+    "  }",
+    "  return ret;",
+    "}"))
+
+  ## TODO: set the seed, and make sure we're using seedrandom
+  function(n, parameters) {
+    f <- V8::JS(sprintf("random.%s(%s)",
+                        name, paste(parameters, collapse = ", ")))
+    v8$call("repeat", f, n)
+  }
+}
+
+
 expect_js_error <- function(...) {
   testthat::expect_error(..., class = "std::runtime_error")
 }
@@ -32,4 +56,50 @@ expect_js_error <- function(...) {
 
 to_json_max <- function(x) {
   V8::JS(jsonlite::toJSON(x, digits = NA))
+}
+
+
+## Requires newish node:
+random_js_supported <- local({
+  supported <- NULL
+  function() {
+    if (is.null(supported)) {
+      supported <<- !is.null(tryCatch(
+                       V8::v8()$eval(package_js("random.js")),
+                       error = function(e) NULL))
+    }
+    supported
+  }
+})
+
+
+skip_if_no_random_js <- function() {
+  if (!random_js_supported()) {
+    testthat::skip("random.js not supported on your v8 version")
+  }
+}
+
+
+model_context <- function(x) {
+  environment(x$initialize)$private$context
+}
+
+
+model_set_seed <- function(x, seed) {
+  model_context(x)$call("setSeed", seed)
+}
+
+
+model_random_numbers <- function(x, name, n, ...) {
+  ctx <- model_context(x)
+  ctx$eval(c(
+    "var repeat = function(f, n) {",
+    "  var ret = [];",
+    "  for (var i = 0; i < n; ++i) {",
+    "    ret.push(f());",
+    "  }",
+    "  return ret;",
+    "}"))
+  f <- V8::JS(sprintf("random.%s(%s)", name, paste(c(...), collapse = ", ")))
+  ctx$call("repeat", f, n)
 }

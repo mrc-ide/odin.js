@@ -152,3 +152,27 @@ test_that("include fancy sum", {
   cmp <- odin::odin_(code, target = "r")(user = user)$run(tt)
   expect_equivalent(yy, cmp[], tolerance = 1e-5)
 })
+
+
+test_that("simple stochastic model in a bundle", {
+  code <- c(
+    "initial(x) <- 0",
+    "update(x) <- x + norm_rand()")
+
+  p <- tempfile()
+  dir.create(p)
+  filename <- file.path(p, "odin.R")
+  writeLines(code, filename)
+  res <- odin_js_bundle(filename)
+
+  ct <- V8::v8()
+  invisible(ct$source(res))
+  ct$call("setSeed", 1)
+  tt <- 0:20
+  yy <- call_odin_bundle(ct, "odin", NULL, tt)
+
+  mod <- odin_js_(code)()
+  model_set_seed(mod, 1)
+  cmp <- mod$run(tt)
+  expect_equal(yy, cmp)
+})

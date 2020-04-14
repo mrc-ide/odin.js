@@ -287,7 +287,6 @@ function flattenArray(value, name) {
 }
 
 
-// not all js versions have Array.prototype.flat?
 function flatten(array, result) {
   if (array.length === 0) {
     return result

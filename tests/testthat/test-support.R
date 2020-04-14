@@ -159,3 +159,42 @@ test_that("generate sum", {
   expect_equal(code,
                readLines(system.file("support_sum.js", package = "odin.js")))
 })
+
+
+test_that("convert matrices to odin style matrices", {
+  ctx <- odin_js_support()
+
+  v <- 1:6
+  expect_equal(
+    ctx$call("flattenArray", v, "v"),
+    list(data = 1:6, dim = 6))
+
+  m <- matrix(1:6, 2, 3)
+  expect_equal(
+    ctx$call("flattenArray", to_json_columnwise(m), "m"),
+    list(data = 1:6, dim = c(2, 3)))
+
+  a <- array(1:24, c(2, 3, 4))
+  expect_equal(
+    ctx$call("flattenArray", to_json_columnwise(a), "a"),
+    list(data = c(a), dim = dim(a)))
+
+  a4 <- array(1:120, c(2, 3, 4, 5))
+  expect_equal(
+    ctx$call("flattenArray", to_json_columnwise(a4), "a4"),
+    list(data = c(a4), dim = dim(a4)))
+})
+
+
+test_that("detect ragged data", {
+  ctx <- odin_js_support()
+  expect_error(ctx$call("flattenArray", list(1:3, 1:2), "x"),
+               "Inconsistent array",
+               class = "std::runtime_error")
+
+  ## Not very clever though - this is a bug if the user provides
+  ## terrible input.
+  expect_equal(
+    ctx$call("flattenArray", list(1:3, 1:2, 1:4), "x"),
+    list(data = c(1:3, 1:2, 1:4), dim = c(3, 3)))
+})

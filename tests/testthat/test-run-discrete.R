@@ -37,8 +37,7 @@ test_that("output", {
 
   tt <- 0:10
   yy <- mod$run(tt)
-  ## zz <- mod$transform_variables(yy)
-  zz <- list(x = unname(yy[, 2:11]), total = yy[, 12])
+  zz <- mod$transform_variables(yy)
 
   expect_equal(zz$x, t(outer(r, tt) + x0))
   expect_equal(zz$total, rowSums(zz$x))
@@ -57,16 +56,16 @@ test_that("interpolate", {
 
   sp <- c(0, 10, 20)
   zp <- c(0, 1, 0)
-  expect_js_error(gen(sp = sp, zp = zp[1:2]),
-                  "Expected length 3 value for 'zp'")
-  expect_js_error(gen(sp = sp, zp = rep(zp, 2)),
-                  "Expected length 3 value for 'zp'")
+  expect_error(gen(sp = sp, zp = zp[1:2]),
+               "Expected length 3 value for 'zp'")
+  expect_error(gen(sp = sp, zp = rep(zp, 2)),
+               "Expected length 3 value for 'zp'")
 
   mod <- gen(sp = sp, zp = zp)
 
   tt <- 0:30
-  expect_js_error(mod$run(tt - 1L),
-                  "Integration times do not span interpolation")
+  expect_error(mod$run(tt - 1L),
+               "Integration times do not span interpolation")
 
   yy <- mod$run(tt)
   zz <- cumsum(ifelse(tt <= 10 | tt > 20, 0, 1))
@@ -102,7 +101,7 @@ test_that("2d array equations", {
   mod <- gen(x0 = x0, r = r)
   yy <- mod$run(0:10)
 
-  expect_equal(mod$contents()$x0, c(x0)) # TODO - reshape
+  expect_equal(mod$contents()$x0, x0)
   expect_equal(matrix(mod$initial(0), 2, 5), x0)
 
   expect_equal(unname(diff(yy)[1, ]), c(1, c(r)))
@@ -133,8 +132,7 @@ test_that("complex initialisation: scalar", {
   model_set_seed(mod, 1)
 
   v <- mod$initial(0)
-  ## vv <- mod$transform_variables(v)
-  vv <- list(x1 = v[[1]], x2 = v[[2]])
+  vv <- mod$transform_variables(v)
 
   ## set.seed(1)
   ## x1 <- rnorm(1)
@@ -175,8 +173,7 @@ test_that("complex initialisation: vector", {
   mod <- gen()
   model_set_seed(mod, 1)
   v <- mod$initial(0)
-  ## vv <- mod$transform_variables(v)
-  vv <- list(x1 = v[1:10], x2 = v[11:20])
+  vv <- mod$transform_variables(v)
 
   model_set_seed(mod, 1)
   ctx <- model_context(mod)

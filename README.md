@@ -1,6 +1,6 @@
 ## odin.js
 
-[![Project Status: Concept – Minimal or no implementation has been done yet, or the repository is only intended to be a limited example, demo, or proof-of-concept.](https://www.repostatus.org/badges/latest/concept.svg)](https://www.repostatus.org/#concept)
+[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 [![Travis-CI Build Status](https://travis-ci.org/mrc-ide/odin.js.svg?branch=master)](https://travis-ci.org/mrc-ide/odin.js)
 [![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/7o66jpuibiy6havb?svg=true)](https://ci.appveyor.com/project/richfitz/odin-js)
 [![codecov.io](https://codecov.io/github/mrc-ide/odin.js/coverage.svg?branch=master)](https://codecov.io/github/mrc-ide/odin.js?branch=master)
@@ -195,6 +195,16 @@ Chrome will not let you execute js directly off disk (though I think Firefox doe
 - [x] interpolation
 - [x] discrete models
 - [x] stochastic models
+
+### Limitations and differences
+
+* Solver does not accept an error tolerance
+* the `$initial()` method always requires a time
+* The `use_dde` option to the constructor has gone
+* The `verbose` and `compiler_errors` option to the compiler have gone
+* Minor error message changes
+* Argument names are required for the constructor
+* Stochastic interface does not use R's RNG so results are different and seed setting is not obvious
 
 ---
 

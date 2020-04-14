@@ -24,7 +24,8 @@ generate_js <- function(ir, options) {
   ## This is all we need to dump out
   list(code = generate_js_generator(core, dat),
        name = dat$config$base,
-       discrete = dat$features$discrete,
+       ir = ir,
+       features = dat$features,
        include = c(interpolate.js = dat$features$has_interpolate,
                    random.js = dat$features$has_stochastic,
                    discrete.js = dat$features$discrete,
@@ -57,23 +58,27 @@ generate_js_core_create <- function(eqs, dat, rewrite) {
   body$add("this.%s = {};", dat$meta$internal)
   body$add("var %s = this.%s;", dat$meta$internal, dat$meta$internal)
   body$add(js_flatten_eqs(eqs[dat$components$create$equations]))
-  body$add("this.setUser(%s);", dat$meta$user)
-  args <- dat$meta$user
+  body$add("this.setUser(%s, unusedUserAction);", dat$meta$user)
+  args <- c(dat$meta$user, "unusedUserAction")
   js_function(args, body$get(), dat$config$base)
 }
 
 
 generate_js_core_set_user <- function(eqs, dat, rewrite) {
   update_metadata <- "this.updateMetadata();"
+  allowed <- paste(dquote(names(dat$user)), collapse = ", ")
+  check_user <- sprintf("checkUser(%s, [%s], unusedUserAction);",
+                        dat$meta$user, allowed)
   if (dat$features$has_user) {
     body <- c(
+      check_user,
       sprintf("var %s = this.%s;", dat$meta$internal, dat$meta$internal),
       js_flatten_eqs(eqs[dat$components$user$equations]),
       update_metadata)
   } else {
-    body <- update_metadata
+    body <- c(check_user, update_metadata)
   }
-  args <- dat$meta$user
+  args <- c(dat$meta$user, "unusedUserAction")
   js_function(args, body)
 }
 
@@ -234,6 +239,30 @@ generate_js_core_metadata <- function(eqs, dat, rewrite) {
       "this.metadata.interpolateTimes = null;")
   }
 
+  len_block <- function(location) {
+    if (location == "internal") {
+      ## This excludes interpolate_data and ring_buffer
+      keep <- vlapply(dat$data$elements, function(x)
+        x$location == "internal" &&
+        x$storage_type %in% c("double", "int", "bool"))
+      contents <- dat$data$elements[keep]
+    } else {
+      contents <- dat$data$elements[names(dat$data[[location]]$contents)]
+    }
+    if (length(contents) == 0) {
+      sprintf("this.metadata.%sOrder = null;", location)
+    } else {
+      len <- vcapply(contents, generate_js_dim, rewrite)
+      sprintf("this.metadata.%sOrder = {\n  %s\n};",
+              location, paste(len, collapse = ",\n  "))
+    }
+  }
+
+  body <- c(body,
+            len_block("internal"),
+            len_block("variable"),
+            len_block("output"))
+
   js_function(NULL, body)
 }
 
@@ -344,4 +373,17 @@ generate_js_generator <- function(core, dat) {
   c(sprintf("%s.%s = (function() {", JS_GENERATORS, base),
     paste0("  ", body$get()),
     "}());")
+}
+
+
+generate_js_dim <- function(data_info, rewrite) {
+  if (data_info$rank == 0L) {
+    len <- "null"
+  } else if (data_info$rank == 1L) {
+    len <- rewrite(data_info$dimnames$length)
+  } else {
+    len <- sprintf(
+      "[%s]", paste(vcapply(data_info$dimnames$dim, rewrite), collapse = ", "))
+  }
+  sprintf('"%s": %s', data_info$name, len)
 }

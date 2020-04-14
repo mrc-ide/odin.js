@@ -38,26 +38,25 @@ test_that("user variables", {
   expect_equal(dat$K, 100.0)
 
   ## This should be a noop:
-  mod$set_user(NULL)
+  mod$set_user()
   dat <- mod$contents()
   expect_equal(dat$r, pi)
   expect_equal(dat$N0, 1.0)
   expect_equal(dat$K, 100.0)
 
   ## Now, try setting one of these:
-  mod$set_user(list(N0 = 5)) # TODO: different interface
+  mod$set_user(N0 = 5)
   dat <- mod$contents()
   expect_equal(dat$r, pi)
   expect_equal(dat$N0, 5.0)
   expect_equal(dat$K, 100.0)
 
   ## Don't reset to default on subsequent set:
-  mod$set_user(NULL)
+  mod$set_user()
   expect_equal(mod$contents()$N0, 5.0)
 })
 
 test_that("user variables on models with none", {
-  skip("interface issue")
   gen <- odin_js({
     a <- 1
     deriv(y) <- 0.5 * a
@@ -71,7 +70,7 @@ test_that("user variables on models with none", {
 })
 
 test_that("non-numeric time", {
-  skip("needs delay")
+  skip_for_delay()
   ## Only an issue for delay models or models with time-dependent
   ## initial conditions.
   gen <- odin_js({
@@ -86,7 +85,7 @@ test_that("non-numeric time", {
 })
 
 test_that("delays and initial conditions", {
-  skip("needs delay")
+  skip_for_delay()
   gen <- odin_js({
     ylag <- delay(y, 10)
     initial(y) <- 0.5
@@ -135,12 +134,9 @@ test_that("non-numeric user", {
 
 
 test_that("conditionals", {
-  ## TODO: this fails if initial(x) is set to zero, like in the odin
-  ## test, due to integration not starting.  This is a general problem
-  ## in the underlying solver.
   gen <- odin_js({
     deriv(x) <- if (x > 2) 0 else 0.5
-    initial(x) <- 1
+    initial(x) <- 0
   })
 
   ## Hey ho it works:
@@ -148,24 +144,21 @@ test_that("conditionals", {
   t <- seq(0, 5, length.out = 101)
   y <- mod$run(t)
 
-  expect_equal(y[, 2], ifelse(t < 2, t * 0.5 + 1, 2.0), tolerance = 1e-4)
+  expect_equal(y[, 2], ifelse(t < 4, t * 0.5, 2.0), tolerance = 1e-4)
 })
 
 
 test_that("conditionals, precendence", {
-  ## TODO: this fails if initial(x) is set to zero, like in the odin
-  ## test, due to integration not starting.  This is a general problem
-  ## in the underlying solver.
   gen <- odin_js({
     deriv(x) <- 0.1 + 2 * if (t > 2) -0.1 else 0.5
-    initial(x) <- 1
+    initial(x) <- 0
   })
 
   mod <- gen()
   t <- seq(0, 5, length.out = 101)
   y <- mod$run(t)
 
-  cmp <- ifelse(t < 2, 1.1 * t, 2.4 -0.1 * t) + 1
+  cmp <- ifelse(t < 2, 1.1 * t, 2.4 -0.1 * t)
   expect_equal(y[, 2], cmp, tolerance = 1e-4)
 })
 
@@ -216,8 +209,8 @@ test_that("time dependent initial conditions", {
 })
 
 test_that("user c", {
-  skip("not relevant")
   skip_for_target("r")
+  skip_for_target("js")
   gen <- odin_js({
     config(include) <- "user_fns.c"
     z <- squarepulse(t, 1, 2)
@@ -238,8 +231,8 @@ test_that("user c", {
 })
 
 test_that("user c in subdir", {
-  skip("not relevant")
   skip_for_target("r")
+  skip_for_target("js")
   dest <- tempfile()
   dir.create(dest)
 
@@ -359,16 +352,16 @@ test_that("3d array", {
   expect_match(colnames(yy)[-1], "^y\\[[0-9],[0-9],[0-9]\\]$")
 
   ## Transform for even nicer:
-  ## zz <- mod$transform_variables(yy)
-  ## expect_equal(dim(zz$y), c(c(length(tt), 2, 3, 4)))
+  zz <- mod$transform_variables(yy)
+  expect_equal(dim(zz$y), c(c(length(tt), 2, 3, 4)))
 
   ## Check the automatic variable naming:
-  ## expect_identical(zz$y[, 1, 2, 4], yy[, "y[1,2,4]"])
+  expect_identical(zz$y[, 1, 2, 4], yy[, "y[1,2,4]"])
 
   ## Check conversion of single row:
-  ## y0 <- mod$transform_variables(yy[1,])
-  ## expect_equal(y0,
-  ##              c(setNames(list(tt[1]), TIME), list(y = array(1, c(2, 3, 4)))))
+  y0 <- mod$transform_variables(yy[1,])
+  expect_equal(y0,
+               c(setNames(list(tt[1]), "t"), list(y = array(1, c(2, 3, 4)))))
 })
 
 test_that("4d array", {
@@ -381,9 +374,8 @@ test_that("4d array", {
 
   mod <- gen()
   expect_equal(mod$initial(0), rep(1.0, 2 * 3 * 4 * 5))
-  ## TODO:
-  ## dat <- mod$contents()
-  ## expect_equal(dat$initial_y, array(1, c(2, 3, 4, 5)))
+  dat <- mod$contents()
+  expect_equal(dat$initial_y, array(1, c(2, 3, 4, 5)))
 })
 
 ## I need a system with mixed variables and arrays for testing the
@@ -405,19 +397,19 @@ test_that("mixed", {
   y <- mod$run(t)
   expect_error(y, NA) # just test that it doesn't fail
 
-  ## yy <- mod$transform_variables(y)
-  ## expect_equal(sort(names(yy)), sort(c(TIME, "a", "b", "v")))
+  yy <- mod$transform_variables(y)
+  expect_equal(sort(names(yy)), sort(c("t", "a", "b", "v")))
 
   ## Check contents:
-  ## expect_equal(yy[c(TIME, "a", "b")],
-  ##              as.list(as.data.frame(y[, c(TIME, "a", "b")])))
-  ## expect_equal(yy$v, unname(y[, sprintf("v[%d]", 1:3)]))
+  expect_equal(yy[c("t", "a", "b")],
+               as.list(as.data.frame(y[, c("t", "a", "b")])))
+  expect_equal(yy$v, unname(y[, sprintf("v[%d]", 1:3)]))
 
   ## Check scalar:
-  ## y0 <- mod$transform_variables(y[1, ])
-  ## expect_equal(names(y0), names(yy))
-  ## expect_equal(y0,
-  ##              lapply(yy, function(x) if (is.matrix(x)) x[1, ] else x[[1]]))
+  y0 <- mod$transform_variables(y[1, ])
+  expect_equal(names(y0), names(yy))
+  expect_equal(y0,
+               lapply(yy, function(x) if (is.matrix(x)) x[1, ] else x[[1]]))
 })
 
 
@@ -459,8 +451,8 @@ test_that("output array", {
                                sprintf("y2[%d]", 1:3)))
 
   ## transform function:
-  ## zz <- mod$transform_variables(yy)
-  expect_equal(2 * unname(yy[, 2:4]), unname(yy[, 5:7]))
+  zz <- mod$transform_variables(yy)
+  expect_equal(zz$y2, zz$y * 2)
 })
 
 ## (2) An existing array
@@ -484,10 +476,9 @@ test_that("output array", {
                                sprintf("r[%d]", 1:3)))
 
   ## transform function:
-  ## zz <- mod$transform_variables(yy)
-  expect_equal(unname(yy[, 5:7]), matrix(0.1, length(tt), 3))
+  zz <- mod$transform_variables(yy)
+  expect_equal(zz$r, matrix(0.1, length(tt), 3))
 })
-
 
 test_that("use length on rhs", {
   gen <- odin_js({
@@ -513,14 +504,13 @@ test_that("use dim on rhs", {
 
   mod <- gen()
   expect_equal(mod$contents()$r, rep(0.1, 3))
-  expect_equal(mod$contents()$initial_y, rep(1, 3 * 4)) # TODO: return matrix
+  expect_equal(mod$contents()$initial_y, matrix(1, 3, 4))
 })
 
 
 ## Ideally we'll end up with all combinations of has array/has scalar
 ## (there are 15 possible combinations though!)
 test_that("transform variables with output", {
-  skip("transform_variables")
   gen <- odin_js({
     deriv(y[]) <- r[i] * y[i]
     initial(y[]) <- y0[i]
@@ -543,13 +533,12 @@ test_that("transform variables with output", {
   y <- mod$run(tt, atol = 1e-8, rtol = 1e-8)
   yy <- mod$transform_variables(y)
 
-  expect_equal(yy$y, real_y)
-  expect_equal(yy$a, real_a)
+  expect_equal(yy$y, real_y, tolerance = 5e-6)
+  expect_equal(yy$a, real_a, tolerance = 5e-6)
 })
 
 
 test_that("transform variables without time", {
-  skip("transform_variables")
   gen <- odin_js({
     deriv(y[]) <- r[i] * y[i]
     initial(y[]) <- y0[i]
@@ -635,10 +624,7 @@ test_that("two output arrays", {
   tt <- seq(0, 10, length.out = 101)
   yy <- mod$run(tt, atol = 1e-8, rtol = 1e-8)
 
-  ## zz <- mod$transform_variables(yy)
-  zz <- list(y = unname(yy[, 2:4]),
-             yr = unname(yy[, 5:7]),
-             r = unname(yy[, 8:10]))
+  zz <- mod$transform_variables(yy)
   ## Quite inaccurate on windows at least?
   expect_equal(zz$y, t(1:3 * exp(outer(r, tt))), tolerance = 1e-5)
   expect_equal(zz$r, matrix(r, length(tt), 3, TRUE))
@@ -702,10 +688,9 @@ test_that("non-numeric input", {
 
   expect_equal(dat$scalar, scalar)
   expect_equal(dat$vector, vector)
-  ## TODO: should shape these back on return
-  expect_equal(dat$matrix, c(matrix))
-  expect_equal(dat$array,  c(array))
-  expect_equal(dat$array4, c(array4))
+  expect_equal(dat$matrix, matrix)
+  expect_equal(dat$array,  array)
+  expect_equal(dat$array4, array4)
 
   ## Then to integer first:
   mod <- gen(scalar = convert(scalar),
@@ -716,10 +701,9 @@ test_that("non-numeric input", {
   dat <- mod$contents()
   expect_equal(dat$scalar, scalar)
   expect_equal(dat$vector, vector)
-  ## TODO: should shape these back on return
-  expect_equal(dat$matrix, c(matrix))
-  expect_equal(dat$array,  c(array))
-  expect_equal(dat$array4, c(array4))
+  expect_equal(dat$matrix, matrix)
+  expect_equal(dat$array,  array)
+  expect_equal(dat$array4, array4)
 
   ## Then test for errors on each as we convert to character:
   expect_error(
@@ -728,40 +712,35 @@ test_that("non-numeric input", {
         matrix = matrix,
         array = array,
         array4 = array4),
-    "Expected a numeric value for 'scalar'",
-    class = "std::runtime_error")
+    "Expected a numeric value for 'scalar'")
   expect_error(
     gen(scalar = scalar,
         vector = convert(vector, "character"),
         matrix = matrix,
         array = array,
         array4 = array4),
-    "Expected a numeric value for 'vector'",
-    class = "std::runtime_error")
+    "Expected a numeric value for 'vector'")
   expect_error(
     gen(scalar = scalar,
         vector = vector,
         matrix = convert(matrix, "character"),
         array = array,
         array4 = array4),
-    "Expected a numeric value for 'matrix'",
-    class = "std::runtime_error")
+    "Expected a numeric value for 'matrix'")
   expect_error(
     gen(scalar = scalar,
         vector = vector,
         matrix = matrix,
         array = convert(array, "character"),
         array4 = array4),
-    "Expected a numeric value for 'array'",
-    class = "std::runtime_error")
+    "Expected a numeric value for 'array'")
   expect_error(
     gen(scalar = scalar,
         vector = vector,
         matrix = matrix,
         array = array,
         array4 = convert(array4, "character")),
-    "Expected a numeric value for 'array4'",
-    class = "std::runtime_error")
+    "Expected a numeric value for 'array4'")
 })
 
 test_that("only used in output", {
@@ -780,10 +759,7 @@ test_that("only used in output", {
 
   mod <- gen()
   tt <- seq(0, 10, length.out = 101)
-  yy <- mod$run(tt)
-  res <- list(y = unname(yy[, 2:4]),
-              ytot = unname(yy[, 5, drop = TRUE]),
-              y2 = unname(yy[, 6:8]))
+  res <- mod$transform_variables(mod$run(tt))
   expect_equal(res$ytot, rowSums(res$y))
   expect_equal(res$y2, res$y * 2)
 })
@@ -841,7 +817,7 @@ test_that("sum over one dimension", {
   m <- matrix(runif(nr * nc), nr, nc)
   dat <- gen(m = m)$contents()
 
-  expect_equal(dat$m, c(m)) # TODO: reshape
+  expect_equal(dat$m, m)
   expect_equal(dat$v1, rowSums(m))
   expect_equal(dat$v2, colSums(m))
 
@@ -903,18 +879,18 @@ test_that("sum over two dimensions", {
   a <- array(runif(nr * nc * nz), c(nr, nc, nz))
   dat <- gen(a = a)$contents()
 
-  expect_equal(dat$a, c(a)) # TODO: reshaping all through here
-  expect_equal(dat$m12, c(apply(a, 1:2, sum)))
-  expect_equal(dat$m13, c(apply(a, c(1, 3), sum)))
-  expect_equal(dat$m23, c(apply(a, 2:3, sum)))
+  expect_equal(dat$a, a)
+  expect_equal(dat$m12, apply(a, 1:2, sum))
+  expect_equal(dat$m13, apply(a, c(1, 3), sum))
+  expect_equal(dat$m23, apply(a, 2:3, sum))
 
   expect_equal(dat$v1, apply(a, 1, sum))
   expect_equal(dat$v2, apply(a, 2, sum))
   expect_equal(dat$v3, apply(a, 3, sum))
 
-  expect_equal(dat$mm12, c(apply(a[,,2:4], 1:2, sum)))
-  expect_equal(dat$mm13, c(apply(a[,2:4,], c(1, 3), sum)))
-  expect_equal(dat$mm23, c(apply(a[2:4,,], 2:3, sum)))
+  expect_equal(dat$mm12, apply(a[,,2:4], 1:2, sum))
+  expect_equal(dat$mm13, apply(a[,2:4,], c(1, 3), sum))
+  expect_equal(dat$mm23, apply(a[2:4,,], 2:3, sum))
 
   expect_equal(dat$vv1, apply(a[,2:4,2:4], 1, sum))
   expect_equal(dat$vv2, apply(a[2:4,,2:4], 2, sum))
@@ -951,10 +927,10 @@ test_that("sum for a 4d array", {
   a <- array(runif(prod(dim)), dim)
   dat <- gen(a = a)$contents()
 
-  expect_equal(dat$a, c(a))
-  expect_equal(dat$m12, c(apply(a, 1:2, sum)))
-  expect_equal(dat$m23, c(apply(a, c(2, 3), sum)))
-  expect_equal(dat$m24, c(apply(a, c(2, 4), sum)))
+  expect_equal(dat$a, a)
+  expect_equal(dat$m12, apply(a, 1:2, sum))
+  expect_equal(dat$m23, apply(a, c(2, 3), sum))
+  expect_equal(dat$m24, apply(a, c(2, 4), sum))
 })
 
 test_that("self output for scalar", {
@@ -1031,7 +1007,6 @@ test_that("integer vector", {
   expect_equal(dat$idx, idx)
   expect_equal(dat$initial_v, x[idx])
 
-  skip("interface issue")
   expect_equal(ir_deserialise(mod$ir)$data$elements$idx$storage_type,
                "int")
 })
@@ -1060,7 +1035,6 @@ test_that("integer matrix", {
   mod <- gen(x = x, idx = idx)
   expect_equal(mod$contents()$v, v)
 
-  skip("interface issue")
   expect_equal(ir_deserialise(mod$ir)$data$elements$idx$storage_type,
                "int")
 })
@@ -1093,8 +1067,7 @@ test_that("user variable information", {
   expect_equal(info$has_default, c(FALSE, TRUE, TRUE))
   expect_equal(info$rank, c(1L, 0L, 0L))
 
-  skip("interface error")
-  expect_identical(coef(gen(1)), info)
+  expect_identical(coef(gen(r = I(1))), info)
 })
 
 
@@ -1116,7 +1089,6 @@ test_that("user variable information - when no user", {
                     integer = logical(),
                     stringsAsFactors = FALSE)
   expect_identical(info, cmp)
-  skip("interface issue")
   expect_identical(coef(gen()), cmp)
 })
 
@@ -1175,11 +1147,9 @@ test_that("user integer", {
   })
 
   expect_error(gen(y0 = 1.5),
-               "Expected 'y0' to be integer-like",
-               class = "std::runtime_error")
+               "Expected 'y0' to be integer-like")
   expect_error(gen(y0 = -1L),
-               "Expected 'y0' to be at least 0",
-               class = "std::runtime_error")
+               "Expected 'y0' to be at least 0")
 
   mod <- gen(y0 = 1)
   expect_equal(mod$run(0:10)[, "y"], 1.0 + 0.5 * (0:10))
@@ -1194,8 +1164,8 @@ test_that("multiple constraints", {
     r <- user(0.5, max = 10)
   })
 
-  expect_js_error(gen(y0 = -1L), "Expected 'y0' to be at least 0")
-  expect_js_error(gen(r = 100), "Expected 'r' to be at most 10")
+  expect_error(gen(y0 = -1L), "Expected 'y0' to be at least 0")
+  expect_error(gen(r = 100), "Expected 'r' to be at most 10")
 })
 
 
@@ -1208,9 +1178,9 @@ test_that("set_user honours constraints", {
   })
 
   mod <- gen()
-  expect_js_error(mod$set_user(list(y0 = -1L)),
-                  "Expected 'y0' to be at least 0")
-  expect_js_error(mod$set_user(list(r = 100)), "Expected 'r' to be at most 10")
+  expect_error(mod$set_user(y0 = -1L),
+               "Expected 'y0' to be at least 0")
+  expect_error(mod$set_user(r = 100), "Expected 'r' to be at most 10")
 })
 
 
@@ -1230,7 +1200,6 @@ test_that("user sized dependent variables are allowed", {
 
 
 test_that("user parameter validation", {
-  skip("user validation")
   gen <- odin_js({
     deriv(y) <- r
     initial(y) <- 1
@@ -1253,7 +1222,7 @@ test_that("user parameter validation", {
   ## Sensible error message for invalid option
   expect_error(
     gen(user = list(r = 1, a = 1), unused_user_action = "other"),
-    "Unknown user parameters: a (and invalid value for unused_user_action)",
+    "Unknown user parameters: a (and invalid value for unusedUserAction)",
     fixed = TRUE)
 
   ## Inherit action from option

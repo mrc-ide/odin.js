@@ -10,8 +10,12 @@ generate_js_sexp <- function(x, data, meta) {
     } else if (fn == "[") {
       pos <- js_array_access(args[[1L]], args[-1], data, meta)
       ret <- sprintf("%s[%s]", values[[1L]], pos)
+    } else if (fn == "^") {
+      ret <- sprintf("Math.pow(%s, %s)", values[[1]], values[[2]])
     } else if (n == 2L && fn %in% odin:::FUNCTIONS_INFIX) {
       ret <- sprintf("%s %s %s", values[[1]], fn, values[[2]])
+    } else if (n == 1L && fn == "-") {
+      ret <- sprintf("- %s", values[[1]])
     } else if (fn == "if") {
       ## NOTE: The ternary operator has very low precendence, so I'm
       ## going to agressively parenthesise it.  This is strictly not
@@ -26,6 +30,11 @@ generate_js_sexp <- function(x, data, meta) {
     } else if (fn == "dim") {
       dim <- data$elements[[args[[1L]]]]$dimnames$dim[[args[[2]]]]
       ret <- generate_js_sexp(dim, data, meta)
+    } else if (fn == "log" && length(values) == 2L) {
+      ret <- sprintf("(Math.log(%s) / Math.log(%s))",
+                     values[[1L]], values[[2L]])
+    } else if (fn == "min" || fn == "max") {
+      ret <- js_fold_call(paste0("Math.", fn), values)
     } else if (fn == "sum" || fn == "odin_sum") {
       ret <- generate_js_sexp_sum(args, data, meta)
     } else if (any(names(FUNCTIONS_STOCHASTIC) == fn)) {
@@ -33,14 +42,15 @@ generate_js_sexp <- function(x, data, meta) {
                      FUNCTIONS_STOCHASTIC[[fn]],
                      paste(values, collapse = ", "))
     } else {
-      if (any(FUNCTIONS_MATH == fn)) {
+      if (any(names(FUNCTIONS_RENAME) == fn)) {
+        fn <- FUNCTIONS_RENAME[[fn]]
+      } else if (any(FUNCTIONS_MATH == fn)) {
         fn <- sprintf("Math.%s", fn)
       } else if (any(names(FUNCTIONS_STOCHASTIC_SPECIAL) == fn)) {
         fn <- sprintf("random.%s", FUNCTIONS_STOCHASTIC_SPECIAL[[fn]])
+      } else {
+        stop(sprintf("unsupported function '%s'", fn))
       }
-      ## if (!any(names(FUNCTIONS) == fn)) {
-      ##   stop(sprintf("unsupported function '%s' [odin bug]", fn)) # nocov
-      ## }
       ret <- sprintf("%s(%s)", fn, paste(values, collapse = ", "))
     }
     ret
@@ -82,8 +92,10 @@ generate_js_sexp_sum <- function(args, data, meta) {
 
 FUNCTIONS_RENAME <- c(
   "^" = "Math.pow",
-  ceiling = "Math.ceil"
-)
+  ceiling = "Math.ceil",
+  round = "round2",
+  "%%" = "modr",
+  "%/%" = "intdivr")
 
 
 FUNCTIONS_MATH <- c(
@@ -93,7 +105,7 @@ FUNCTIONS_MATH <- c(
   "acos", "asin", "atan", "atan2",
   "cosh", "sinh", "tanh",
   "acosh", "asinh", "atanh",
-  "abs", "floor", "round", "trunc")
+  "abs", "floor", "trunc")
 
 
 FUNCTIONS_STOCHASTIC_SPECIAL <- c(

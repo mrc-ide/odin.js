@@ -6,8 +6,9 @@ odin_js_wrapper <- function(ir, options) {
   context$eval(paste(res$code, collapse = "\n"))
   name <- res$name
 
-  ret <- function(..., user = list(...)) {
-    R6_odin_js_wrapper$new(context, name, user, res$discrete)
+  ret <- function(..., user = list(...), unused_user_action = NULL) {
+    R6_odin_js_wrapper$new(context, name, user, res$features, res$ir,
+                           unused_user_action)
   }
   attr(ret, "ir") <- ir
   class(ret) <- "odin_generator"
@@ -17,7 +18,9 @@ odin_js_wrapper <- function(ir, options) {
 
 to_json_user <- function(user) {
   f <- function(x) {
-    if (is.array(x)) {
+    if (inherits(x, "JS_EVAL")) {
+      class(x) <- "json"
+    } else if (is.array(x)) {
       x <- list(data = c(x), dim = I(dim(x)))
     } else if (length(x) > 1L || inherits(x, "AsIs")) {
       x <- list(data = x, dim = I(length(x)))
@@ -28,7 +31,7 @@ to_json_user <- function(user) {
     stopifnot(!is.null(names(user)))
   }
   user <- lapply(user, f)
-  to_json(user, auto_unbox = TRUE)
+  to_json(user, auto_unbox = TRUE, json_verbatim = TRUE)
 }
 
 
@@ -41,44 +44,86 @@ R6_odin_js_wrapper <- R6::R6Class(
   private = list(
     context = NULL,
     name = NULL,
+    features = NULL,
+    internal_order = NULL,
+    variable_order = NULL,
+    output_order = NULL,
 
     finalize = function() {
-      private$context$eval(sprintf("delete %s;", private$name))
+      private$js_eval(sprintf("delete %s;", private$name))
+    },
+
+    update_metadata = function() {
+      private$internal_order <-
+        private$context$get(sprintf("%s.metadata.internalOrder", private$name))
+      private$variable_order <-
+        private$context$get(sprintf("%s.metadata.variableOrder", private$name))
+      private$output_order <-
+        private$context$get(sprintf("%s.metadata.outputOrder", private$name))
+    },
+
+    js_call = function(...) {
+      tryCatch(private$context$call(...), error = function(e) stop(e$message))
+    },
+
+    js_eval = function(...) {
+      tryCatch(private$context$eval(...), error = function(e) stop(e$message))
     }
   ),
 
   public = list(
-    initialize = function(context, generator, user, discrete) {
+    initialize = function(context, generator, user, features, ir,
+                          unused_user_action) {
       private$context <- context
       private$name <- sprintf("%s.%s", JS_INSTANCES, basename(tempfile("i")))
+      private$features <- features
+
+      ## For compatibility with odin, without having to write the full
+      ## interface
+      if (length(user) > 0L && !private$features$has_user) {
+        tryCatch(do.call(function() NULL, user),
+                 error = function(e) stop(e$message, call. = FALSE))
+      }
+
       user_js <- to_json_user(user)
-      init <- sprintf("%s = new %s.%s(%s);",
-                      private$name, JS_GENERATORS, generator, user_js)
-      if (discrete) {
+      unused_user_action <- unused_user_action %||%
+        getOption("odin.unused_user_action", "warning")
+      init <- sprintf("%s = new %s.%s(%s, %s);",
+                      private$name, JS_GENERATORS, generator, user_js,
+                      dquote(unused_user_action))
+      if (features$discrete) {
         self$update <- self$rhs
       } else {
         self$deriv <- self$rhs
       }
-      private$context$eval(init)
+      private$js_eval(init)
+      private$update_metadata()
+
+      self$ir <- ir
+      lockBinding("ir", self)
       lockEnvironment(self)
     },
 
     initial = function(t) {
       t_js <- to_json(scalar(t))
-      private$context$call(sprintf("%s.initial", private$name), t_js)
+      private$js_call(sprintf("%s.initial", private$name), t_js)
     },
 
-    set_user = function(user) {
+    set_user = function(..., user = list(...), unused_user_action = NULL) {
+      unused_user_action <- unused_user_action %||%
+        getOption("odin.unused_user_action", "warning")
       user_js <- to_json_user(user)
-      private$context$call(sprintf("%s.setUser", private$name), user_js)
+      private$js_call(sprintf("%s.setUser", private$name),
+                      user_js, unused_user_action)
+      private$update_metadata()
     },
 
     rhs = function(t, y) {
       ## TODO: check length of 'y' here?
       t_js <- to_json(scalar(t))
       y_js <- to_json(y, auto_unbox = FALSE)
-      ret <- private$context$call(sprintf("%s.rhsEval", private$name),
-                                  t_js, y_js)
+      ret <- private$js_call(sprintf("%s.rhsEval", private$name),
+                             t_js, y_js)
       ## This is super ugly but should do the trick for now:
       if (length(ret) > length(y)) {
         i <- seq_along(y)
@@ -88,7 +133,15 @@ R6_odin_js_wrapper <- R6::R6Class(
     },
 
     contents = function() {
-      private$context$get(sprintf("%s.internal", private$name))
+      ret <- private$context$get(sprintf("%s.internal", private$name))
+      order <- private$internal_order
+      for (i in names(ret)) {
+        d <- order[[i]]
+        if (length(d) > 1) {
+          dim(ret[[i]]) <- d
+        }
+      }
+      ret
     },
 
     run = function(t, y = NULL, ..., tcrit = NULL, use_names = TRUE) {
@@ -104,12 +157,16 @@ R6_odin_js_wrapper <- R6::R6Class(
 
       ## NOTE: tcrit here is ignored when calling the discrete time
       ## model
-      res <- private$context$call(sprintf("%s.run", private$name),
-                                  t_js, y_js, tcrit)
+      res <- private$js_call(sprintf("%s.run", private$name),
+                             t_js, y_js, tcrit)
       if (use_names) {
         colnames(res$y) <- res$names
       }
       res$y
+    },
+
+    transform_variables = function(y) {
+      odin:::support_transform_variables(y, private)
     }
   ))
 

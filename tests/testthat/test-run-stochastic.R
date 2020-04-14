@@ -60,8 +60,7 @@ test_that("array stochastic variables are time dependent", {
   tt <- 0:20
   model_set_seed(mod, 1)
   yy <- mod$run(tt)
-  ## zz <- mod$transform_variables(yy)
-  zz <- list(x = unname(yy[, 2:4]))
+  zz <- mod$transform_variables(yy)
   model_set_seed(mod, 1)
   cmp <- rbind(0,
                matrix(model_random_numbers(mod, "normal", 3 * 20), 20, 3, TRUE))
@@ -141,7 +140,7 @@ test_that("round & rbinom", {
 
   mod <- gen(p = 1, size = 0.4)
   expect_equal(mod$initial(0), 0)
-  mod$set_user(list(p = 1, size = 1.7))
+  mod$set_user(p = 1, size = 1.7)
   expect_equal(mod$initial(0), 2)
 })
 

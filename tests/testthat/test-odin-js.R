@@ -88,12 +88,12 @@ test_that("user variables", {
 
   expect_error(gen())
   ## TODO: Some of these errors are not the same as the other engines
-  expect_js_error(gen(user = NULL),
-                  "Expected a value for 'r'", fixed = TRUE)
-  expect_js_error(gen(r = 1:2),
-                  "Expected a numeric value for 'r'")
-  expect_js_error(gen(r = numeric(0)),
-                  "Expected a numeric value for 'r'")
+  expect_error(gen(user = NULL),
+               "Expected a value for 'r'", fixed = TRUE)
+  expect_error(gen(r = 1:2),
+               "Expected a numeric value for 'r'")
+  expect_error(gen(r = numeric(0)),
+               "Expected a numeric value for 'r'")
 
   expect_equal(sort_list(gen(r = pi)$contents()),
                sort_list(list(K = 100, N0 = 1, initial_N = 1, r = pi)))
@@ -104,9 +104,28 @@ test_that("user variables", {
                pi * 10 * (1 - 10 / 100))
 
   mod <- gen(r = pi, N0 = exp(1))
-  mod$set_user(NULL)
+  mod$set_user()
   expect_equal(mod$contents()$r, pi)
   expect_equal(mod$contents()$N0, exp(1))
+})
+
+
+test_that("accept matrices directly if asked nicely", {
+  gen <- odin_js({
+    deriv(y) <- 1
+    initial(y) <- 1
+    matrix[,] <- user()
+    dim(matrix) <- user()
+  })
+
+  m <- matrix(1:12, c(3, 4))
+  mod <- gen(matrix = to_json_columnwise(m))
+  expect_equal(
+    mod$contents()$matrix, m)
+
+  mod <- gen(matrix = m)
+  expect_equal(
+    mod$contents()$matrix, m)
 })
 
 
@@ -118,4 +137,14 @@ test_that("delay models are not supported", {
       deriv(y) <- 0.2 * ylag * 1 / (1 + ylag^10) - 0.1 * y
     }),
     "Using unsupported features: 'has_delay'")
+})
+
+
+test_that("some R functions are not available", {
+  expect_error(
+    odin_js({
+      deriv(y) <- 1
+      initial(y) <- choose(4, 3)
+    }),
+    "unsupported function 'choose'")
 })

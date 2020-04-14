@@ -46,9 +46,6 @@ function integrateOdin(obj, times, y0, tcrit) {
 function getUser(user, name, internal, size, defaultValue,
                   min, max, isInteger) {
     var value = user[name];
-    if (size !== null) {
-        throw Error("Arrays not yet supported");
-    }
     if (isMissing(value)) {
         if (isMissing(internal[name])) {
             if (defaultValue === null) {
@@ -156,7 +153,11 @@ function getUserArrayDim(user, name, internal, size, defaultValue,
 
 
 function getUserArrayCheckType(value, name) {
-    if (!(typeof value === "object" && "data" in value && "dim" in value)) {
+    if (Array.isArray(value)) {
+        value = flattenArray(value, name)
+    } else if (!(typeof value === "object" &&
+                 "data" in value &&
+                 "dim" in value)) {
         throw Error("Expected an odin.js array object for '" + name + "'");
     }
     return value;
@@ -195,6 +196,30 @@ function getUserArrayCheckContents(data, min, max, isInteger, name) {
 }
 
 
+function checkUser(user, allowed, unusedUserAction) {
+    if (unusedUserAction === undefined) {
+        unusedUserAction = "stop";
+    }
+    if (unusedUserAction === "ignore") {
+        return;
+    }
+    var err = setDifference(Object.keys(user), allowed);
+    if (err.length > 0) {
+        var msg = "Unknown user parameters: " + err.join(", ");
+
+        if (unusedUserAction === "message") {
+            odinMessage(msg);
+        } else if (unusedUserAction === "warning") {
+            odinWarning(msg);
+        } else if (unusedUserAction === "stop") {
+            throw Error(msg);
+        } else {
+            throw Error(msg + " (and invalid value for unusedUserAction)");
+        }
+    }
+}
+
+
 function isMissing(x) {
     return x === undefined || x === null ||
         (typeof x === "number" && isNaN(x));
@@ -206,6 +231,108 @@ function isMissing(x) {
 // which is close enough to sqrt(double.eps) anyway
 function numberIsInteger(x) {
     return Math.abs(x - Math.round(x)) < 1e-8
+}
+
+
+// O(n^2) but does not use Set, which is not available in old v8
+function setDifference(a, b) {
+  var result = [];
+  for (var i = 0; i < a.length; i++) {
+    if (b.indexOf(a[i]) === -1) {
+      result.push(a[i]);
+    }
+  }
+  return result;
+}
+
+
+// nice behaviour both in and out of R
+function odinWarning(msg) {
+    try {
+        console.r.call("warning", msg)
+    } catch (e) {
+        console.warn(msg)
+    }
+}
+
+
+function odinMessage(msg) {
+    try {
+        console.r.call("message", msg)
+    } catch (e) {
+        console.warn(msg)
+    }
+}
+
+
+function flattenArray(value, name) {
+    var len = 1;
+    var dim = [];
+    var x = value;
+    while (Array.isArray(x)) {
+        dim.push(x.length);
+        len *= x.length;
+        x = x[0];
+    }
+    dim.reverse();
+
+    var data = flatten(value, []);
+
+    // Not a suffient check, but at least a necessary one:
+    if (len !== data.length) {
+        throw Error("Inconsistent array for '" + name + '"');
+    }
+
+    return {data: data, dim: dim};
+}
+
+
+function flatten(array, result) {
+  if (array.length === 0) {
+    return result
+  }
+  var head = array[0]
+  var rest = array.slice(1)
+  if (Array.isArray(head)) {
+    return flatten(head.concat(rest), result)
+  }
+  result.push(head)
+  return flatten(rest, result)
+}
+
+
+// https://en.wikipedia.org/wiki/Rounding#Round_half_to_even - same
+// behaviour as R and IEEE 754, with better biases.
+function roundHalfToEven(x) {
+    if (modr(x, 1) === 0.5) {
+        return 2 * Math.round(x / 2);
+    } else {
+        return Math.round(x);
+    }
+}
+
+
+function round2(x, digits) {
+    if (digits === undefined) {
+        return roundHalfToEven(x);
+    } else {
+        var mult = Math.pow(10, digits);
+        return roundHalfToEven(x * mult) / mult;
+    }
+}
+
+// modulo that conforms to (approximately) the same behaviour as R
+function modr(x, y) {
+    var tmp = x % y;
+    if (tmp * y < 0) {
+        tmp += y;
+    }
+    return tmp;
+}
+
+
+function intdivr(x, y) {
+    return Math.floor(x / y);
 }
 
 

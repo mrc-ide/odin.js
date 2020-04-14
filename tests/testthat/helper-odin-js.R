@@ -49,11 +49,6 @@ odin_js_test_random <- function(name) {
 }
 
 
-expect_js_error <- function(...) {
-  testthat::expect_error(..., class = "std::runtime_error")
-}
-
-
 to_json_max <- function(x) {
   V8::JS(jsonlite::toJSON(x, digits = NA))
 }
@@ -102,4 +97,16 @@ model_random_numbers <- function(x, name, n, ...) {
     "}"))
   f <- V8::JS(sprintf("random.%s(%s)", name, paste(c(...), collapse = ", ")))
   ctx$call("repeat", f, n)
+}
+
+
+with_options <- function(opts, code) {
+  oo <- options(opts)
+  on.exit(oo)
+  force(code)
+}
+
+
+to_json_columnwise <- function(x) {
+  V8::JS(jsonlite::toJSON(x, matrix = "columnmajor"))
 }

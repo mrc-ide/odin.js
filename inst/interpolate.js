@@ -55,7 +55,7 @@ function interpolateAlloc(type, x, y, failOnExtrapolate) {
         y = [];
         for (var i = 0; i < n; ++i) {
             var yi = [];
-            for (j = 0; j < ny; ++j) {
+            for (var j = 0; j < ny; ++j) {
                 yi.push(ylinear[j * n + i]);
             }
             y.push(yi);

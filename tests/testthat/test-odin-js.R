@@ -161,3 +161,16 @@ test_that("can adjust tolerance in the solver", {
   y2 <- mod$run(tt, atol = 1e-10, rtol = 1e-10)
   expect_true(mean(abs(y1[, 2] - sin(tt))) > 10 * mean(abs(y2[, 2] - sin(tt))))
 })
+
+
+test_that("can adjust max steps", {
+  gen <- odin_js({
+    deriv(y) <- cos(t)
+    initial(y) <- 0
+  })
+  mod <- gen()
+  tt <- seq(0, 2 * pi, length.out = 101)
+  expect_error(
+    mod$run(tt, step_max_n = 10),
+    "Integration failure: too many steps")
+})

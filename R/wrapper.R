@@ -144,8 +144,8 @@ R6_odin_js_wrapper <- R6::R6Class(
       ret
     },
 
-    run = function(t, y = NULL, ..., atol = NULL, rtol = NULL,
-                   tcrit = NULL, use_names = TRUE) {
+    run = function(t, y = NULL, ..., tcrit = NULL, atol = NULL, rtol = NULL,
+                   step_max_n = NULL, use_names = TRUE) {
       t_js <- to_json(t, auto_unbox = FALSE)
       if (is.null(y)) {
         y_js <- V8::JS("null")
@@ -161,11 +161,14 @@ R6_odin_js_wrapper <- R6::R6Class(
       if (is.null(rtol)) {
         rtol <- V8::JS("null")
       }
+      if (is.null(step_max_n)) {
+        step_max_n <- V8::JS("null")
+      }
 
       ## NOTE: tcrit here is ignored when calling the discrete time
       ## model
       res <- private$js_call(sprintf("%s.run", private$name),
-                             t_js, y_js, tcrit, atol, rtol)
+                             t_js, y_js, tcrit, atol, rtol, step_max_n)
       if (use_names) {
         colnames(res$y) <- res$names
       }

@@ -8,7 +8,7 @@ function zeros(n) {
 }
 
 
-function integrateOdin(obj, times, y0, tcrit, atol, rtol) {
+function integrateOdin(obj, times, y0, tcrit, atol, rtol, maxSteps) {
     var t0 = times[0];
     var t1 = times[times.length - 1];
     if (obj.metadata.interpolateTimes !== null) {
@@ -29,6 +29,9 @@ function integrateOdin(obj, times, y0, tcrit, atol, rtol) {
     }
     if (!isMissing(rtol)) {
         ctl.rtol = rtol;
+    }
+    if (!isMissing(maxSteps)) {
+        ctl.maxSteps = maxSteps;
     }
     var sol = null;
     if (typeof obj.output === "function") {

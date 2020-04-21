@@ -27,7 +27,7 @@ function integrateOdin(obj, times, y0, tcrit, atol, rtol) {
     if (!isMissing(atol)) {
         ctl.atol = atol;
     }
-    if (isMissing(rtol)) {
+    if (!isMissing(rtol)) {
         ctl.rtol = rtol;
     }
     var sol = null;

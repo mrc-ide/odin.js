@@ -95,7 +95,9 @@ FUNCTIONS_RENAME <- c(
   ceiling = "Math.ceil",
   round = "round2",
   "%%" = "modr",
-  "%/%" = "intdivr")
+  "%/%" = "intdivr",
+  "as.integer" = "Math.floor"
+)
 
 
 FUNCTIONS_MATH <- c(

@@ -23,3 +23,6 @@ Suggests:
     deSolve,
     testthat
 RoxygenNote: 6.1.1
+Remotes:
+    ropensci/jsonvalidate,
+    mrc-ide/odin

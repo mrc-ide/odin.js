@@ -1,9 +1,10 @@
 ## odin.js
 
+<!-- badges: start -->
 [![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
-[![Travis-CI Build Status](https://travis-ci.org/mrc-ide/odin.js.svg?branch=master)](https://travis-ci.org/mrc-ide/odin.js)
-[![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/7o66jpuibiy6havb?svg=true)](https://ci.appveyor.com/project/richfitz/odin-js)
+[![R build status](https://github.com/mrc-ide/odin.js/workflows/R-CMD-check/badge.svg)](https://github.com/mrc-ide/odin.js/actions)
 [![codecov.io](https://codecov.io/github/mrc-ide/odin.js/coverage.svg?branch=master)](https://codecov.io/github/mrc-ide/odin.js?branch=master)
+<!-- badges: end -->
 
 ```{r, echo = FALSE, results = "hide"}
 knitr::opts_chunk$set(error = FALSE)

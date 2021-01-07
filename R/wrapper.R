@@ -145,7 +145,8 @@ R6_odin_js_wrapper <- R6::R6Class(
     },
 
     run = function(t, y = NULL, ..., tcrit = NULL, atol = NULL, rtol = NULL,
-                   step_max_n = NULL, use_names = TRUE) {
+                   step_max_n = NULL, use_names = TRUE,
+                   return_statistics = FALSE) {
       t_js <- to_json(t, auto_unbox = FALSE)
       if (is.null(y)) {
         y_js <- V8::JS("null")
@@ -171,6 +172,16 @@ R6_odin_js_wrapper <- R6::R6Class(
                              t_js, y_js, tcrit, atol, rtol, step_max_n)
       if (use_names) {
         colnames(res$y) <- res$names
+      }
+
+      if (return_statistics) {
+        ## Convert into the same as for dde, which is a subset (we
+        ## discard here lastError, stiffNNonstiff and stiffNStiff)
+        statistics <- c(n_eval = res$statistics$nEval,
+                        n_steps = res$statistics$nSteps,
+                        n_accepted = res$statistics$nStepsAccepted,
+                        n_rejected = res$statistics$nStepsRejected)
+        attr(res$y, "statistics") <- statistics
       }
       res$y
     },

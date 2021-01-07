@@ -48,6 +48,7 @@ R6_odin_js_wrapper <- R6::R6Class(
     internal_order = NULL,
     variable_order = NULL,
     output_order = NULL,
+    ir_ = NULL,
 
     finalize = function() {
       private$js_eval(sprintf("delete %s;", private$name))
@@ -99,14 +100,17 @@ R6_odin_js_wrapper <- R6::R6Class(
       private$js_eval(init)
       private$update_metadata()
 
-      self$ir <- ir
-      lockBinding("ir", self)
+      private$ir_ <- ir
       lockEnvironment(self)
     },
 
     initial = function(t) {
       t_js <- to_json(scalar(t))
       private$js_call(sprintf("%s.initial", private$name), t_js)
+    },
+
+    ir = function() {
+      private$ir_
     },
 
     set_user = function(..., user = list(...), unused_user_action = NULL) {
@@ -145,7 +149,8 @@ R6_odin_js_wrapper <- R6::R6Class(
     },
 
     run = function(t, y = NULL, ..., tcrit = NULL, atol = NULL, rtol = NULL,
-                   step_max_n = NULL, use_names = TRUE) {
+                   step_max_n = NULL, use_names = TRUE,
+                   return_statistics = FALSE) {
       t_js <- to_json(t, auto_unbox = FALSE)
       if (is.null(y)) {
         y_js <- V8::JS("null")
@@ -171,6 +176,16 @@ R6_odin_js_wrapper <- R6::R6Class(
                              t_js, y_js, tcrit, atol, rtol, step_max_n)
       if (use_names) {
         colnames(res$y) <- res$names
+      }
+
+      if (return_statistics) {
+        ## Convert into the same as for dde, which is a subset (we
+        ## discard here lastError, stiffNNonstiff and stiffNStiff)
+        statistics <- c(n_eval = res$statistics$nEval,
+                        n_step = res$statistics$nSteps,
+                        n_accept = res$statistics$nStepsAccepted,
+                        n_reject = res$statistics$nStepsRejected)
+        attr(res$y, "statistics") <- statistics
       }
       res$y
     },

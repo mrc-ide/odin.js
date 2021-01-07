@@ -1,6 +1,6 @@
 Package: odin.js
 Title: 'odin' 'JavaScript' support
-Version: 0.1.9
+Version: 0.1.10
 Authors@R:
     person(given = "Rich",
            family = "FitzJohn",
@@ -17,7 +17,7 @@ Imports:
     R6 (>= 2.4.0),
     V8,
     jsonlite,
-    odin (>= 0.2.0)
+    odin (>= 1.1.5)
 Suggests:
     cinterpolate,
     deSolve,

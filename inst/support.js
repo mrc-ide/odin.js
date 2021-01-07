@@ -33,15 +33,17 @@ function integrateOdin(obj, times, y0, tcrit, atol, rtol, maxSteps) {
     if (!isMissing(maxSteps)) {
         ctl.maxSteps = maxSteps;
     }
-    var sol = null;
+    var solver;
     if (typeof obj.output === "function") {
         var output = function(t, y) {
             return obj.output(t, y);
         }
-        sol = dopri.integrate(rhs, y0, t0, t1, ctl, output);
+        solver = new dopri.Dopri(rhs, y0.length, ctl, output);
     } else {
-        sol = dopri.integrate(rhs, y0, t0, t1, ctl);
+        solver = new dopri.Dopri(rhs, y0.length, ctl);
     }
+    solver.initialise(t0, y0);
+    var sol = solver.run(t1);
     var y = sol(times);
     // Prepend the result vector with the times; this is going to be
     // required later on - it would be nice if dopri did this through
@@ -49,7 +51,10 @@ function integrateOdin(obj, times, y0, tcrit, atol, rtol, maxSteps) {
     for (var i = 0; i < times.length; ++i) {
         y[i].unshift(times[i]);
     }
-    return {"y": y, "names": obj.metadata.ynames.slice(0)};
+
+    return {"y": y,
+            "names": obj.metadata.ynames.slice(0),
+            "statistics": solver.statistics()};
 }
 
 function getUser(user, name, internal, size, defaultValue,

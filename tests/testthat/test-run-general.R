@@ -1256,7 +1256,7 @@ test_that("user parameter validation", {
 })
 
 test_that("force integer on use", {
-  gen <- odin({
+  gen <- odin_js({
     vec[] <- i
     dim(vec) <- 2
     idx <- if (t > 5) 2 else 1
@@ -1267,12 +1267,13 @@ test_that("force integer on use", {
   mod <- gen()
   t <- seq(0, 10, length.out = 101)
   y <- mod$run(t, atol = 1e-9, rtol = 1e-9)
-  expect_equal(y[, 2], ifelse(t <= 5, t, 2 * t - 5))
+  expect_equal(y[, 2], ifelse(t <= 5, t, 2 * t - 5),
+               tolerance = 1e-7)
 })
 
 
 test_that("force integer on a numeric vector truncates", {
-  gen <- odin({
+  gen <- odin_js({
     vec[] <- i
     dim(vec) <- 10
     idx <- user()
@@ -1280,7 +1281,7 @@ test_that("force integer on a numeric vector truncates", {
     deriv(x) <- 0
   })
 
-  expect_equal(gen(idx = 1.5)$initial(), 1)
-  expect_equal(gen(idx = 3 - 1e-8)$initial(), 2)
-  expect_equal(gen(idx = 3 + 1e-8)$initial(), 3)
+  expect_equal(gen(idx = 1.5)$initial(0), 1)
+  expect_equal(gen(idx = 3 - 1e-8)$initial(0), 2)
+  expect_equal(gen(idx = 3 + 1e-8)$initial(0), 3)
 })

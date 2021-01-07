@@ -46,6 +46,6 @@ test_that("return statistics", {
   statistics <- attr(res, "statistics")
   expect_is(statistics, "integer")
   expect_equal(names(statistics),
-               c("n_eval", "n_steps", "n_accepted", "n_rejected"))
+               c("n_eval", "n_step", "n_accept", "n_reject"))
   expect_true(all(statistics) >= 0)
 })

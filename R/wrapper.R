@@ -182,9 +182,9 @@ R6_odin_js_wrapper <- R6::R6Class(
         ## Convert into the same as for dde, which is a subset (we
         ## discard here lastError, stiffNNonstiff and stiffNStiff)
         statistics <- c(n_eval = res$statistics$nEval,
-                        n_steps = res$statistics$nSteps,
-                        n_accepted = res$statistics$nStepsAccepted,
-                        n_rejected = res$statistics$nStepsRejected)
+                        n_step = res$statistics$nSteps,
+                        n_accept = res$statistics$nStepsAccepted,
+                        n_reject = res$statistics$nStepsRejected)
         attr(res$y, "statistics") <- statistics
       }
       res$y

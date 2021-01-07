@@ -48,6 +48,7 @@ R6_odin_js_wrapper <- R6::R6Class(
     internal_order = NULL,
     variable_order = NULL,
     output_order = NULL,
+    ir_ = NULL,
 
     finalize = function() {
       private$js_eval(sprintf("delete %s;", private$name))
@@ -99,14 +100,17 @@ R6_odin_js_wrapper <- R6::R6Class(
       private$js_eval(init)
       private$update_metadata()
 
-      self$ir <- ir
-      lockBinding("ir", self)
+      private$ir_ <- ir
       lockEnvironment(self)
     },
 
     initial = function(t) {
       t_js <- to_json(scalar(t))
       private$js_call(sprintf("%s.initial", private$name), t_js)
+    },
+
+    ir = function() {
+      private$ir_
     },
 
     set_user = function(..., user = list(...), unused_user_action = NULL) {

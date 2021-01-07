@@ -1007,7 +1007,7 @@ test_that("integer vector", {
   expect_equal(dat$idx, idx)
   expect_equal(dat$initial_v, x[idx])
 
-  expect_equal(ir_deserialise(mod$ir)$data$elements$idx$storage_type,
+  expect_equal(ir_deserialise(mod$ir())$data$elements$idx$storage_type,
                "int")
 })
 
@@ -1035,7 +1035,7 @@ test_that("integer matrix", {
   mod <- gen(x = x, idx = idx)
   expect_equal(mod$contents()$v, v)
 
-  expect_equal(ir_deserialise(mod$ir)$data$elements$idx$storage_type,
+  expect_equal(ir_deserialise(mod$ir())$data$elements$idx$storage_type,
                "int")
 })
 

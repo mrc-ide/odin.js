@@ -149,31 +149,29 @@ R6_odin_js_wrapper <- R6::R6Class(
     },
 
     run = function(t, y = NULL, ..., tcrit = NULL, atol = NULL, rtol = NULL,
-                   step_max_n = NULL, use_names = TRUE,
-                   return_statistics = FALSE) {
+                   step_max_n = NULL, step_size_min = NULL,
+                   step_size_max = NULL, step_size_min_allow = NULL,
+                   use_names = TRUE, return_statistics = FALSE) {
       t_js <- to_json(t, auto_unbox = FALSE)
       if (is.null(y)) {
         y_js <- V8::JS("null")
       } else {
         y_js <- to_json(y, auto_unbox = FALSE)
       }
-      if (is.null(tcrit)) {
-        tcrit <- V8::JS("null")
-      }
-      if (is.null(atol)) {
-        atol <- V8::JS("null")
-      }
-      if (is.null(rtol)) {
-        rtol <- V8::JS("null")
-      }
-      if (is.null(step_max_n)) {
-        step_max_n <- V8::JS("null")
-      }
+      control <- list(atol = atol,
+                      rtol = rtol,
+                      tcrit = tcrit,
+                      maxSteps = step_max_n,
+                      stepSizeMin = step_size_min,
+                      stepSizeMax = step_size_max,
+                      stepSizeMinAllow = step_size_min_allow)
+      control <- control[!vlapply(control, is.null)]
+      control_js <- to_json(control, auto_unbox = TRUE)
 
       ## NOTE: tcrit here is ignored when calling the discrete time
       ## model
       res <- private$js_call(sprintf("%s.run", private$name),
-                             t_js, y_js, tcrit, atol, rtol, step_max_n)
+                             t_js, y_js, control_js)
       if (use_names) {
         colnames(res$y) <- res$names
       }

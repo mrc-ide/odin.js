@@ -8,7 +8,7 @@ function zeros(n) {
 }
 
 
-function integrateOdin(obj, times, y0, tcrit, atol, rtol, maxSteps) {
+function integrateOdin(obj, times, y0, control) {
     var t0 = times[0];
     var t1 = times[times.length - 1];
     if (obj.metadata.interpolateTimes !== null) {
@@ -20,27 +20,14 @@ function integrateOdin(obj, times, y0, tcrit, atol, rtol, maxSteps) {
     var rhs = function(t, y, dy) {
         obj.rhs(t, y, dy);
     };
-    var ctl = {};
-    if (tcrit !== null) {
-        ctl.tcrit = tcrit;
-    }
-    if (!isMissing(atol)) {
-        ctl.atol = atol;
-    }
-    if (!isMissing(rtol)) {
-        ctl.rtol = rtol;
-    }
-    if (!isMissing(maxSteps)) {
-        ctl.maxSteps = maxSteps;
-    }
     var solver;
     if (typeof obj.output === "function") {
         var output = function(t, y) {
             return obj.output(t, y);
         }
-        solver = new dopri.Dopri(rhs, y0.length, ctl, output);
+        solver = new dopri.Dopri(rhs, y0.length, control, output);
     } else {
-        solver = new dopri.Dopri(rhs, y0.length, ctl);
+        solver = new dopri.Dopri(rhs, y0.length, control);
     }
     solver.initialise(t0, y0);
     var sol = solver.run(t1);

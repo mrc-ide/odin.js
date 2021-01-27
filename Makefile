@@ -48,7 +48,7 @@ coverage:
 
 js: inst/dopri.js
 
-js/dopri.js: js/package.json js/in.js
+js/dopri.js: js/package.json js/dopri.in.js
 	./js/build
 
 inst/support.min.js: inst/support.js

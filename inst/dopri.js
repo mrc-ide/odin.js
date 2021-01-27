@@ -1,19 +1,29 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-(function (global){
+(function (global){(function (){
 global.dopri = require('dopri');
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+}).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"dopri":8}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 function dopriControl(control) {
     if (control === void 0) { control = {}; }
-    var defaults = { atol: 1e-6, maxSteps: 10000, rtol: 1e-6,
-        stiffCheck: 0, tcrit: Infinity };
+    var defaults = { atol: 1e-6,
+        maxSteps: 10000,
+        rtol: 1e-6,
+        stepSizeMax: Infinity,
+        stepSizeMin: 1e-8,
+        stepSizeMinAllow: false,
+        stiffCheck: 0,
+        tcrit: Infinity,
+    };
     var ret = {
         atol: withDefault(control.atol, defaults.atol),
         maxSteps: withDefault(control.maxSteps, defaults.maxSteps),
         rtol: withDefault(control.rtol, defaults.rtol),
+        stepSizeMax: withDefault(control.stepSizeMax, defaults.stepSizeMax),
+        stepSizeMin: withDefault(control.stepSizeMin, defaults.stepSizeMin),
+        stepSizeMinAllow: withDefault(control.stepSizeMinAllow, defaults.stepSizeMinAllow),
         stiffCheck: withDefault(control.stiffCheck, defaults.stiffCheck),
         tcrit: withDefault(control.tcrit, defaults.tcrit),
     };
@@ -145,7 +155,7 @@ var Dopri = /** @class */ (function () {
         }
         this._stepper.reset(t, y);
         this._reset();
-        this._h = initialStepSize(this._stepper, t, y, this._control.atol, this._control.rtol);
+        this._h = initialStepSize(this._stepper, t, y, this._control.atol, this._control.rtol, this._control.stepSizeMax);
         this._t = t;
         this._history = [];
         return this;
@@ -183,24 +193,32 @@ var Dopri = /** @class */ (function () {
         var reject = false;
         var facOld = Math.max(this._lastError, 1e-4);
         var stepControl = this._stepper.stepControl;
+        var control = this._control;
         while (!success) {
-            if (this._nSteps > this._control.maxSteps) {
+            var forceThisStep = false;
+            if (this._nSteps > control.maxSteps) {
                 throw integrationError("too many steps", t);
             }
-            if (h < this._stepper.stepControl.sizeMin) {
-                throw integrationError("step too small", t);
+            if (h < control.stepSizeMin) {
+                if (control.stepSizeMinAllow) {
+                    h = control.stepSizeMin;
+                    forceThisStep = true;
+                }
+                else {
+                    throw integrationError("step too small", t);
+                }
             }
             if (h <= Math.abs(t) * DBL_EPSILON) {
                 throw integrationError("step size vanished", t);
             }
-            if (t + h > this._control.tcrit) {
-                h = this._control.tcrit - t;
+            if (t + h > control.tcrit) {
+                h = control.tcrit - t;
             }
             // Carry out the step
             this._stepper.step(t, h);
             this._nSteps++;
             // Error estimation
-            var err = this._stepper.error(this._control.atol, this._control.rtol);
+            var err = this._stepper.error(control.atol, control.rtol);
             var fac11 = Math.pow(err, stepControl.constant);
             var facc1 = 1.0 / stepControl.factorMin;
             var facc2 = 1.0 / stepControl.factorMax;
@@ -215,7 +233,12 @@ var Dopri = /** @class */ (function () {
                 fac = utils.constrain(fac / stepControl.factorSafe, facc2, facc1);
                 var hNew = h / fac;
                 this._t += h;
-                this._h = reject ? Math.min(hNew, h) : hNew;
+                if (reject) {
+                    this._h = Math.min(hNew, h);
+                }
+                else {
+                    this._h = Math.min(hNew, control.stepSizeMax);
+                }
                 this._lastError = err;
             }
             else {
@@ -250,8 +273,7 @@ var Dopri = /** @class */ (function () {
     return Dopri;
 }());
 exports.Dopri = Dopri;
-function initialStepSize(stepper, t, y, atol, rtol) {
-    var stepSizeMax = stepper.stepControl.sizeMax;
+function initialStepSize(stepper, t, y, atol, rtol, stepSizeMax) {
     // NOTE: This is destructive with respect to most of the information
     // in the object; in particular k2, k3 will be modified.
     var f0 = new Array(stepper.n);
@@ -301,9 +323,6 @@ function initialStepSize(stepper, t, y, atol, rtol) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var Dopri5StepControl = /** @class */ (function () {
     function Dopri5StepControl() {
-        // Essentially unlimited step size
-        this.sizeMin = 1e-8; // should be Number.EPSILON, really
-        this.sizeMax = Number.MAX_VALUE;
         // For scaling during adaptive stepping
         this.factorSafe = 0.9;
         this.factorMin = 0.2; // from dopri5.f:276, retard.f:328
@@ -681,10 +700,6 @@ function seqLen(a, b, len) {
     return ret;
 }
 exports.seqLen = seqLen;
-function last(x) {
-    return x[x.length - 1];
-}
-exports.last = last;
 // See richfitz/ring:inst/include/ring/ring.c - this is closely based
 // off of this; that code was written for the same purpose.
 //

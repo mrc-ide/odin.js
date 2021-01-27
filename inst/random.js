@@ -2261,7 +2261,7 @@ if ((typeof module) == 'object' && module.exports) {
 );
 
 },{"crypto":33}],32:[function(require,module,exports){
-(function (global){
+(function (global){(function (){
 global.seedrandom = require("seedrandom");
 global.random = require("random");
 global.random.use(seedrandom("odin.js"));
@@ -2287,7 +2287,7 @@ global.random.rbinom = function(n, p) {
     return ret;
 }
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+}).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"random":23,"seedrandom":24}],33:[function(require,module,exports){
 
 },{}]},{},[32]);

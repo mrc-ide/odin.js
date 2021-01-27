@@ -5,13 +5,18 @@ sort_list <- function(x) {
 }
 
 
-call_odin_bundle <- function(context, name, user, t, y = NULL) {
+call_odin_bundle <- function(context, name, user, t, y = NULL, control = NULL) {
   context$eval(package_js("test.js"))
   user <- to_json_user(user)
   if (is.null(y)) {
     y <- js_null()
   }
-  res <- context$call("run", "odin", user, t, y)
+  if (is.null(control)) {
+    control_js <- to_json(setNames(list(), character(0)))
+  } else {
+    control_js <- to_json(control, auto_unbox = TRUE)
+  }
+  res <- context$call("run", "odin", user, t, y, control_js)
   colnames(res$y) <- res$names
   res$y
 }

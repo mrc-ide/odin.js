@@ -12,7 +12,8 @@ function integrateOdin(obj, times, y0, control) {
     var t0 = times[0];
     var t1 = times[times.length - 1];
     if (obj.metadata.interpolateTimes !== null) {
-        tcrit = interpolateCheckT(times, obj.metadata.interpolateTimes, tcrit);
+        control.tcrit = interpolateCheckT(times, obj.metadata.interpolateTimes,
+                                          control.tcrit);
     }
     if (isMissing(y0)) {
       y0 = obj.initial(times[0]);

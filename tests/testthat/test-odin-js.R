@@ -174,3 +174,52 @@ test_that("can adjust max steps", {
     mod$run(tt, step_max_n = 10),
     "Integration failure: too many steps")
 })
+
+
+test_that("can specify min step sizes and allow continuation with them", {
+  lorenz <- odin_js({
+    deriv(y1) <- sigma * (y2 - y1)
+    deriv(y2) <- R * y1 - y2 - y1 * y3
+    deriv(y3) <- -b * y3 + y1 * y2
+    initial(y1) <- 10.0
+    initial(y2) <- 1.0
+    initial(y3) <- 1.0
+    sigma <- 10.0
+    R     <- 28.0
+    b     <-  8.0 / 3.0
+  })
+  mod <- lorenz()
+  tt <- seq(0, 1, length.out = 101)
+  y1 <- mod$run(tt, return_statistics = TRUE)
+
+  expect_error(
+    mod$run(tt, step_size_min = 0.01),
+    "Integration failure: step too small")
+  y2 <- mod$run(tt, step_size_min = 0.01, step_size_min_allow = TRUE,
+                return_statistics = TRUE)
+  expect_true(all(attr(y2, "statistics") < attr(y1, "statistics")))
+})
+
+
+test_that("can specify max step sizes", {
+  lorenz <- odin_js({
+    deriv(y1) <- sigma * (y2 - y1)
+    deriv(y2) <- R * y1 - y2 - y1 * y3
+    deriv(y3) <- -b * y3 + y1 * y2
+    initial(y1) <- 10.0
+    initial(y2) <- 1.0
+    initial(y3) <- 1.0
+    sigma <- 10.0
+    R     <- 28.0
+    b     <-  8.0 / 3.0
+  })
+  mod <- lorenz()
+  tt <- seq(0, 1, length.out = 101)
+  y1 <- mod$run(tt, return_statistics = TRUE)
+  y2 <- mod$run(tt, atol = 0.01, rtol = 0.01, step_size_max = 0.01,
+                return_statistics = TRUE)
+  s1 <- as.list(attr(y1, "statistics"))
+  s2 <- as.list(attr(y2, "statistics"))
+  expect_gt(s2$n_step, s1$n_step)
+  expect_lt(s2$n_reject, s1$n_reject)
+})

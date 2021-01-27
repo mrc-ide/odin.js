@@ -138,9 +138,9 @@ generate_js_core_run <- function(eqs, dat, rewrite) {
     body <- sprintf("return iterateOdin(this, times, y0, %s);",
                     rewrite(dat$data$output$length))
   } else {
-    args <- c("times", "y0", "tcrit", "atol", "rtol", "maxSteps")
+    args <- c("times", "y0", "control")
     body <-
-      "return integrateOdin(this, times, y0, tcrit, atol, rtol, maxSteps);"
+      "return integrateOdin(this, times, y0, control);"
   }
   js_function(args, body)
 }

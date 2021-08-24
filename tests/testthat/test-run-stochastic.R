@@ -8,7 +8,7 @@ test_that("stochastic", {
     update(x) <- x + norm_rand()
   })
 
-  mod <- gen()
+  mod <- gen$new()
   tt <- 0:20
   model_set_seed(mod, 1)
   yy1 <- mod$run(tt)
@@ -35,7 +35,7 @@ test_that("stochastic variables are time dependent", {
     update(x) <- x + v
   })
 
-  mod <- gen()
+  mod <- gen$new()
   tt <- 0:20
   model_set_seed(mod, 1)
   yy1 <- mod$run(tt)
@@ -56,7 +56,7 @@ test_that("array stochastic variables are time dependent", {
     dim(x) <- 3
   })
 
-  mod <- gen()
+  mod <- gen$new()
   tt <- 0:20
   model_set_seed(mod, 1)
   yy <- mod$run(tt)
@@ -79,7 +79,7 @@ test_that("stochastic initial conditions don't get called every step", {
   })
 
   ## cmp <- .Random.seed
-  mod <- gen()
+  mod <- gen$new()
   ## expect_equal(.Random.seed, cmp)
 
   ## Initial conditions (why is $init even a member here?)
@@ -120,7 +120,7 @@ test_that("exotic stochastic functions", {
     update(x) <- rnorm(mu, sd)
   })
 
-  mod <- gen()
+  mod <- gen$new()
   model_set_seed(mod, 1)
   y <- mod$run(0:10)
 
@@ -138,7 +138,7 @@ test_that("round & rbinom", {
     initial(x) <- rbinom(size, p)
   })
 
-  mod <- gen(p = 1, size = 0.4)
+  mod <- gen$new(p = 1, size = 0.4)
   expect_equal(mod$initial(0), 0)
   mod$set_user(p = 1, size = 1.7)
   expect_equal(mod$initial(0), 2)
@@ -180,7 +180,7 @@ test_that("replicate: scalar", {
     initial(x) <- 0
     update(x) <- x + norm_rand()
   })
-  m <- gen()
+  m <- gen$new()
   tt <- 0:50
   res <- m$run(tt, replicate = 100)
   yy <- m$transform_variables(res)
@@ -202,7 +202,7 @@ test_that("replicate: array", {
     update(y[]) <- y[i] + norm_rand() / 2
     dim(y) <- 3
   })
-  m <- gen()
+  m <- gen$new()
 
   tt <- 0:20
   res <- m$run(tt, replicate = 30)
@@ -223,7 +223,7 @@ test_that("low-level stochastics: norm_rand", {
     initial(y) <- 0
     update(y) <- norm_rand()
   })
-  m <- gen()
+  m <- gen$new()
 
   tt <- 0:10
   model_set_seed(m, 1)
@@ -240,7 +240,7 @@ test_that("low-level stochastics: unif_rand", {
     initial(y) <- 0
     update(y) <- unif_rand()
   })
-  m <- gen()
+  m <- gen$new()
 
   tt <- 0:10
   model_set_seed(m, 1)
@@ -257,7 +257,7 @@ test_that("low-level stochastics: exp_rand", {
     initial(y) <- 0
     update(y) <- exp_rand()
   })
-  m <- gen()
+  m <- gen$new()
 
   tt <- 0:10
   model_set_seed(m, 1)
@@ -274,7 +274,7 @@ test_that("rexp parametrisation", {
     initial(y) <- 0
     update(y) <- rexp(10)
   })
-  m <- gen()
+  m <- gen$new()
 
   tt <- 0:10
   model_set_seed(m, 1)

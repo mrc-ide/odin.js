@@ -7,7 +7,7 @@ test_that("trivial model", {
     r <- 2
   })
 
-  mod <- gen()
+  mod <- gen$new()
   expect_is(mod, "odin_model")
   expect_equal(mod$initial(0), 1)
   expect_equal(mod$initial(10), 1)
@@ -39,7 +39,7 @@ test_that("Time dependent rhs", {
 
   ## This looks like a reasonable rhs but it's going through the
   ## internal storage instead of being transient.
-  mod <- gen()
+  mod <- gen$new()
 
   tt <- 0:10
   yy <- mod$run(tt, atol = 1e-8, rtol = 1e-8)
@@ -59,7 +59,7 @@ test_that("Time dependent initial conditions", {
     initial(y3) <- y2
   })
 
-  mod <- gen()
+  mod <- gen$new()
 
   f <- function(t) {
     cos(t) * (1 + t)
@@ -84,7 +84,7 @@ test_that("use state in derivative calculation", {
     r <- 2.0
   })
 
-  mod <- gen()
+  mod <- gen$new()
   ## two equilibria:
   expect_equal(mod$deriv(0, 0), 0)
   expect_equal(mod$deriv(0, 100), 0)
@@ -106,7 +106,7 @@ test_that("multiple variables", {
     R     <- 28.0
     b     <-  8.0 / 3.0
   })
-  mod <- gen()
+  mod <- gen$new()
   expect_equal(mod$initial(0), c(10, 1, 1))
   expect_equal(mod$deriv(0, mod$initial(0)), c(-90, 269, 22 / 3))
 })
@@ -122,25 +122,25 @@ test_that("user variables", {
     r <- user()
   })
 
-  expect_error(gen())
+  expect_error(gen$new())
   ## TODO: had to change error strings here
-  expect_error(gen(user = NULL),
+  expect_error(gen$new(user = NULL),
                "Expected a value for 'r'", fixed = TRUE)
-  expect_error(gen(r = 1:2),
+  expect_error(gen$new(r = 1:2),
                "Expected a numeric value for 'r'", fixed = TRUE)
-  expect_error(gen(r = numeric(0)),
+  expect_error(gen$new(r = numeric(0)),
                "Expected a numeric value for 'r'",
                fixed = TRUE)
 
-  expect_equal(sort_list(gen(r = pi)$contents()),
+  expect_equal(sort_list(gen$new(r = pi)$contents()),
                sort_list(list(K = 100, N0 = 1, initial_N = 1, r = pi)))
-  expect_equal(sort_list(gen(r = pi, N0 = 10)$contents()),
+  expect_equal(sort_list(gen$new(r = pi, N0 = 10)$contents()),
                sort_list(list(K = 100, N0 = 10, initial_N = 10, r = pi)))
-  expect_equal(gen(r = pi, N0 = 10)$initial(0), 10)
-  expect_equal(gen(r = pi, N0 = 10)$deriv(0, 10),
+  expect_equal(gen$new(r = pi, N0 = 10)$initial(0), 10)
+  expect_equal(gen$new(r = pi, N0 = 10)$deriv(0, 10),
                pi * 10 * (1 - 10 / 100))
 
-  mod <- gen(r = pi, N0 = exp(1))
+  mod <- gen$new(r = pi, N0 = exp(1))
   mod$set_user()
   expect_equal(mod$contents()$r, pi)
   expect_equal(mod$contents()$N0, exp(1))
@@ -159,7 +159,7 @@ test_that("output", {
 
   tt <- 0:10
 
-  mod <- gen()
+  mod <- gen$new()
 
   expect_equal(mod$deriv(0, 1), structure(2, output = 0))
   expect_equal(mod$deriv(10, 1), structure(2, output = 10))
@@ -181,7 +181,7 @@ test_that("output", {
     a <- t + y
   })
 
-  mod <- gen()
+  mod <- gen$new()
   expect_equal(mod$deriv(0, 1), structure(2, output = 2))
   expect_equal(mod$deriv(10, 1), structure(2, output = 22))
 })
@@ -196,7 +196,7 @@ test_that("copy output", {
     output(z[]) <- TRUE
   })
 
-  mod <- gen()
+  mod <- gen$new()
   tt <- 0:10
   y <- mod$run(tt)
   yy <- mod$transform_variables(y)
@@ -211,7 +211,7 @@ test_that("discrete", {
     initial(x) <- 1
     update(x) <- x + 1
   })
-  mod <- gen()
+  mod <- gen$new()
 
   expect_equal(mod$initial(0), 1)
   expect_equal(mod$update(0, 1), 2)
@@ -228,7 +228,7 @@ test_that("discrete with output", {
     update(x) <- x + 1
     output(y) <- x + step
   })
-  mod <- gen()
+  mod <- gen$new()
 
   expect_equal(mod$update(2, 3), structure(4, output = 5))
   tt <- 0:10
@@ -251,7 +251,7 @@ test_that("array support", {
     dim(x) <- n
   })
 
-  mod <- gen()
+  mod <- gen$new()
 
   ## internal data is ok:
   expect_equal(sort_list(mod$contents()),
@@ -284,7 +284,7 @@ test_that("multi-line array expression", {
     dim(a) <- n
     n <- 10
   })
-  expect_equal(gen()$contents()$a, c(1, 1, 2, 3, 5, 8, 13, 21, 34, 55))
+  expect_equal(gen$new()$contents()$a, c(1, 1, 2, 3, 5, 8, 13, 21, 34, 55))
 })
 
 
@@ -295,7 +295,7 @@ test_that("3d array", {
     dim(y) <- c(2, 3, 4)
   })
 
-  mod <- gen()
+  mod <- gen$new()
   d <- mod$contents()
   expect_equal(d$initial_y, array(1, c(2, 3, 4)))
   expect_equal(d$dim_y, 24)
@@ -327,9 +327,9 @@ test_that("user array", {
     dim(x) <- n
   })
 
-  mod <- gen(r = 1:3)
+  mod <- gen$new(r = 1:3)
   expect_equal(mod$contents()$r, 1:3)
-  expect_error(gen(r = I(1)), "Expected length 3 value for 'r'")
+  expect_error(gen$new(r = I(1)), "Expected length 3 value for 'r'")
 })
 
 
@@ -343,7 +343,7 @@ test_that("user matrix", {
   })
 
   r <- matrix(runif(6), 2, 3)
-  mod <- gen(r = r)
+  mod <- gen$new(r = r)
   expect_equal(mod$contents()$r, r)
 
   ## TODO: this would be nice to tidy up but it's really tricky to
@@ -358,12 +358,12 @@ test_that("user matrix", {
     msg2 <- "Incorrect size of dimension 1 of r (expected 2)"
   }
 
-  expect_error(gen(r = c(r)), msg1, fixed = TRUE)
-  expect_error(gen(r = I(r[2, 2])), msg1, fixed = TRUE)
-  expect_error(gen(r = array(1, 2:4)), msg1, fixed = TRUE)
-  expect_error(gen(r = I(1)), msg1, fixed = TRUE)
+  expect_error(gen$new(r = c(r)), msg1, fixed = TRUE)
+  expect_error(gen$new(r = I(r[2, 2])), msg1, fixed = TRUE)
+  expect_error(gen$new(r = array(1, 2:4)), msg1, fixed = TRUE)
+  expect_error(gen$new(r = I(1)), msg1, fixed = TRUE)
 
-  expect_error(gen(r = t(r)), msg2, fixed = TRUE)
+  expect_error(gen$new(r = t(r)), msg2, fixed = TRUE)
 })
 
 
@@ -377,7 +377,7 @@ test_that("user array - indirect", {
     n <- user()
   })
 
-  mod <- gen(n = 3, r = 1:3)
+  mod <- gen$new(n = 3, r = 1:3)
   expect_equal(sort_list(mod$contents()),
                sort_list(list(
                  dim_r = 3,
@@ -386,7 +386,7 @@ test_that("user array - indirect", {
                  n = 3,
                  r = 1:3)))
 
-  expect_error(gen(n = 4, r = 1:3),
+  expect_error(gen$new(n = 4, r = 1:3),
                "Expected length 4 value for 'r'")
 })
 
@@ -400,13 +400,13 @@ test_that("user array - direct", {
     dim(x) <- length(r)
   })
 
-  mod <- gen(r = 1:3)
+  mod <- gen$new(r = 1:3)
   expect_equal(
     sort_list(mod$contents()),
     sort_list(list(dim_r = 3, dim_x = 3, initial_x = rep(1, 3), r = 1:3)))
-  expect_error(gen(r = matrix(1, 2, 3)),
+  expect_error(gen$new(r = matrix(1, 2, 3)),
                "Expected a numeric vector for 'r'")
-  expect_error(gen(r = NULL),
+  expect_error(gen$new(r = NULL),
                "Expected an odin.js array object for 'r'")
   ## expect_silent(mod$set_user(r = NULL)) # TODO - this differs...
   expect_equal(mod$contents()$r, 1:3)
@@ -422,15 +422,15 @@ test_that("user array - direct 3d", {
   })
 
   m <- array(runif(24), 2:4)
-  mod <- gen(r = m)
+  mod <- gen$new(r = m)
   expect_equal(sort_list(mod$contents()),
                sort_list(list(dim_r = 24, dim_r_1 = 2, dim_r_12 = 6,
                               dim_r_2 = 3, dim_r_3 = 4, initial_y = 1,
                               r = m)))
 
-  expect_error(gen(r = I(1)),
+  expect_error(gen$new(r = I(1)),
                "Expected a numeric array of rank 3 for 'r'")
-  expect_error(gen(r = matrix(1)),
+  expect_error(gen$new(r = matrix(1)),
                "Expected a numeric array of rank 3 for 'r'")
 })
 
@@ -453,7 +453,7 @@ test_that("interpolation", {
   tt <- seq(0, 3, length.out = 301)
   tp <- c(0, 1, 2)
   zp <- c(0, 1, 0)
-  mod <- gen(tp = tp, zp = zp)
+  mod <- gen$new(tp = tp, zp = zp)
   dat <- mod$contents()
 
   expect_equal(sort(names(dat)),
@@ -479,7 +479,7 @@ test_that("stochastic", {
     initial(x) <- 0
     update(x) <- x + norm_rand()
   })
-  mod <- gen()
+  mod <- gen$new()
   expect_equal(mod$initial(0), 0)
 
   model_set_seed(mod, 1)
@@ -505,7 +505,7 @@ test_that("multiple arrays: constant", {
     dim(y) <- n
   })
 
-  mod <- gen()
+  mod <- gen$new()
   ## expect_equal(mod$contents()$offset_y, 3)
   expect_equal(mod$initial(0), rep(1:2, each = 3))
   expect_equal(mod$deriv(0, mod$initial(0)), rep(1:3, 2))
@@ -525,7 +525,7 @@ test_that("multiple arrays: dynamic", {
     dim(y) <- n
   })
 
-  mod <- gen(n = 4)
+  mod <- gen$new(n = 4)
   ## expect_equal(mod$contents()$offset_y, 4)
   expect_equal(mod$initial(0), rep(1:2, each = 4))
   expect_equal(mod$deriv(0, mod$initial(0)), rep(1:4, 2))
@@ -545,7 +545,7 @@ test_that("multiple output arrays", {
   })
 
   r <- runif(3)
-  mod <- gen(r = r)
+  mod <- gen$new(r = r)
 
   expect_equal(mod$initial(0), 1:3)
   expect_equal(
@@ -571,7 +571,7 @@ test_that("3d array time dependent and variable", {
     r[, , ] <- t * 0.1
   })
 
-  mod <- gen()
+  mod <- gen$new()
   d <- mod$contents()
   expect_equal(d$initial_y, array(1, c(2, 3, 4)))
   expect_equal(d$dim_y, 24)
@@ -606,13 +606,13 @@ test_that("rich user arrays", {
   })
 
   r <- matrix(runif(6), 2, 3)
-  expect_error(gen(r = r), NA)
-  expect_error(gen(r = -r), "Expected 'r' to be at least 0")
+  expect_error(gen$new(r = r), NA)
+  expect_error(gen$new(r = -r), "Expected 'r' to be at least 0")
   r[5] <- -1
-  expect_error(gen(r = r), "Expected 'r' to be at least 0")
+  expect_error(gen$new(r = r), "Expected 'r' to be at least 0")
   r[5] <- NA
   ## TODO: not a great error
-  expect_error(gen(r = r), "Expected a numeric value for 'r'")
+  expect_error(gen$new(r = r), "Expected a numeric value for 'r'")
 })
 
 
@@ -627,10 +627,10 @@ test_that("rich user sized arrays", {
 
   r <- matrix(runif(6), 2, 3)
 
-  expect_error(gen(r = r), NA)
-  expect_error(gen(r = -r), "Expected 'r' to be at least 0")
+  expect_error(gen$new(r = r), NA)
+  expect_error(gen$new(r = -r), "Expected 'r' to be at least 0")
   r[5] <- -1
-  expect_error(gen(r = r), "Expected 'r' to be at least 0")
+  expect_error(gen$new(r = r), "Expected 'r' to be at least 0")
 })
 
 
@@ -649,7 +649,7 @@ test_that("discrete delays: matrix", {
     dim(a) <- c(2, 3)
   })
 
-  mod <- gen()
+  mod <- gen$new()
   tt <- 0:10
   yy <- mod$run(tt)
   zz <- mod$transform_variables(yy)
@@ -675,7 +675,7 @@ test_that("multinomial", {
 
   set.seed(1)
   p <- runif(5)
-  mod <- gen(p)
+  mod <- gen$new(p)
 
   set.seed(1)
   y <- mod$update(0, mod$initial(0))
@@ -703,7 +703,7 @@ test_that("local scope of loop variables", {
     m <- 2
   })
 
-  mod <- gen()
+  mod <- gen$new()
   y0 <- mod$initial(0)
   y <- mod$transform_variables(mod$deriv(0, y0))
 

@@ -6,7 +6,7 @@ test_that("basic", {
     update(x) <- x + 1
   })
 
-  mod <- gen()
+  mod <- gen$new()
   expect_equal(mod$contents(), list(initial_x = 1))
   y0 <- mod$initial(0)
   expect_equal(y0, 1.0)
@@ -33,7 +33,7 @@ test_that("output", {
   x0 <- runif(10)
   r <- runif(length(x0))
 
-  mod <- gen(x0 = x0, r = r)
+  mod <- gen$new(x0 = x0, r = r)
 
   tt <- 0:10
   yy <- mod$run(tt)
@@ -56,12 +56,12 @@ test_that("interpolate", {
 
   sp <- c(0, 10, 20)
   zp <- c(0, 1, 0)
-  expect_error(gen(sp = sp, zp = zp[1:2]),
+  expect_error(gen$new(sp = sp, zp = zp[1:2]),
                "Expected length 3 value for 'zp'")
-  expect_error(gen(sp = sp, zp = rep(zp, 2)),
+  expect_error(gen$new(sp = sp, zp = rep(zp, 2)),
                "Expected length 3 value for 'zp'")
 
-  mod <- gen(sp = sp, zp = zp)
+  mod <- gen$new(sp = sp, zp = zp)
 
   tt <- 0:30
   expect_error(mod$run(tt - 1L),
@@ -78,7 +78,7 @@ test_that("use step in model", {
     update(x) <- step + 1
   })
 
-  mod <- gen()
+  mod <- gen$new()
   res <- mod$run(5:10)
   expect_equal(res[, "x"], res[, "step"])
 })
@@ -98,7 +98,7 @@ test_that("2d array equations", {
   r <- matrix(runif(10), 2, 5)
   x0 <- matrix(runif(10), 2, 5)
 
-  mod <- gen(x0 = x0, r = r)
+  mod <- gen$new(x0 = x0, r = r)
   yy <- mod$run(0:10)
 
   expect_equal(mod$contents()$x0, x0)
@@ -128,7 +128,7 @@ test_that("complex initialisation: scalar", {
     update(x2) <- x2 + r
   })
 
-  mod <- gen()
+  mod <- gen$new()
   model_set_seed(mod, 1)
 
   v <- mod$initial(0)
@@ -170,7 +170,7 @@ test_that("complex initialisation: vector", {
     dim(x2) <- length(x1)
   })
 
-  mod <- gen()
+  mod <- gen$new()
   model_set_seed(mod, 1)
   v <- mod$initial(0)
   vv <- mod$transform_variables(v)

@@ -7,7 +7,7 @@ test_that("trivial model", {
     r <- 2
   })
 
-  mod <- gen()
+  mod <- gen$new()
   expect_is(mod, "odin_model")
   expect_equal(mod$initial(0), 1)
   expect_equal(mod$initial(10), 1)
@@ -41,7 +41,7 @@ test_that("Time dependent rhs", {
 
   ## This looks like a reasonable rhs but it's going through the
   ## internal storage instead of being transient.
-  mod <- gen()
+  mod <- gen$new()
 
   tt <- 0:10
   yy <- mod$run(tt, atol = 1e-8, rtol = 1e-8)
@@ -61,7 +61,7 @@ test_that("Time dependent initial conditions", {
     initial(y3) <- y2
   })
 
-  mod <- gen()
+  mod <- gen$new()
 
   f <- function(t) {
     cos(t) * (1 + t)
@@ -86,24 +86,24 @@ test_that("user variables", {
     r <- user()
   })
 
-  expect_error(gen())
+  expect_error(gen$new())
   ## TODO: Some of these errors are not the same as the other engines
-  expect_error(gen(user = NULL),
+  expect_error(gen$new(user = NULL),
                "Expected a value for 'r'", fixed = TRUE)
-  expect_error(gen(r = 1:2),
+  expect_error(gen$new(r = 1:2),
                "Expected a numeric value for 'r'")
-  expect_error(gen(r = numeric(0)),
+  expect_error(gen$new(r = numeric(0)),
                "Expected a numeric value for 'r'")
 
-  expect_equal(sort_list(gen(r = pi)$contents()),
+  expect_equal(sort_list(gen$new(r = pi)$contents()),
                sort_list(list(K = 100, N0 = 1, initial_N = 1, r = pi)))
-  expect_equal(sort_list(gen(r = pi, N0 = 10)$contents()),
+  expect_equal(sort_list(gen$new(r = pi, N0 = 10)$contents()),
                sort_list(list(K = 100, N0 = 10, initial_N = 10, r = pi)))
-  expect_equal(gen(r = pi, N0 = 10)$initial(0), 10)
-  expect_equal(gen(r = pi, N0 = 10)$deriv(0, 10),
+  expect_equal(gen$new(r = pi, N0 = 10)$initial(0), 10)
+  expect_equal(gen$new(r = pi, N0 = 10)$deriv(0, 10),
                pi * 10 * (1 - 10 / 100))
 
-  mod <- gen(r = pi, N0 = exp(1))
+  mod <- gen$new(r = pi, N0 = exp(1))
   mod$set_user()
   expect_equal(mod$contents()$r, pi)
   expect_equal(mod$contents()$N0, exp(1))
@@ -119,11 +119,11 @@ test_that("accept matrices directly if asked nicely", {
   })
 
   m <- matrix(1:12, c(3, 4))
-  mod <- gen(matrix = to_json_columnwise(m))
+  mod <- gen$new(matrix = to_json_columnwise(m))
   expect_equal(
     mod$contents()$matrix, m)
 
-  mod <- gen(matrix = m)
+  mod <- gen$new(matrix = m)
   expect_equal(
     mod$contents()$matrix, m)
 })
@@ -155,7 +155,7 @@ test_that("can adjust tolerance in the solver", {
     deriv(y) <- cos(t)
     initial(y) <- 0
   })
-  mod <- gen()
+  mod <- gen$new()
   tt <- seq(0, 2 * pi, length.out = 101)
   y1 <- mod$run(tt, atol = 1e-3, rtol = 1e-3)
   y2 <- mod$run(tt, atol = 1e-10, rtol = 1e-10)
@@ -168,7 +168,7 @@ test_that("can adjust max steps", {
     deriv(y) <- cos(t)
     initial(y) <- 0
   })
-  mod <- gen()
+  mod <- gen$new()
   tt <- seq(0, 2 * pi, length.out = 101)
   expect_error(
     mod$run(tt, step_max_n = 10),
@@ -188,7 +188,7 @@ test_that("can specify min step sizes and allow continuation with them", {
     R     <- 28.0
     b     <-  8.0 / 3.0
   })
-  mod <- lorenz()
+  mod <- lorenz$new()
   tt <- seq(0, 1, length.out = 101)
   y1 <- mod$run(tt, return_statistics = TRUE)
 
@@ -213,7 +213,7 @@ test_that("can specify max step sizes", {
     R     <- 28.0
     b     <-  8.0 / 3.0
   })
-  mod <- lorenz()
+  mod <- lorenz$new()
   tt <- seq(0, 1, length.out = 101)
   y1 <- mod$run(tt, return_statistics = TRUE)
   y2 <- mod$run(tt, atol = 0.01, rtol = 0.01, step_size_max = 0.01,

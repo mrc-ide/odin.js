@@ -4,8 +4,12 @@
 \alias{odin_js_bundle}
 \title{Create a bundle of odin models}
 \usage{
-odin_js_bundle(filenames, dest = tempfile(), include = NULL,
-  include_dopri = TRUE)
+odin_js_bundle(
+  filenames,
+  dest = tempfile(),
+  include = NULL,
+  include_dopri = TRUE
+)
 }
 \arguments{
 \item{filenames}{Filenames with odin source code}

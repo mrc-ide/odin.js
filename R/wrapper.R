@@ -30,7 +30,7 @@ odin_js_wrapper_object <- function(res) {
   context <- js_context(names(which(res$include)))
   context$eval(paste(res$code, collapse = "\n"))
 
-  R6::R6Class(
+  ret <- R6::R6Class(
     "odin_model",
     cloneable = FALSE,
     lock_objects = FALSE,
@@ -185,6 +185,8 @@ odin_js_wrapper_object <- function(res) {
         odin:::support_transform_variables(y, private)
       }
     ))
+  class(ret) <- c("odin_js_generator", class(ret))
+  ret
 }
 
 
@@ -204,4 +206,12 @@ js_context <- function(include) {
   ct$eval(sprintf("var %s = {};", JS_GENERATORS))
   ct$eval(sprintf("var %s = {};", JS_INSTANCES))
   ct
+}
+
+
+##' @export
+coef.odin_js_generator <- function(object, ...) {
+  ## This is a workaround until odin drops the constructor interface
+  coef(structure(list(), ir = object$private_fields$ir_,
+                 class = "odin_generator"))
 }

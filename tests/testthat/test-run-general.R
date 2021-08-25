@@ -1094,6 +1094,7 @@ test_that("user variable information - when no user", {
 
 
 test_that("format/print", {
+  skip_for_target("js")
   gen <- odin_js({
     deriv(N) <- r[1] * N * (1 - N / K)
     initial(N) <- N0

@@ -147,6 +147,18 @@ test_that("user variables", {
 })
 
 
+test_that("simple operations in user variables are allowed", {
+  gen <- odin_js({
+    deriv(x) <- 1
+    initial(x) <- x0
+    x0 <- user(-1 / (2 + 3 * 4))
+  })
+
+  mod <- gen$new()
+  expect_equal(mod$contents()$x0, -1 / (2 + 3 * 4))
+})
+
+
 ## Tests: basic output
 ##
 ## This one is about as basic as I can see!

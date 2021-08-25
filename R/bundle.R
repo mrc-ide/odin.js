@@ -42,7 +42,7 @@ odin_js_bundle <- function(filenames, dest = tempfile(),
   err <- duplicated(nms)
   if (any(err)) {
     stop(sprintf("Duplicate model names: %s",
-                 paste(squote(unique(nms[err]))), collapse = ", "))
+                 paste(squote(unique(nms[err])), collapse = ", ")))
   }
 
   needed <- apply(do.call(cbind, lapply(dat, "[[", "include")), 1, any)

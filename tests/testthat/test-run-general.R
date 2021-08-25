@@ -189,8 +189,8 @@ test_that("time dependent", {
   t0 <- seq(0,  10, length.out = 101)
   t1 <- seq(10, 20, length.out = 101) # TODO: changed this.
 
-  expect_equal(mod_t$run(t0), gen_cmp(N0 = sqrt(t0[[1]]) + 1)$run(t0))
-  expect_equal(mod_t$run(t1), gen_cmp(N0 = sqrt(t1[[1]]) + 1)$run(t1))
+  expect_equal(mod_t$run(t0), gen_cmp$new(N0 = sqrt(t0[[1]]) + 1)$run(t0))
+  expect_equal(mod_t$run(t1), gen_cmp$new(N0 = sqrt(t1[[1]]) + 1)$run(t1))
 })
 
 test_that("time dependent initial conditions", {

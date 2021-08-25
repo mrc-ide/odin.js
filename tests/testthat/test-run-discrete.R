@@ -141,7 +141,7 @@ test_that("complex initialisation: scalar", {
   expect_equal(vv$x1, x1)
   expect_equal(vv$x2, x1 * 2 + 1)
 
-  mod2 <- gen2(x1_0 = x1)
+  mod2 <- gen2$new(x1_0 = x1)
   v2 <- mod2$initial(0)
   expect_equal(v2, v)
 

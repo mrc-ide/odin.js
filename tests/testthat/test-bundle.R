@@ -149,7 +149,7 @@ test_that("include fancy sum", {
   tt <- seq(0, 50, length.out = 101)
   yy <- call_odin_bundle(ct, "odin", user, tt)
 
-  cmp <- odin::odin_(code, target = "r")(user = user)$run(tt)
+  cmp <- odin::odin_(code, target = "r")$new(user = user)$run(tt)
   expect_equivalent(yy, cmp[], tolerance = 1e-5)
 })
 
@@ -171,7 +171,7 @@ test_that("simple stochastic model in a bundle", {
   tt <- 0:20
   yy <- call_odin_bundle(ct, "odin", NULL, tt)
 
-  mod <- odin_js_(code)()
+  mod <- odin_js_(code)$new()
   model_set_seed(mod, 1)
   cmp <- mod$run(tt)
   expect_equal(yy, cmp)

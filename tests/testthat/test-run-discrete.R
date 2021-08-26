@@ -183,3 +183,27 @@ test_that("complex initialisation: vector", {
   expect_equal(vv$x2, cmp * 2 + 1)
   expect_equal(mod$contents()$r, cmp * 2)
 })
+
+
+test_that_odin("can set initial conditions", {
+  gen <- odin_js({
+    initial(x) <- 1
+    update(x) <- x + 1
+  })
+
+  mod <- gen$new()
+  y <- mod$run(0:10, 2)
+  expect_equal(y[, "x"], 2:12)
+})
+
+
+test_that_odin("can set/omit ynames", {
+  gen <- odin_js({
+    initial(x) <- 1
+    update(x) <- x + 1
+  })
+
+  mod <- gen$new()
+  expect_equal(colnames(mod$run(0:10)), c("step", "x"))
+  expect_null(colnames(mod$run(0:10, use_names = FALSE)))
+})

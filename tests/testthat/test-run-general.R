@@ -31,7 +31,7 @@ test_that("user variables", {
   ## expect_error(gen$new(), 'argument "r" is missing')
   ## expect_error(gen$new(NULL), "Expected a value for 'r'")
 
-  mod <- gen$new(r = pi) # TODO: arg name r= should not be required
+  mod <- gen$new(r = pi)
   dat <- mod$contents()
   expect_equal(dat$r, pi)
   expect_equal(dat$N0, 1.0)
@@ -187,7 +187,7 @@ test_that("time dependent", {
   expect_equal(mod_t$initial(10), sqrt(10) + 1)
 
   t0 <- seq(0,  10, length.out = 101)
-  t1 <- seq(10, 20, length.out = 101) # TODO: changed this.
+  t1 <- seq(10, 20, length.out = 101)
 
   expect_equal(mod_t$run(t0), gen_cmp$new(N0 = sqrt(t0[[1]]) + 1)$run(t0))
   expect_equal(mod_t$run(t1), gen_cmp$new(N0 = sqrt(t1[[1]]) + 1)$run(t1))
@@ -586,7 +586,7 @@ test_that("pathalogical array index", {
     ## *initial assignment* we have assigned the wrong thing.  I think
     ## that Ada has an issue about this actually!  Probably this will
     ## require some care on the rewrite.
-    y[] <- i #  + 1
+    y[] <- i
     dim(y) <- 5
 
     a <- length(y)
@@ -931,6 +931,30 @@ test_that("sum for a 4d array", {
   expect_equal(dat$m12, apply(a, 1:2, sum))
   expect_equal(dat$m23, apply(a, c(2, 3), sum))
   expect_equal(dat$m24, apply(a, c(2, 4), sum))
+})
+
+test_that_odin("sum initial condition from initial condition", {
+  gen <- odin_js({
+    update(a[, ]) <- 1
+    update(b) <- 1
+    initial(a[, ]) <- 1
+    initial(b) <- n
+    n <- sum(a[1, ])
+    dim(a) <- c(10, 10)
+  })
+  expect_equal(gen$new()$initial(0), c(10, rep(1, 100)))
+})
+
+test_that_odin("another initial condition failure", {
+  gen <- odin_js({
+    deriv(a[]) <- 1
+    deriv(b) <- 1
+    initial(a[]) <- 1
+    initial(b) <- n
+    n <- sum(a)
+    dim(a) <- 10
+  })
+  expect_equal(gen$new()$initial(0), c(10, rep(1, 10)))
 })
 
 test_that("self output for scalar", {

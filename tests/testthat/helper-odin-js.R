@@ -1,5 +1,8 @@
 options(odin.no_check_naked_index = TRUE)
 
+test_that_odin <- testthat::test_that
+odin_options <- odin::odin_options
+
 sort_list <- function(x) {
   x[order(names(x))]
 }

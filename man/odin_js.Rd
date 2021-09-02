@@ -5,14 +5,19 @@
 \alias{odin_js_}
 \title{Create a javascript odin model}
 \usage{
-odin_js(x)
+odin_js(x, ..., options = NULL)
 
-odin_js_(x)
+odin_js_(x, ..., options = NULL)
 }
 \arguments{
 \item{x}{Either the name of a file to read, a text string (if
 length is greater than 1 elements will be joined with newlines)
 or an expression.}
+
+\item{...}{Arguments passed to \code{\link{odin_options}}}
+
+\item{options}{An optional \code{\link{odin_options}} object. The
+\code{target} element (if present) will be overriden.}
 }
 \description{
 Generate a javascript odin model from a file, text string or

@@ -7,7 +7,7 @@ test_that("abs", {
     output(a) <- abs(t)
   })
   tt <- seq(-5, 5, length.out = 101)
-  expect_equal(gen()$run(tt)[, "a"], abs(tt))
+  expect_equal(gen$new()$run(tt)[, "a"], abs(tt))
 })
 
 
@@ -20,7 +20,7 @@ test_that("log", {
     output(c) <- log(t, 10)
   })
   tt <- seq(0.0001, 5, length.out = 101)
-  yy <- gen()$run(tt)
+  yy <- gen$new()$run(tt)
   expect_equal(yy[, "a"], log(tt))
   expect_equal(yy[, "b"], log2(tt))
   expect_equal(yy[, "c"], log10(tt))
@@ -35,7 +35,7 @@ test_that("pow", {
     output(b) <- max(t, t^2 - 2, -t)
   })
   tt <- seq(0.0001, 5, length.out = 101)
-  yy <- gen()$run(tt)
+  yy <- gen$new()$run(tt)
   expect_equal(yy[, "a"], pmin(tt, tt^2 - 2, -tt))
   expect_equal(yy[, "b"], pmax(tt, tt^2 - 2, -tt))
 })
@@ -57,7 +57,7 @@ test_that("%%", {
     output(q4) <- -t %% -q
   })
   tt <- seq(-5, 5, length.out = 101)
-  mod <- gen()
+  mod <- gen$new()
   res <- mod$run(tt)
   s <- mod$contents()[["s"]]
   q <- mod$contents()[["q"]]
@@ -91,7 +91,7 @@ test_that("%/%", {
     output(q4) <- -t %/% -q
   })
   tt <- seq(-5, 5, length.out = 101)
-  mod <- gen()
+  mod <- gen$new()
   res <- mod$run(tt)
   s <- mod$contents()[["s"]]
   q <- mod$contents()[["q"]]
@@ -119,9 +119,9 @@ test_that("2-arg round", {
     z <- round(t)
   })
 
-  mod0 <- gen(n = 0)
-  mod1 <- gen(n = 1)
-  mod2 <- gen(n = 2)
+  mod0 <- gen$new(n = 0)
+  mod1 <- gen$new(n = 1)
+  mod2 <- gen$new(n = 2)
 
   tt <- seq(0, 1, length.out = 101)
   yy0 <- mod0$run(tt)

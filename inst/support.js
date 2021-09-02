@@ -46,7 +46,7 @@ function integrateOdin(obj, times, y0, control) {
 }
 
 function getUser(user, name, internal, size, defaultValue,
-                  min, max, isInteger) {
+                 min, max, isInteger) {
     var value = user[name];
     if (isMissing(value)) {
         if (isMissing(internal[name])) {

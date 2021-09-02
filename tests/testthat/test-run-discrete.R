@@ -6,7 +6,7 @@ test_that("basic", {
     update(x) <- x + 1
   })
 
-  mod <- gen()
+  mod <- gen$new()
   expect_equal(mod$contents(), list(initial_x = 1))
   y0 <- mod$initial(0)
   expect_equal(y0, 1.0)
@@ -33,7 +33,7 @@ test_that("output", {
   x0 <- runif(10)
   r <- runif(length(x0))
 
-  mod <- gen(x0 = x0, r = r)
+  mod <- gen$new(x0 = x0, r = r)
 
   tt <- 0:10
   yy <- mod$run(tt)
@@ -56,12 +56,12 @@ test_that("interpolate", {
 
   sp <- c(0, 10, 20)
   zp <- c(0, 1, 0)
-  expect_error(gen(sp = sp, zp = zp[1:2]),
+  expect_error(gen$new(sp = sp, zp = zp[1:2]),
                "Expected length 3 value for 'zp'")
-  expect_error(gen(sp = sp, zp = rep(zp, 2)),
+  expect_error(gen$new(sp = sp, zp = rep(zp, 2)),
                "Expected length 3 value for 'zp'")
 
-  mod <- gen(sp = sp, zp = zp)
+  mod <- gen$new(sp = sp, zp = zp)
 
   tt <- 0:30
   expect_error(mod$run(tt - 1L),
@@ -78,7 +78,7 @@ test_that("use step in model", {
     update(x) <- step + 1
   })
 
-  mod <- gen()
+  mod <- gen$new()
   res <- mod$run(5:10)
   expect_equal(res[, "x"], res[, "step"])
 })
@@ -98,7 +98,7 @@ test_that("2d array equations", {
   r <- matrix(runif(10), 2, 5)
   x0 <- matrix(runif(10), 2, 5)
 
-  mod <- gen(x0 = x0, r = r)
+  mod <- gen$new(x0 = x0, r = r)
   yy <- mod$run(0:10)
 
   expect_equal(mod$contents()$x0, x0)
@@ -128,7 +128,7 @@ test_that("complex initialisation: scalar", {
     update(x2) <- x2 + r
   })
 
-  mod <- gen()
+  mod <- gen$new()
   model_set_seed(mod, 1)
 
   v <- mod$initial(0)
@@ -141,7 +141,7 @@ test_that("complex initialisation: scalar", {
   expect_equal(vv$x1, x1)
   expect_equal(vv$x2, x1 * 2 + 1)
 
-  mod2 <- gen2(x1_0 = x1)
+  mod2 <- gen2$new(x1_0 = x1)
   v2 <- mod2$initial(0)
   expect_equal(v2, v)
 
@@ -170,7 +170,7 @@ test_that("complex initialisation: vector", {
     dim(x2) <- length(x1)
   })
 
-  mod <- gen()
+  mod <- gen$new()
   model_set_seed(mod, 1)
   v <- mod$initial(0)
   vv <- mod$transform_variables(v)
@@ -182,4 +182,28 @@ test_that("complex initialisation: vector", {
   expect_equal(vv$x1, cmp)
   expect_equal(vv$x2, cmp * 2 + 1)
   expect_equal(mod$contents()$r, cmp * 2)
+})
+
+
+test_that_odin("can set initial conditions", {
+  gen <- odin_js({
+    initial(x) <- 1
+    update(x) <- x + 1
+  })
+
+  mod <- gen$new()
+  y <- mod$run(0:10, 2)
+  expect_equal(y[, "x"], 2:12)
+})
+
+
+test_that_odin("can set/omit ynames", {
+  gen <- odin_js({
+    initial(x) <- 1
+    update(x) <- x + 1
+  })
+
+  mod <- gen$new()
+  expect_equal(colnames(mod$run(0:10)), c("step", "x"))
+  expect_null(colnames(mod$run(0:10, use_names = FALSE)))
 })

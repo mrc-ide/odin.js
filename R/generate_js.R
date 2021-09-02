@@ -158,7 +158,7 @@ generate_js_coef <- function(eqs, dat, rewrite) {
     if (is.null(x$user$default)) {
       default <- "null"
     } else {
-      default <- as.character(x$user$default)
+      default <- as.character(rewrite(x$user$default))
     }
     d <- c(has_default = tolower(is.null(x$user$default)),
            default = default,

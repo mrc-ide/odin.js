@@ -28,6 +28,7 @@ generate_js_sexp <- function(x, data, meta) {
       ret <- generate_js_sexp(data$elements[[args[[1L]]]]$dimnames$length,
                               data, meta)
     } else if (fn == "dim") {
+      args[[1]] <- sub(sprintf("^%s\\.", meta$internal), "", args[[1]])
       dim <- data$elements[[args[[1L]]]]$dimnames$dim[[args[[2]]]]
       ret <- generate_js_sexp(dim, data, meta)
     } else if (fn == "log" && length(values) == 2L) {
@@ -71,7 +72,9 @@ generate_js_sexp <- function(x, data, meta) {
 ## might be a better way in js.
 generate_js_sexp_sum <- function(args, data, meta) {
   target <- generate_js_sexp(args[[1]], data, meta)
-  data_info <- data$elements[[args[[1]]]]
+  ## See https://github.com/mrc-ide/odin/pull/197
+  nm <- sub(sprintf("^%s\\.", meta$internal), "", args[[1]])
+  data_info <- data$elements[[nm]]
 
   if (length(args) == 1L) {
     len <- generate_js_sexp(data_info$dimnames$length, data, meta)

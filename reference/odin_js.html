@@ -114,9 +114,9 @@ expression." />
 expression.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>odin_js</span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span>
+    <pre class="usage"><span class='fu'>odin_js</span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>...</span>, options <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span>
 
-<span class='fu'>odin_js_</span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span></pre>
+<span class='fu'>odin_js_</span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>...</span>, options <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -126,6 +126,15 @@ expression.</p>
       <td><p>Either the name of a file to read, a text string (if
 length is greater than 1 elements will be joined with newlines)
 or an expression.</p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>Arguments passed to <code>odin_options</code></p></td>
+    </tr>
+    <tr>
+      <th>options</th>
+      <td><p>An optional <code>odin_options</code> object. The
+<code>target</code> element (if present) will be overriden.</p></td>
     </tr>
     </table>
 
